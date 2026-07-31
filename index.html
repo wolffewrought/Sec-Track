@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="description" content="Security Access Management System">
+    <title>Security Access Tracker</title>
+    <link rel="manifest" href="data:application/manifest+json,{
+        \"name\": \"Security Access Tracker\",
+        \"short_name\": \"SAT\",
+        \"start_url\": \"./\",
+        \"display\": \"standalone\",
+        \"background_color\": \"#ffffff\",
+        \"theme_color\": \"#1e293b\",
+        \"icons\": [{
+            \"src\": \"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231e293b' width='192' height='192'/><text x='50%' y='50%' font-size='120' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'>SAT</text></svg>\",
+            \"sizes\": \"192x192\",
+            \"type\": \"image/svg+xml\",
+            \"purpose\": \"any\"
+        }]
+    }">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+            --emerald-600: #16a34a;
+            --emerald-50: #f0fdf4;
+            --red-600: #dc2626;
+            --red-50: #fef2f2;
+            --amber-600: #d97706;
+            --blue-600: #2563eb;
+        }
+
+        html {
+            background: var(--slate-100);
+            color: var(--slate-900);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        body {
+            background: var(--slate-100);
+        }
+
+        /* Header */
+        .header {
+            background: var(--slate-800);
+            color: white;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-date {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid var(--slate-200);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            position: sticky;
+            top: 3.5rem;
+            z-index: 50;
+        }
+
+        .tab-nav button {
+            flex: 1;
+            min-width: 100px;
+            padding: 1rem 0.75rem;
+            border: none;
+            background: white;
+            color: var(--slate-600);
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .tab-nav button:active,
+        .tab-nav button.active {
+            color: var(--blue-600);
+            border-bottom-color: var(--blue-600);
+            background: var(--blue-600);
+            background: linear-gradient(to bottom, rgba(37, 99, 235, 0.05), transparent);
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Tabs */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--slate-700);
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--slate-300);
+            border-radius: 0.375rem;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--blue-600);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group input[type="time"] {
+            font-size: 1rem;
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Buttons */
+        .button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .button-primary {
+            background: var(--blue-600);
+            color: white;
+        }
+
+        .button-primary:active {
+            background: #1d4ed8;
+            transform: scale(0.98);
+        }
+
+        .button-secondary {
+            background: var(--slate-200);
+            color: var(--slate-900);
+        }
+
+        .button-secondary:active {
+            background: var(--slate-300);
+        }
+
+        .button-danger {
+            background: var(--red-600);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .button-danger:active {
+            background: #b91c1c;
+        }
+
+        /* Autocomplete */
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--slate-300);
+            border-top: none;
+            border-radius: 0 0 0.375rem 0.375rem;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .autocomplete-list.active {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 0.75rem 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--slate-100);
+            font-size: 0.9rem;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: var(--blue-600);
+            color: white;
+        }
+
+        /* Visitor Log */
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            font-size: 0.875rem;
+        }
+
+        .log-table thead {
+            background: var(--slate-800);
+            color: white;
+        }
+
+        .log-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .log-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--slate-200);
+        }
+
+        .log-table tbody tr:hover {
+            background: var(--slate-50);
+        }
+
+        .log-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Archive Table */
+        .archive-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .archive-table thead {
+            background: var(--slate-800);
+            color: white;
+        }
+
+        .archive-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .archive-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--slate-200);
+            font-size: 0.875rem;
+        }
+
+        .archive-table tbody tr:hover {
+            background: var(--slate-50);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-valid {
+            background: var(--emerald-50);
+            color: var(--emerald-600);
+        }
+
+        .status-needed {
+            background: var(--red-50);
+            color: var(--red-600);
+        }
+
+        .status-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Section */
+        .section {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .section h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--slate-800);
+            border-bottom: 2px solid var(--slate-800);
+            padding-bottom: 0.75rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--slate-500);
+        }
+
+        .empty-state p {
+            margin-bottom: 1rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--slate-900);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease-out;
+            z-index: 1000;
+            font-size: 0.875rem;
+        }
+
+        .toast.success {
+            background: var(--emerald-600);
+        }
+
+        .toast.error {
+            background: var(--red-600);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Action Row */
+        .action-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .action-row button {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* Delete Icon */
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--red-600);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.25rem 0.5rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            background: var(--amber-600);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .settings-panel h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .settings-panel .form-group label {
+            color: white;
+        }
+
+        .settings-panel input {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .settings-panel input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .settings-panel input:focus {
+            border-color: white;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Helpers */
+        .text-muted {
+            color: var(--slate-500);
+            font-size: 0.875rem;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 1rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+
+            .tab-nav button {
+                font-size: 0.75rem;
+                padding: 0.75rem 0.5rem;
+            }
+
+            .container {
+                padding: 0.75rem;
+            }
+
+            .section {
+                padding: 1rem;
+            }
+
+            .log-table,
+            .archive-table {
+                font-size: 0.8rem;
+            }
+
+            .log-table th,
+            .log-table td,
+            .archive-table th,
+            .archive-table td {
+                padding: 0.5rem 0.25rem;
+            }
+
+            .button {
+                padding: 0.625rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .grid-2 {
+                gap: 0.75rem;
+            }
+
+            .action-row button {
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔐 Security Access Tracker</h1>
+        <div class="header-date" id="headerDate"></div>
+    </div>
+
+    <div class="tab-nav">
+        <button class="tab-button active" data-tab="tracker">Daily Log</button>
+        <button class="tab-button" data-tab="archive">Contractor Archive</button>
+        <button class="tab-button" data-tab="visitors">Regular Visitors</button>
+        <button class="tab-button" data-tab="settings">Settings</button>
+    </div>
+
+    <div class="container">
+        <!-- Tracker Tab -->
+        <div id="tracker" class="tab-content active">
+            <div class="section">
+                <h2>Site Access Hours</h2>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Start Time</label>
+                        <input type="time" id="startTime" value="05:00">
+                    </div>
+                    <div class="form-group">
+                        <label>End Time</label>
+                        <input type="time" id="endTime" value="17:00">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Record Visitor Entry/Exit</h2>
+                <form id="visitorForm">
+                    <div class="form-group">
+                        <label>Company / Visitor Name *</label>
+                        <div class="autocomplete-wrapper">
+                            <input 
+                                type="text" 
+                                id="companyInput" 
+                                placeholder="Start typing..." 
+                                autocomplete="off"
+                                required
+                            >
+                            <div class="autocomplete-list" id="companyList"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vehicle Registration</label>
+                        <input 
+                            type="text" 
+                            id="vehicleInput" 
+                            placeholder="e.g., AB21 XYZ"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label>Reason for Visit *</label>
+                        <input 
+                            type="text" 
+                            id="reasonInput" 
+                            placeholder="Maintenance, Delivery, etc." 
+                            required
+                        >
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Entry Time *</label>
+                            <input type="time" id="entryTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Exit Time</label>
+                            <input type="time" id="exitTime">
+                        </div>
+                    </div>
+
+                    <div class="action-row">
+                        <button type="submit" class="button button-primary">Record Entry</button>
+                        <button type="button" class="button button-secondary" id="setCurrentTime">Use Current Time</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="section">
+                <h2>Today's Visitor Log</h2>
+                <div id="logContainer"></div>
+            </div>
+        </div>
+
+        <!-- Archive Tab -->
+        <div id="archive" class="tab-content">
+            <div class="section">
+                <h2>Contractor Inductions</h2>
+                <div class="action-row">
+                    <button class="button button-primary" id="addContractorBtn">+ Add Contractor</button>
+                </div>
+
+                <form id="contractorForm" style="display: none; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label>Company Name *</label>
+                        <input type="text" id="contractorName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Induction Valid Until *</label>
+                        <input type="date" id="inductionDate" required>
+                    </div>
+                    <div class="action-row">
+                        <button type="submit" class="button button-primary">Save Contractor</button>
+                        <button type="button" class="button button-secondary" id="cancelContractorBtn">Cancel</button>
+                    </div>
+                </form>
+
+                <div id="archiveContainer"></div>
+            </div>
+        </div>
+
+        <!-- Regular Visitors Tab -->
+        <div id="visitors" class="tab-content">
+            <div class="section">
+                <h2>Regular Visitors Database</h2>
+                <div class="action-row">
+                    <button class="button button-primary" id="addVisitorBtn">+ Add Regular Visitor</button>
+                </div>
+
+                <form id="regularVisitorForm" style="display: none; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label>Visitor Name / Company *</label>
+                        <input type="text" id="visitorName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Registration *</label>
+                        <input type="text" id="visitorVehicle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Common Reason for Visit</label>
+                        <input type="text" id="visitorReason" placeholder="Optional">
+                    </div>
+                    <div class="action-row">
+                        <button type="submit" class="button button-primary">Save Visitor</button>
+                        <button type="button" class="button button-secondary" id="cancelVisitorBtn">Cancel</button>
+                    </div>
+                </form>
+
+                <div id="visitorsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="section">
+                <h2>Export & Backup</h2>
+                <div class="action-row">
+                    <button class="button button-primary" id="exportPdfBtn">Export Today as PDF</button>
+                    <button class="button button-secondary" id="exportJsonBtn">Export as JSON</button>
+                    <button class="button button-secondary" id="importJsonBtn">Import from JSON</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Data Management</h2>
+                <div class="action-row">
+                    <button class="button button-danger" id="clearTodayBtn">Clear Today's Log</button>
+                    <button class="button button-danger" id="clearAllBtn">Clear All Data</button>
+                </div>
+                <p class="text-muted" style="margin-top: 1rem;">⚠️ Actions cannot be undone. Export your data before clearing.</p>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="jsonImportInput" accept=".json" style="display: none;">
+
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'security-tracker-v1';
+                const urlsToCache = ['/'];
+
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME).then((cache) => {
+                            return cache.addAll(urlsToCache).catch(() => {});
+                        })
+                    );
+                    self.skipWaiting();
+                });
+
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(
+                        caches.keys().then((cacheNames) => {
+                            return Promise.all(
+                                cacheNames.map((cacheName) => {
+                                    if (cacheName !== CACHE_NAME) {
+                                        return caches.delete(cacheName);
+                                    }
+                                })
+                            );
+                        })
+                    );
+                    self.clients.claim();
+                });
+
+                self.addEventListener('fetch', (event) => {
+                    // Cache-first strategy: offline-first for true PWA operation
+                    event.respondWith(
+                        caches.match(event.request).then((response) => {
+                            if (response) {
+                                return response;
+                            }
+                            // For non-cached requests (shouldn't happen), don't attempt network
+                            return new Response('Offline: Resource not cached', {
+                                status: 503,
+                                statusText: 'Service Unavailable'
+                            });
+                        }).catch(() => {
+                            return new Response('Offline: Service Worker Error', {
+                                status: 503,
+                                statusText: 'Service Unavailable'
+                            });
+                        })
+                    );
+                });
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(() => {});
+        }
+
+        // Application State
+        const app = {
+            visitors: [],
+            contractors: [],
+            regularVisitors: [],
+            currentDate: new Date().toISOString().split('T')[0],
+
+            init() {
+                this.loadData();
+                this.setupEventListeners();
+                this.updateHeaderDate();
+                this.renderLog();
+                this.renderArchive();
+                this.renderVisitors();
+                this.setDefaultTimes();
+            },
+
+            loadData() {
+                const stored = localStorage.getItem('security-tracker-data');
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    this.visitors = data.visitors || [];
+                    this.contractors = data.contractors || [];
+                    this.regularVisitors = data.regularVisitors || [];
+                }
+            },
+
+            saveData() {
+                localStorage.setItem('security-tracker-data', JSON.stringify({
+                    visitors: this.visitors,
+                    contractors: this.contractors,
+                    regularVisitors: this.regularVisitors
+                }));
+            },
+
+            setDefaultTimes() {
+                const startTime = localStorage.getItem('security-start-time') || '05:00';
+                const endTime = localStorage.getItem('security-end-time') || '17:00';
+                document.getElementById('startTime').value = startTime;
+                document.getElementById('endTime').value = endTime;
+            },
+
+            updateHeaderDate() {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                document.getElementById('headerDate').textContent = now.toLocaleDateString('en-GB', options);
+            },
+
+            setupEventListeners() {
+                // Tab Navigation
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
+                });
+
+                // Visitor Form
+                document.getElementById('visitorForm').addEventListener('submit', (e) => this.recordVisitor(e));
+                document.getElementById('setCurrentTime').addEventListener('click', () => this.setCurrentTime());
+                document.getElementById('companyInput').addEventListener('input', (e) => this.handleCompanyInput(e));
+                document.getElementById('companyInput').addEventListener('focus', (e) => this.showCompanyAutocomplete(e));
+                document.getElementById('companyInput').addEventListener('blur', () => {
+                    setTimeout(() => this.hideCompanyAutocomplete(), 200);
+                });
+
+                // Time Changes
+                document.getElementById('startTime').addEventListener('change', (e) => {
+                    localStorage.setItem('security-start-time', e.target.value);
+                });
+                document.getElementById('endTime').addEventListener('change', (e) => {
+                    localStorage.setItem('security-end-time', e.target.value);
+                });
+
+                // Contractor Management
+                document.getElementById('addContractorBtn').addEventListener('click', () => this.showContractorForm());
+                document.getElementById('contractorForm').addEventListener('submit', (e) => this.addContractor(e));
+                document.getElementById('cancelContractorBtn').addEventListener('click', () => this.hideContractorForm());
+
+                // Regular Visitors
+                document.getElementById('addVisitorBtn').addEventListener('click', () => this.showVisitorForm());
+                document.getElementById('regularVisitorForm').addEventListener('submit', (e) => this.addRegularVisitor(e));
+                document.getElementById('cancelVisitorBtn').addEventListener('click', () => this.hideVisitorForm());
+
+                // Export/Import
+                document.getElementById('exportPdfBtn').addEventListener('click', () => this.exportPdf());
+                document.getElementById('exportJsonBtn').addEventListener('click', () => this.exportJson());
+                document.getElementById('importJsonBtn').addEventListener('click', () => this.importJson());
+                document.getElementById('jsonImportInput').addEventListener('change', (e) => this.handleJsonImport(e));
+
+                // Data Management
+                document.getElementById('clearTodayBtn').addEventListener('click', () => this.clearToday());
+                document.getElementById('clearAllBtn').addEventListener('click', () => this.clearAll());
+            },
+
+            switchTab(tabName) {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(tabName).classList.add('active');
+                event.target.classList.add('active');
+            },
+
+            setCurrentTime() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                document.getElementById('entryTime').value = `${hours}:${minutes}`;
+            },
+
+            handleCompanyInput(e) {
+                const value = e.target.value.toLowerCase();
+                if (value.length > 0) {
+                    this.showCompanyAutocomplete();
+                }
+            },
+
+            showCompanyAutocomplete() {
+                const input = document.getElementById('companyInput').value.toLowerCase();
+                const list = document.getElementById('companyList');
+                list.innerHTML = '';
+
+                const unique = new Set();
+                const allCompanies = [];
+
+                this.visitors.forEach(v => {
+                    if (v.company) allCompanies.push(v.company);
+                });
+                this.regularVisitors.forEach(v => {
+                    allCompanies.push(v.name);
+                });
+                this.contractors.forEach(c => {
+                    allCompanies.push(c.name);
+                });
+
+                const filtered = allCompanies
+                    .filter(c => c.toLowerCase().includes(input) && !unique.has(c.toLowerCase()))
+                    .filter(c => { unique.add(c.toLowerCase()); return true; })
+                    .slice(0, 10);
+
+                if (filtered.length > 0) {
+                    list.classList.add('active');
+                    filtered.forEach(company => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        
+                        const vehicle = this.regularVisitors.find(v => v.name === company)?.vehicle || '';
+                        item.textContent = vehicle ? `${company} (${vehicle})` : company;
+                        
+                        item.addEventListener('click', () => {
+                            document.getElementById('companyInput').value = company;
+                            if (vehicle) {
+                                document.getElementById('vehicleInput').value = vehicle;
+                            }
+                            this.hideCompanyAutocomplete();
+                        });
+
+                        list.appendChild(item);
+                    });
+                } else {
+                    list.classList.remove('active');
+                }
+            },
+
+            hideCompanyAutocomplete() {
+                document.getElementById('companyList').classList.remove('active');
+            },
+
+            recordVisitor(e) {
+                e.preventDefault();
+
+                const company = document.getElementById('companyInput').value.trim();
+                const vehicle = document.getElementById('vehicleInput').value.trim();
+                const reason = document.getElementById('reasonInput').value.trim();
+                const entryTime = document.getElementById('entryTime').value;
+                const exitTime = document.getElementById('exitTime').value;
+
+                if (!company || !reason || !entryTime) {
+                    this.showToast('Missing required fields', 'error');
+                    return;
+                }
+
+                this.visitors.push({
+                    id: Date.now(),
+                    date: this.currentDate,
+                    company,
+                    vehicle,
+                    reason,
+                    entryTime,
+                    exitTime
+                });
+
+                this.saveData();
+                this.renderLog();
+                e.target.reset();
+                document.getElementById('entryTime').focus();
+                this.showToast('Visitor recorded', 'success');
+            },
+
+            renderLog() {
+                const container = document.getElementById('logContainer');
+                const todayVisitors = this.visitors.filter(v => v.date === this.currentDate);
+
+                if (todayVisitors.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>No visitors recorded today</p></div>';
+                    return;
+                }
+
+                let html = `
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Vehicle</th>
+                                <th>Reason</th>
+                                <th>Entry</th>
+                                <th>Exit</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                todayVisitors.forEach(v => {
+                    html += `
+                        <tr>
+                            <td>${v.company}</td>
+                            <td>${v.vehicle || '—'}</td>
+                            <td>${v.reason}</td>
+                            <td>${v.entryTime}</td>
+                            <td>${v.exitTime || '—'}</td>
+                            <td><button class="delete-btn" onclick="app.deleteVisitor(${v.id})">✕</button></td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            },
+
+            deleteVisitor(id) {
+                if (confirm('Delete this entry?')) {
+                    this.visitors = this.visitors.filter(v => v.id !== id);
+                    this.saveData();
+                    this.renderLog();
+                    this.showToast('Entry deleted', 'success');
+                }
+            },
+
+            showContractorForm() {
+                document.getElementById('contractorForm').style.display = 'block';
+                document.getElementById('contractorName').focus();
+            },
+
+            hideContractorForm() {
+                document.getElementById('contractorForm').style.display = 'none';
+                document.getElementById('contractorForm').reset();
+            },
+
+            addContractor(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('contractorName').value.trim();
+                const inductionDate = document.getElementById('inductionDate').value;
+
+                if (!name || !inductionDate) {
+                    this.showToast('Missing required fields', 'error');
+                    return;
+                }
+
+                this.contractors.push({
+                    id: Date.now(),
+                    name,
+                    inductionDate
+                });
+
+                this.saveData();
+                this.renderArchive();
+                this.hideContractorForm();
+                this.showToast('Contractor added', 'success');
+            },
+
+            renderArchive() {
+                const container = document.getElementById('archiveContainer');
+
+                if (this.contractors.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>No contractors registered</p></div>';
+                    return;
+                }
+
+                const today = new Date();
+                let html = `
+                    <table class="archive-table">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Induction Valid</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                this.contractors.forEach(c => {
+                    const inductDate = new Date(c.inductionDate);
+                    const isValid = inductDate > today;
+                    const status = isValid ? 'Valid' : 'Needed';
+                    const statusClass = isValid ? 'status-valid' : 'status-needed';
+                    const dotColor = isValid ? 'var(--emerald-600)' : 'var(--red-600)';
+
+                    html += `
+                        <tr>
+                            <td>${c.name}</td>
+                            <td>${new Date(c.inductionDate).toLocaleDateString()}</td>
+                            <td>
+                                <span class="status-badge ${statusClass}">
+                                    <span class="status-dot" style="background: ${dotColor}"></span>
+                                    ${status}
+                                </span>
+                            </td>
+                            <td><button class="delete-btn" onclick="app.deleteContractor(${c.id})">✕</button></td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            },
+
+            deleteContractor(id) {
+                if (confirm('Delete this contractor?')) {
+                    this.contractors = this.contractors.filter(c => c.id !== id);
+                    this.saveData();
+                    this.renderArchive();
+                    this.showToast('Contractor deleted', 'success');
+                }
+            },
+
+            showVisitorForm() {
+                document.getElementById('regularVisitorForm').style.display = 'block';
+                document.getElementById('visitorName').focus();
+            },
+
+            hideVisitorForm() {
+                document.getElementById('regularVisitorForm').style.display = 'none';
+                document.getElementById('regularVisitorForm').reset();
+            },
+
+            addRegularVisitor(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('visitorName').value.trim();
+                const vehicle = document.getElementById('visitorVehicle').value.trim();
+                const reason = document.getElementById('visitorReason').value.trim();
+
+                if (!name || !vehicle) {
+                    this.showToast('Name and vehicle required', 'error');
+                    return;
+                }
+
+                this.regularVisitors.push({
+                    id: Date.now(),
+                    name,
+                    vehicle,
+                    reason
+                });
+
+                this.saveData();
+                this.renderVisitors();
+                this.hideVisitorForm();
+                this.showToast('Regular visitor added', 'success');
+            },
+
+            renderVisitors() {
+                const container = document.getElementById('visitorsContainer');
+
+                if (this.regularVisitors.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>No regular visitors saved</p></div>';
+                    return;
+                }
+
+                let html = `
+                    <table class="archive-table">
+                        <thead>
+                            <tr>
+                                <th>Name/Company</th>
+                                <th>Vehicle</th>
+                                <th>Typical Reason</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                this.regularVisitors.forEach(v => {
+                    html += `
+                        <tr>
+                            <td>${v.name}</td>
+                            <td>${v.vehicle}</td>
+                            <td>${v.reason || '—'}</td>
+                            <td><button class="delete-btn" onclick="app.deleteRegularVisitor(${v.id})">✕</button></td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            },
+
+            deleteRegularVisitor(id) {
+                if (confirm('Delete this regular visitor?')) {
+                    this.regularVisitors = this.regularVisitors.filter(v => v.id !== id);
+                    this.saveData();
+                    this.renderVisitors();
+                    this.showToast('Visitor deleted', 'success');
+                }
+            },
+
+            exportPdf() {
+                const todayVisitors = this.visitors.filter(v => v.date === this.currentDate);
+                const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                let html = `
+                    <div style="font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px;">
+                        <h1 style="text-align: center; color: #1e293b; border-bottom: 2px solid #1e293b; padding-bottom: 10px;">Security Access Log</h1>
+                        <p style="text-align: center; color: #64748b; margin-bottom: 20px;">${today}</p>
+
+                        <h2 style="color: #1e293b; margin-top: 20px; font-size: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Daily Visitor Log</h2>
+                        ${todayVisitors.length > 0 ? `
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                                <thead>
+                                    <tr style="background: #1e293b; color: white;">
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Company</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Vehicle</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Reason</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Entry</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Exit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${todayVisitors.map(v => `
+                                        <tr>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.company}</td>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.vehicle || '—'}</td>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.reason}</td>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.entryTime}</td>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.exitTime || '—'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: #64748b;">No visitors recorded today.</p>'}
+
+                        <h2 style="color: #1e293b; margin-top: 20px; font-size: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Contractor Inductions</h2>
+                        ${this.contractors.length > 0 ? `
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                                <thead>
+                                    <tr style="background: #1e293b; color: white;">
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Company</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Induction Valid Until</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${this.contractors.map(c => {
+                                        const inductDate = new Date(c.inductionDate);
+                                        const isValid = inductDate > new Date();
+                                        return `
+                                            <tr>
+                                                <td style="padding: 8px; border: 1px solid #cbd5e1;">${c.name}</td>
+                                                <td style="padding: 8px; border: 1px solid #cbd5e1;">${inductDate.toLocaleDateString()}</td>
+                                                <td style="padding: 8px; border: 1px solid #cbd5e1; color: ${isValid ? '#16a34a' : '#dc2626'}; font-weight: bold;">${isValid ? '✓ Valid' : '✗ Renewal Needed'}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: #64748b;">No contractors registered.</p>'}
+
+                        <h2 style="color: #1e293b; margin-top: 20px; font-size: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Regular Visitors</h2>
+                        ${this.regularVisitors.length > 0 ? `
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                <thead>
+                                    <tr style="background: #1e293b; color: white;">
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Name/Company</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Vehicle</th>
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Typical Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${this.regularVisitors.map(v => `
+                                        <tr>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.name}</td>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.vehicle}</td>
+                                            <td style="padding: 8px; border: 1px solid #cbd5e1;">${v.reason || '—'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: #64748b;">No regular visitors saved.</p>'}
+
+                        <hr style="margin: 30px 0; border: none; border-top: 1px solid #cbd5e1;">
+                        <p style="font-size: 10px; color: #94a3b8;">Exported ${today}</p>
+                    </div>
+                `;
+
+                // Open printable window (fully offline, no external libraries)
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Security Access Log - ${this.currentDate}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; line-height: 1.6; }
+                            @media print {
+                                body { margin: 10mm; }
+                                h1 { page-break-after: avoid; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${html}
+                        <script>
+                            setTimeout(() => window.print(), 500);
+                            window.addEventListener('afterprint', () => window.close());
+                        </script>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                this.showToast('Print dialog opened', 'success');
+            },
+
+            exportJson() {
+                const data = {
+                    exportDate: new Date().toISOString(),
+                    visitors: this.visitors,
+                    contractors: this.contractors,
+                    regularVisitors: this.regularVisitors
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `security-tracker-${this.currentDate}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showToast('Data exported', 'success');
+            },
+
+            importJson() {
+                document.getElementById('jsonImportInput').click();
+            },
+
+            handleJsonImport(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (data.visitors) this.visitors = data.visitors;
+                        if (data.contractors) this.contractors = data.contractors;
+                        if (data.regularVisitors) this.regularVisitors = data.regularVisitors;
+                        
+                        this.saveData();
+                        this.renderLog();
+                        this.renderArchive();
+                        this.renderVisitors();
+                        this.showToast('Data imported', 'success');
+                    } catch (err) {
+                        this.showToast('Invalid JSON file', 'error');
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            },
+
+            clearToday() {
+                if (confirm(`Clear all entries for ${this.currentDate}? This cannot be undone.`)) {
+                    this.visitors = this.visitors.filter(v => v.date !== this.currentDate);
+                    this.saveData();
+                    this.renderLog();
+                    this.showToast('Today\'s log cleared', 'success');
+                }
+            },
+
+            clearAll() {
+                if (confirm('Clear ALL data including archive and regular visitors? This cannot be undone. Export your data first.')) {
+                    if (confirm('Really clear everything?')) {
+                        this.visitors = [];
+                        this.contractors = [];
+                        this.regularVisitors = [];
+                        this.saveData();
+                        this.renderLog();
+                        this.renderArchive();
+                        this.renderVisitors();
+                        this.showToast('All data cleared', 'success');
+                    }
+                }
+            },
+
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
