@@ -54,7 +54,7 @@ body{background:#f1f5f9;padding-bottom:3rem}
 .data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:.375rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);font-size:.875rem}
 .data-table thead{background:#1e293b;color:#fff}
 .data-table th{padding:.75rem;text-align:left;font-weight:600}
-.data-table td{padding:.75rem;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+.data-table td{padding:.75rem;border-bottom:1px solid #e2e8f0;vertical-align:middle;overflow-wrap:anywhere;word-break:break-word}
 .data-table tbody tr:last-child td{border-bottom:none}
 .status-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .625rem;border-radius:9999px;font-weight:600;font-size:.75rem;white-space:nowrap}
 .status-valid{background:#f0fdf4;color:#15803d}
@@ -87,8 +87,23 @@ body{background:#f1f5f9;padding-bottom:3rem}
 .add-rep{font-size:.8rem;padding:.5rem .75rem}
 .rep-empty{color:#64748b;font-size:.85rem;margin-bottom:.5rem}
 .cell-sub{display:block;color:#64748b;font-size:.78rem;margin-top:.1rem}
+.cell-sub.carried{color:#b45309;font-weight:600}
 .row-actions{white-space:nowrap;text-align:right}
 .edit-btn{background:none;border:none;color:#2563eb;cursor:pointer;font-size:.8rem;font-weight:600;padding:.25rem .4rem}
+.field-hint{color:#64748b;font-size:.78rem;margin-top:.35rem}
+.induction-note{margin-top:.5rem;padding:.55rem .7rem;border-radius:.375rem;font-size:.82rem;font-weight:600}
+.induction-note.good{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.induction-note.bad{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.rep-row input.rep-date{flex:0 0 9.5rem}
+.group-start td{border-top:2px solid #cbd5e1}
+.sheet-bar{display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap;align-items:center}
+.sheet-bar input[type=date]{flex:1 1 8rem;min-width:8rem;padding:.5rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.9rem;background:#fff;color:#0f172a}
+.sheet-bar .button{flex:0 0 auto;padding:.5rem .7rem;font-size:.78rem}
+.sheet-summary{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;font-size:.85rem;color:#475569}
+.onsite-chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:9999px;padding:.35rem .75rem;font-weight:600;cursor:pointer;font-size:.8rem}
+.onsite-chip.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.onsite-chip.none{background:#f1f5f9;border-color:#e2e8f0;color:#64748b;cursor:default}
+tr.on-site td:first-child{box-shadow:inset 3px 0 0 #2563eb}
 </style>
 </head>
 <body>
@@ -128,7 +143,7 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <div class="form-group">
 <label for="companyInput">Company / visitor name</label>
 <div class="autocomplete-wrapper">
-<input type="text" id="companyInput" placeholder="Start typing to see saved visitors" autocomplete="off" required>
+<input type="text" id="companyInput" maxlength="80" placeholder="Start typing to see saved visitors" autocomplete="off" required>
 <div class="autocomplete-list" id="companyList"></div>
 </div>
 </div>
@@ -138,7 +153,8 @@ body{background:#f1f5f9;padding-bottom:3rem}
 </div>
 <div class="form-group">
 <label for="repInput">Representative</label>
-<input type="text" id="repInput" placeholder="Driver or visitor name (optional)">
+<input type="text" id="repInput" maxlength="60" placeholder="Driver or visitor name (optional)">
+<div id="inductionNote" class="induction-note" role="status" aria-live="polite" style="display:none"></div>
 </div>
 <div class="form-group" id="vehiclePickRow" style="display:none">
 <label for="vehicleSelect">Recorded vehicles</label>
@@ -146,11 +162,11 @@ body{background:#f1f5f9;padding-bottom:3rem}
 </div>
 <div class="form-group">
 <label for="vehicleInput">Vehicle registration</label>
-<input type="text" id="vehicleInput" placeholder="AB21 XYZ">
+<input type="text" id="vehicleInput" maxlength="20" placeholder="AB21 XYZ">
 </div>
 <div class="form-group">
 <label for="reasonInput">Reason for site visit</label>
-<input type="text" id="reasonInput" placeholder="Delivery, maintenance, meeting" required>
+<input type="text" id="reasonInput" maxlength="120" placeholder="Delivery, maintenance, meeting" required>
 </div>
 <div class="grid-2">
 <div class="form-group">
@@ -170,7 +186,15 @@ body{background:#f1f5f9;padding-bottom:3rem}
 </div>
 
 <div class="section">
-<h2>Today's occurrence sheet</h2>
+<h2>Occurrence sheet</h2>
+<div class="sheet-bar">
+<button type="button" class="button button-secondary" id="prevDay">&#8249; Prev</button>
+<input type="date" id="sheetDate">
+<button type="button" class="button button-secondary" id="nextDay">Next &#8250;</button>
+<button type="button" class="button button-secondary" id="todayBtn">Today</button>
+</div>
+<div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
+<div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="logContainer"></div>
 </div>
 </div>
@@ -185,16 +209,18 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <h3 class="form-title" id="contractorFormTitle">New contractor</h3>
 <div class="form-group">
 <label for="contractorName">Company name</label>
-<input type="text" id="contractorName" required>
+<input type="text" id="contractorName" maxlength="80" required>
 </div>
 <div class="form-group">
-<label for="inductionDate">Induction valid until</label>
-<input type="date" id="inductionDate" required>
+<label for="inductionDate">Default induction expiry</label>
+<input type="date" id="inductionDate">
+<p class="field-hint">Used for any representative left without their own date.</p>
 </div>
 <div class="form-group">
-<label>Representatives and their vehicles</label>
+<label>Representatives, vehicles and induction expiry</label>
 <div id="contractorReps"></div>
-<button type="button" class="button button-secondary add-rep" data-target="contractorReps">Add representative</button>
+<button type="button" class="button button-secondary add-rep" data-target="contractorReps" data-dates="1">Add representative</button>
+<p class="field-hint">Each representative is inducted individually, so each carries their own expiry date.</p>
 </div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="contractorSubmit">Save contractor</button>
@@ -215,16 +241,17 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <h3 class="form-title" id="visitorFormTitle">New regular visitor</h3>
 <div class="form-group">
 <label for="visitorName">Visitor / company name</label>
-<input type="text" id="visitorName" required>
+<input type="text" id="visitorName" maxlength="80" required>
 </div>
 <div class="form-group">
-<label for="visitorVehicle">Company vehicles</label>
-<input type="text" id="visitorVehicle" placeholder="Comma separate, or leave blank if per representative">
+<label for="visitorVehicle">Shared pool vehicles</label>
+<input type="text" id="visitorVehicle" placeholder="Comma separate. Any representative can be logged against these.">
 </div>
 <div class="form-group">
-<label>Representatives and their vehicles</label>
+<label>Representatives and their usual vehicles</label>
 <div id="visitorReps"></div>
 <button type="button" class="button button-secondary add-rep" data-target="visitorReps">Add representative</button>
+<p class="field-hint">Leave a representative's vehicles blank if they just take whatever is free from the pool.</p>
 </div>
 <div class="form-group">
 <label for="visitorReason">Usual reason for visit</label>
@@ -249,10 +276,47 @@ body{background:#f1f5f9;padding-bottom:3rem}
 </div>
 <p class="text-muted">The PDF holds the printed sheet plus the same records as hidden recoverable data. Restore accepts either the PDF or a backup file.</p>
 </div>
+
+<div class="section">
+<h2>Period report</h2>
+<div class="form-group">
+<label for="periodType">Cover</label>
+<select id="periodType">
+<option value="week">A week</option>
+<option value="month" selected>A month</option>
+<option value="quarter">A quarter</option>
+<option value="half">Half a year</option>
+<option value="year">A whole year</option>
+</select>
+</div>
+<div class="form-group" id="periodWeekRow" style="display:none">
+<label for="periodWeek">Any date in that week</label>
+<input type="date" id="periodWeek">
+</div>
+<div class="grid-2">
+<div class="form-group" id="periodValueRow">
+<label for="periodValue">Which</label>
+<select id="periodValue"></select>
+</div>
+<div class="form-group" id="periodYearRow">
+<label for="periodYear">Year</label>
+<select id="periodYear"></select>
+</div>
+</div>
+<div id="periodSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div class="action-row">
+<button type="button" class="button button-primary" id="exportPeriodBtn">Export period report</button>
+</div>
+<p class="text-muted">A week or month report lists every movement day by day. Longer periods give daily totals and the most frequent visitors instead, so the file stays manageable. Contractor inductions and regular visitors are included either way.</p>
+</div>
 <div class="section">
 <h2>Data</h2>
+<p class="text-muted" id="storageNote" style="margin-top:0"></p>
 <div class="action-row">
-<button type="button" class="button button-danger" id="clearTodayBtn">Clear today's sheet</button>
+<button type="button" class="button button-secondary" id="pruneBtn">Clear movements over 12 months old</button>
+</div>
+<div class="action-row">
+<button type="button" class="button button-danger" id="clearTodayBtn">Clear the shown day</button>
 <button type="button" class="button button-danger" id="clearAllBtn">Clear everything</button>
 </div>
 <p class="text-muted">Everything is stored on this device only. Clearing cannot be undone, so save a backup first.</p>
@@ -513,6 +577,128 @@ var PDFKit = (function () {
   };
 })();
 
+/* ---------------------------------------------------------------
+ * Store - IndexedDB with a localStorage fallback.
+ *
+ * localStorage gives about 5 MB shared across the whole origin, which
+ * every app on the same hostname draws from. IndexedDB is scoped the same
+ * way but its allowance is a share of free disk, so the ceiling stops
+ * mattering. Records already held in localStorage are moved across once,
+ * on first load, and the old key is then released so the space returns to
+ * the shared pool.
+ * --------------------------------------------------------------- */
+var Store = (function () {
+  var LS_KEY = 'security-tracker-data';
+  var DB_NAME = 'security-access-tracker';
+  var STORE_NAME = 'records';
+  var REC_KEY = 'data';
+
+  var idb = null;
+  try { idb = (typeof indexedDB !== 'undefined') ? indexedDB : null; } catch (e) { idb = null; }
+
+  var dbPromise = null;
+  var chain = null;
+  var backend = idb ? 'indexeddb' : 'localstorage';
+
+  function openDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      var req = idb.open(DB_NAME, 1);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+      req.onblocked = function () { reject(new Error('blocked')); };
+    });
+    return dbPromise;
+  }
+
+  function idbGet() {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(STORE_NAME, 'readonly');
+        var rq = tx.objectStore(STORE_NAME).get(REC_KEY);
+        rq.onsuccess = function () { resolve(rq.result); };
+        rq.onerror = function () { reject(rq.error); };
+      });
+    });
+  }
+
+  function idbSet(value) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(value, REC_KEY);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { reject(tx.error); };
+        tx.onabort = function () { reject(tx.error || new Error('aborted')); };
+      });
+    });
+  }
+
+  function readLocal() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  return {
+    backend: function () { return backend; },
+
+    /* cb(data|null, note) - note describes what happened, for the log */
+    load: function (cb) {
+      if (!idb) { backend = 'localstorage'; cb(readLocal(), 'localstorage'); return; }
+
+      idbGet().then(function (found) {
+        if (found) { cb(found, 'indexeddb'); return; }
+
+        var legacy = readLocal();
+        if (!legacy) { cb(null, 'indexeddb'); return; }
+
+        /* first run after the switch - carry the records over, and only
+           drop the old copy once the new one is safely written */
+        idbSet(legacy).then(function () {
+          try { localStorage.removeItem(LS_KEY); } catch (e) {}
+          cb(legacy, 'migrated');
+        }).catch(function () {
+          backend = 'localstorage';
+          cb(legacy, 'localstorage');
+        });
+      }).catch(function () {
+        backend = 'localstorage';
+        cb(readLocal(), 'localstorage');
+      });
+    },
+
+    /* Writes are queued so two quick edits cannot land out of order. */
+    save: function (data, onError) {
+      if (backend !== 'indexeddb') {
+        try { localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+        catch (e) { if (onError) onError(e); }
+        return;
+      }
+      if (!chain) chain = Promise.resolve();
+      chain = chain.then(function () { return idbSet(data); }).catch(function (err) {
+        if (onError) onError(err);
+      });
+    },
+
+    /* cb({usage, quota}|null) - real figures where the browser offers them */
+    estimate: function (cb) {
+      try {
+        if (navigator.storage && navigator.storage.estimate) {
+          navigator.storage.estimate().then(function (e) { cb(e); }).catch(function () { cb(null); });
+          return;
+        }
+      } catch (e) {}
+      cb(null);
+    }
+  };
+})();
+
 var app = {
   visitors: [],
   contractors: [],
@@ -520,19 +706,129 @@ var app = {
   currentDate: '',
   editingContractorId: null,
   editingVisitorId: null,
+  viewDate: '',
+  onSiteOnly: false,
+  _lastSubmit: 0,
+  _lastSig: '',
   _lastId: 0,
 
   init: function () {
+    var self = this;
     this.currentDate = this.todayKey();
-    this.loadData();
+    this.viewDate = this.currentDate;
     this.updateHeaderDate();
     this.setDefaultTimes();
     this.bindEvents();
-    this.renderLog();
-    this.renderArchive();
-    this.renderVisitors();
     this.renderRepPlaceholder('contractorReps');
     this.renderRepPlaceholder('visitorReps');
+    this.renderSheetControls();
+
+    /* reading is asynchronous now, so paint the shell first and fill it in
+       the moment the records arrive */
+    this.loadData(function (note) {
+      self.renderLog();
+      self.renderArchive();
+      self.renderVisitors();
+      self.renderSheetControls();
+      self.renderPeriodControls();
+      self.renderStorageNote();
+      self.startDayWatch();
+      if (note === 'migrated') {
+        self.toast('Records moved to larger storage on this device');
+      }
+    });
+  },
+
+  /* The sheet date was fixed at start-up, so an app left open overnight
+     kept filing entries under yesterday. Re-check whenever the app is
+     looked at again, and on a timer while it sits open. */
+  startDayWatch: function () {
+    var self = this;
+    if (typeof setInterval === 'function') {
+      setInterval(function () { self.checkDayRollover(); }, 30000);
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) self.checkDayRollover();
+    });
+    window.addEventListener('focus', function () { self.checkDayRollover(); });
+  },
+
+  checkDayRollover: function () {
+    var t = this.todayKey();
+    if (t === this.currentDate) return;
+    var wasOnToday = this.viewDate === this.currentDate;
+    this.currentDate = t;
+    if (wasOnToday) this.viewDate = t;
+    this.renderSheetControls();
+    this.renderLog();
+    if (wasOnToday) this.toast('New day - now logging to ' + this.ukDate(t));
+  },
+
+  setViewDate: function (d) {
+    if (!d) return;
+    if (d > this.currentDate) d = this.currentDate;
+    this.viewDate = d;
+    this.onSiteOnly = false;
+    this.renderSheetControls();
+    this.renderLog();
+  },
+
+  shiftViewDate: function (days) {
+    var d = this.parseLocalDate(this.viewDate);
+    if (!d) return;
+    d.setDate(d.getDate() + days);
+    this.setViewDate(d.getFullYear() + '-' + this.pad2(d.getMonth() + 1) + '-' + this.pad2(d.getDate()));
+  },
+
+  renderSheetControls: function () {
+    var input = document.getElementById('sheetDate');
+    input.value = this.viewDate;
+    input.max = this.currentDate;
+
+    var note = document.getElementById('backdateNote');
+    if (this.viewDate === this.currentDate) {
+      note.style.display = 'none';
+    } else {
+      note.textContent = 'Viewing ' + this.ukDate(this.viewDate) +
+        '. Anything recorded now will be filed under that date.';
+      note.style.display = 'block';
+    }
+
+    document.getElementById('nextDay').disabled = (this.viewDate >= this.currentDate);
+  },
+
+  entriesFor: function (date) {
+    var out = [], i;
+    for (i = 0; i < this.visitors.length; i++) {
+      if (this.visitors[i].date === date) out.push(this.visitors[i]);
+    }
+    return out;
+  },
+
+  stillOnSite: function (list) {
+    var out = [], i;
+    for (i = 0; i < list.length; i++) if (!list[i].exitTime) out.push(list[i]);
+    return out;
+  },
+
+  /* Anyone without an exit time, whatever day they signed in on. A visitor
+     who arrives at 22:30 is still on site at 00:30, so tying "on site" to
+     the calendar day would hide them and leave no way to sign them out. */
+  openEntries: function () {
+    var out = [], i;
+    for (i = 0; i < this.visitors.length; i++) {
+      if (!this.visitors[i].exitTime) out.push(this.visitors[i]);
+    }
+    out.sort(function (a, b) {
+      var ka = a.date + ' ' + a.entryTime, kb = b.date + ' ' + b.entryTime;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+    return out;
+  },
+
+  toggleOnSite: function () {
+    this.onSiteOnly = !this.onSiteOnly;
+    this.renderLog();
   },
 
   /* Date.now() alone collides when several records are created inside the
@@ -575,57 +871,80 @@ var app = {
       .replace(/"/g, '&quot;');
   },
 
-  loadData: function () {
-    try {
-      var raw = localStorage.getItem('security-tracker-data');
-      if (!raw) return;
-      var d = JSON.parse(raw);
-      this.visitors = d.visitors || [];
-      this.contractors = d.contractors || [];
-      this.regularVisitors = d.regularVisitors || [];
-      this.migrate();
-      this.seedIds();
-    } catch (e) {}
+  loadData: function (done) {
+    var self = this;
+    Store.load(function (d, note) {
+      try {
+        if (d) {
+          self.visitors = d.visitors || [];
+          self.contractors = d.contractors || [];
+          self.regularVisitors = d.regularVisitors || [];
+        }
+        self.migrate();
+        self.seedIds();
+      } catch (e) {}
+      if (done) done(note);
+    });
   },
 
   /* Brings older records up to the current shape. Early versions stored a
      single comma separated `vehicle` string per company and had no notion
      of representatives, so those registrations become company vehicles and
      nothing is lost. Safe to run repeatedly. */
+  splitRegs: function (s) {
+    var out = [], parts = String(s || '').split(','), j, t;
+    for (j = 0; j < parts.length; j++) {
+      t = parts[j].replace(/^\s+|\s+$/g, '');
+      if (t) out.push(t);
+    }
+    return out;
+  },
+
+  /* Brings a single record up to the current shape. Early versions stored
+     one comma separated `vehicle` string per company and held the induction
+     once per company rather than per person, so those values are carried
+     across rather than dropped. Safe to run repeatedly, and also used on
+     imported data so an old backup merges cleanly. */
+  normaliseRecord: function (rec, isContractor) {
+    var r, k;
+    if (!rec.reps) rec.reps = [];
+    for (r = 0; r < rec.reps.length; r++) {
+      if (!rec.reps[r].vehicles) rec.reps[r].vehicles = [];
+      if (typeof rec.reps[r].vehicles === 'string') rec.reps[r].vehicles = this.splitRegs(rec.reps[r].vehicles);
+      if (isContractor && !rec.reps[r].inductionDate && rec.inductionDate) {
+        rec.reps[r].inductionDate = rec.inductionDate;
+      }
+    }
+    if (!rec.vehicles) rec.vehicles = [];
+    if (typeof rec.vehicles === 'string') rec.vehicles = this.splitRegs(rec.vehicles);
+    if (rec.vehicle) {
+      var legacy = this.splitRegs(rec.vehicle);
+      for (k = 0; k < legacy.length; k++) {
+        if (rec.vehicles.indexOf(legacy[k]) === -1) rec.vehicles.push(legacy[k]);
+      }
+      delete rec.vehicle;
+    }
+    return rec;
+  },
+
   migrate: function () {
     var i;
-
-    function splitRegs(s) {
-      var out = [], parts = String(s || '').split(','), j, t;
-      for (j = 0; j < parts.length; j++) {
-        t = parts[j].replace(/^\s+|\s+$/g, '');
-        if (t) out.push(t);
-      }
-      return out;
-    }
-
-    function normaliseRecord(rec) {
-      if (!rec.reps) rec.reps = [];
-      for (var r = 0; r < rec.reps.length; r++) {
-        if (!rec.reps[r].vehicles) rec.reps[r].vehicles = [];
-        if (typeof rec.reps[r].vehicles === 'string') rec.reps[r].vehicles = splitRegs(rec.reps[r].vehicles);
-      }
-      if (!rec.vehicles) rec.vehicles = [];
-      if (typeof rec.vehicles === 'string') rec.vehicles = splitRegs(rec.vehicles);
-      if (rec.vehicle) {
-        var legacy = splitRegs(rec.vehicle);
-        for (var k = 0; k < legacy.length; k++) {
-          if (rec.vehicles.indexOf(legacy[k]) === -1) rec.vehicles.push(legacy[k]);
-        }
-        delete rec.vehicle;
-      }
-    }
-
-    for (i = 0; i < this.regularVisitors.length; i++) normaliseRecord(this.regularVisitors[i]);
-    for (i = 0; i < this.contractors.length; i++) normaliseRecord(this.contractors[i]);
+    for (i = 0; i < this.regularVisitors.length; i++) this.normaliseRecord(this.regularVisitors[i], false);
+    for (i = 0; i < this.contractors.length; i++) this.normaliseRecord(this.contractors[i], true);
     for (i = 0; i < this.visitors.length; i++) {
       if (this.visitors[i].rep === undefined) this.visitors[i].rep = '';
     }
+  },
+
+  /* Dates are stored as YYYY-MM-DD. new Date() reads that as UTC midnight,
+     which lands on the previous day anywhere west of UTC and made an
+     induction expiring today read as overdue. Build a local date instead. */
+  parseLocalDate: function (s) {
+    if (!s) return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s));
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
   },
 
   /* Every saved company, from both lists, keyed by lower case name. */
@@ -661,15 +980,14 @@ var app = {
   },
 
   saveData: function () {
-    try {
-      localStorage.setItem('security-tracker-data', JSON.stringify({
-        visitors: this.visitors,
-        contractors: this.contractors,
-        regularVisitors: this.regularVisitors
-      }));
-    } catch (e) {
-      this.toast('Could not save to this device', 'error');
-    }
+    var self = this;
+    Store.save({
+      visitors: this.visitors,
+      contractors: this.contractors,
+      regularVisitors: this.regularVisitors
+    }, function () {
+      self.toast('Could not save - export a backup and clear older movements', 'error');
+    });
   },
 
   setDefaultTimes: function () {
@@ -697,6 +1015,7 @@ var app = {
         document.getElementById(name).classList.add('active');
         e.currentTarget.classList.add('active');
         window.scrollTo(0, 0);
+        if (name === 'settings') self.renderStorageNote();
       });
     }
 
@@ -715,8 +1034,13 @@ var app = {
       document.getElementById('repInput').value = ev.target.value;
       document.getElementById('vehicleInput').value = '';
       self.refreshVehiclePicker();
+      self.updateInductionNote();
     });
-    document.getElementById('repInput').addEventListener('change', function () { self.refreshVehiclePicker(); });
+    document.getElementById('repInput').addEventListener('change', function () {
+      self.refreshVehiclePicker();
+      self.updateInductionNote();
+    });
+    document.getElementById('repInput').addEventListener('input', function () { self.updateInductionNote(); });
     document.getElementById('vehicleSelect').addEventListener('change', function (ev) {
       if (ev.target.value) document.getElementById('vehicleInput').value = ev.target.value;
     });
@@ -724,7 +1048,7 @@ var app = {
     var adders = document.querySelectorAll('.add-rep');
     for (var a = 0; a < adders.length; a++) {
       adders[a].addEventListener('click', function (ev) {
-        self.addRepRow(ev.currentTarget.getAttribute('data-target'), '', []);
+        self.addRepRow(ev.currentTarget.getAttribute('data-target'), '', [], '');
       });
     }
 
@@ -744,6 +1068,18 @@ var app = {
     document.getElementById('importJsonBtn').addEventListener('click', function () { document.getElementById('jsonImportInput').click(); });
     document.getElementById('jsonImportInput').addEventListener('change', function (e) { self.handleImport(e); });
 
+    document.getElementById('prevDay').addEventListener('click', function () { self.shiftViewDate(-1); });
+    document.getElementById('nextDay').addEventListener('click', function () { self.shiftViewDate(1); });
+    document.getElementById('todayBtn').addEventListener('click', function () { self.setViewDate(self.currentDate); });
+    document.getElementById('sheetDate').addEventListener('change', function (ev) { self.setViewDate(ev.target.value); });
+
+    document.getElementById('periodType').addEventListener('change', function () { self.renderPeriodControls(); });
+    document.getElementById('periodValue').addEventListener('change', function () { self.renderPeriodSummary(); });
+    document.getElementById('periodYear').addEventListener('change', function () { self.renderPeriodSummary(); });
+    document.getElementById('periodWeek').addEventListener('change', function () { self.renderPeriodSummary(); });
+    document.getElementById('exportPeriodBtn').addEventListener('click', function () { self.exportPeriod(); });
+
+    document.getElementById('pruneBtn').addEventListener('click', function () { self.pruneOld(); });
     document.getElementById('clearTodayBtn').addEventListener('click', function () { self.clearToday(); });
     document.getElementById('clearAllBtn').addEventListener('click', function () { self.clearAll(); });
   },
@@ -770,11 +1106,15 @@ var app = {
       /* the company on its own - picking it reveals the dropdowns */
       add({ company: rec.name, rep: '', vehicle: '', label: rec.name, hint: this.companyHint(rec) });
 
-      /* each representative, with each of their vehicles */
+      /* each representative, on their own and with each of their vehicles */
       for (r = 0; r < rec.reps.length; r++) {
-        if (!rec.reps[r].vehicles.length) {
+        /* offer the name alone whenever the vehicle is not a foregone
+           conclusion, so a pool driver can be picked in one tap and then
+           choose the vehicle from the dropdown */
+        if (rec.reps[r].vehicles.length !== 1 || rec.vehicles.length) {
           add({ company: rec.name, rep: rec.reps[r].name, vehicle: '',
-                label: rec.name, hint: rec.reps[r].name });
+                label: rec.name,
+                hint: rec.reps[r].name + (rec.vehicles.length ? ' - choose vehicle' : '') });
         }
         for (v = 0; v < rec.reps[r].vehicles.length; v++) {
           add({ company: rec.name, rep: rec.reps[r].name, vehicle: rec.reps[r].vehicles[v],
@@ -807,6 +1147,7 @@ var app = {
     var count = rec.vehicles.length;
     for (var r = 0; r < rec.reps.length; r++) count += rec.reps[r].vehicles.length;
     if (count) bits.push(count + (count === 1 ? ' vehicle' : ' vehicles'));
+    if (rec.vehicles.length) bits.push('pool');
     return bits.join(', ');
   },
 
@@ -887,6 +1228,91 @@ var app = {
     }
 
     this.refreshVehiclePicker();
+    this.updateInductionNote();
+  },
+
+  /* Tells the guard, at the point of logging, whether the person in front
+     of them is actually inducted. That is the whole point of tracking it. */
+  updateInductionNote: function () {
+    var note = document.getElementById('inductionNote');
+    var c = this.findContractor(document.getElementById('companyInput').value);
+
+    if (!c) { note.style.display = 'none'; note.textContent = ''; return; }
+
+    var entries = this.inductionEntries(c);
+    var repName = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var match = null, i, due = 0;
+
+    for (i = 0; i < entries.length; i++) {
+      if (repName && entries[i].name.toLowerCase() === repName) match = entries[i];
+      if (!entries[i].valid) due++;
+    }
+
+    var good, text;
+    if (match) {
+      good = match.valid;
+      text = match.name + (match.valid
+        ? ' - induction valid to ' + this.ukDate(match.date)
+        : (match.missing ? ' - no induction date recorded' : ' - INDUCTION DUE, expired ' + this.ukDate(match.date)));
+    } else if (repName) {
+      good = false;
+      text = repName + ' is not on the induction list for ' + c.name;
+    } else {
+      good = due === 0;
+      text = due
+        ? c.name + ': ' + due + ' of ' + entries.length + ' inductions due'
+        : c.name + ': all inductions in date';
+    }
+
+    note.textContent = text;
+    note.className = 'induction-note ' + (good ? 'good' : 'bad');
+    note.style.display = 'block';
+  },
+
+  /* A representative is not tied to one vehicle. They may have vehicles
+     usually assigned to them, but they can also take anything from the
+     company pool, or occasionally another colleague's vehicle. All three
+     stay reachable, grouped so it is obvious which is which. */
+  vehicleGroups: function (rec, repNameLower) {
+    var groups = [], seen = {}, i, r, others;
+
+    function bucket(label, list) {
+      var items = [], v, key;
+      for (var k = 0; k < (list || []).length; k++) {
+        v = list[k];
+        if (!v) continue;
+        key = v.toLowerCase();
+        if (seen[key]) continue;
+        seen[key] = 1;
+        items.push(v);
+      }
+      if (items.length) groups.push({ label: label, items: items });
+    }
+
+    if (!rec) return groups;
+
+    var matched = null;
+    for (r = 0; r < rec.reps.length; r++) {
+      if (repNameLower && rec.reps[r].name.toLowerCase() === repNameLower) matched = rec.reps[r];
+    }
+
+    if (matched) {
+      bucket('Usually ' + matched.name, matched.vehicles);
+      bucket('Shared pool', rec.vehicles);
+      others = [];
+      for (r = 0; r < rec.reps.length; r++) {
+        if (rec.reps[r] === matched) continue;
+        for (i = 0; i < rec.reps[r].vehicles.length; i++) others.push(rec.reps[r].vehicles[i]);
+      }
+      bucket('Other representatives', others);
+    } else {
+      bucket('Shared pool', rec.vehicles);
+      for (r = 0; r < rec.reps.length; r++) {
+        bucket(rec.reps[r].name || 'Unnamed', rec.reps[r].vehicles);
+      }
+    }
+
+    return groups;
   },
 
   refreshVehiclePicker: function () {
@@ -894,55 +1320,55 @@ var app = {
     var row = document.getElementById('vehiclePickRow');
     var sel = document.getElementById('vehicleSelect');
     var repName = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '').toLowerCase();
-    var options = [], i, r;
 
-    function push(v) { if (v && options.indexOf(v) === -1) options.push(v); }
-
-    if (rec) {
-      var matchedRep = null;
-      for (r = 0; r < rec.reps.length; r++) {
-        if (rec.reps[r].name.toLowerCase() === repName) matchedRep = rec.reps[r];
-      }
-      if (matchedRep) {
-        for (i = 0; i < matchedRep.vehicles.length; i++) push(matchedRep.vehicles[i]);
-      } else {
-        for (i = 0; i < rec.vehicles.length; i++) push(rec.vehicles[i]);
-        for (r = 0; r < rec.reps.length; r++) {
-          for (i = 0; i < rec.reps[r].vehicles.length; i++) push(rec.reps[r].vehicles[i]);
-        }
-      }
+    var groups = this.vehicleGroups(rec, repName);
+    var flat = [], g, i;
+    for (g = 0; g < groups.length; g++) {
+      for (i = 0; i < groups[g].items.length; i++) flat.push(groups[g].items[i]);
     }
 
     sel.innerHTML = '';
 
-    if (options.length > 1) {
+    if (flat.length > 1) {
       var blank = document.createElement('option');
       blank.value = '';
-      blank.textContent = options.length + ' recorded - choose a vehicle';
+      blank.textContent = flat.length + ' recorded - choose a vehicle';
       sel.appendChild(blank);
-      for (i = 0; i < options.length; i++) {
-        var o = document.createElement('option');
-        o.value = options[i];
-        o.textContent = options[i];
-        sel.appendChild(o);
+
+      for (g = 0; g < groups.length; g++) {
+        /* a single unlabelled set does not need a group heading */
+        var host = sel;
+        if (groups.length > 1) {
+          host = document.createElement('optgroup');
+          host.label = groups[g].label;
+          sel.appendChild(host);
+        }
+        for (i = 0; i < groups[g].items.length; i++) {
+          var o = document.createElement('option');
+          o.value = groups[g].items[i];
+          o.textContent = groups[g].items[i];
+          host.appendChild(o);
+        }
       }
+
       sel.value = document.getElementById('vehicleInput').value || '';
       row.style.display = 'block';
     } else {
       row.style.display = 'none';
       /* exactly one on record - fill it in rather than making them pick */
-      if (options.length === 1 && !document.getElementById('vehicleInput').value) {
-        document.getElementById('vehicleInput').value = options[0];
+      if (flat.length === 1 && !document.getElementById('vehicleInput').value) {
+        document.getElementById('vehicleInput').value = flat[0];
       }
     }
   },
 
   /* ---- representative editor rows ---- */
 
-  addRepRow: function (containerId, name, vehicles) {
+  addRepRow: function (containerId, name, vehicles, inductionDate) {
     var box = document.getElementById(containerId);
     var empty = box.querySelector('.rep-empty');
     if (empty) box.removeChild(empty);
+    var withDates = (containerId === 'contractorReps');
 
     var row = document.createElement('div');
     row.className = 'rep-row';
@@ -951,13 +1377,24 @@ var app = {
     nameInput.type = 'text';
     nameInput.className = 'rep-name';
     nameInput.placeholder = 'Representative name';
+    nameInput.maxLength = 60;
     nameInput.value = name || '';
 
     var vehInput = document.createElement('input');
     vehInput.type = 'text';
     vehInput.className = 'rep-vehicles';
     vehInput.placeholder = 'Their vehicles, comma separated';
+    vehInput.maxLength = 200;
     vehInput.value = (vehicles || []).join(', ');
+
+    var dateInput = null;
+    if (withDates) {
+      dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.className = 'rep-date';
+      dateInput.title = 'Induction expiry for this person';
+      dateInput.value = inductionDate || '';
+    }
 
     var remove = document.createElement('button');
     remove.type = 'button';
@@ -970,6 +1407,7 @@ var app = {
 
     row.appendChild(nameInput);
     row.appendChild(vehInput);
+    if (dateInput) row.appendChild(dateInput);
     row.appendChild(remove);
     box.appendChild(row);
     return row;
@@ -985,9 +1423,20 @@ var app = {
     var box = document.getElementById(containerId);
     box.innerHTML = '';
     for (var i = 0; i < (reps || []).length; i++) {
-      this.addRepRow(containerId, reps[i].name, reps[i].vehicles);
+      this.addRepRow(containerId, reps[i].name, reps[i].vehicles, reps[i].inductionDate);
     }
     this.renderRepPlaceholder(containerId);
+  },
+
+  duplicateRepName: function (reps) {
+    var seen = {}, i, key;
+    for (i = 0; i < reps.length; i++) {
+      key = String(reps[i].name || '').toLowerCase();
+      if (!key) continue;
+      if (seen[key]) return reps[i].name;
+      seen[key] = 1;
+    }
+    return null;
   },
 
   readRepRows: function (containerId) {
@@ -1001,7 +1450,10 @@ var app = {
         t = parts[j].replace(/^\s+|\s+$/g, '');
         if (t) regs.push(t);
       }
-      if (name || regs.length) out.push({ name: name, vehicles: regs });
+      var entry = { name: name, vehicles: regs };
+      var dateField = rows[i].querySelector('.rep-date');
+      if (dateField && dateField.value) entry.inductionDate = dateField.value;
+      if (name || regs.length || entry.inductionDate) out.push(entry);
     }
     return out;
   },
@@ -1017,6 +1469,8 @@ var app = {
 
   recordVisitor: function (e) {
     e.preventDefault();
+
+
     var company = document.getElementById('companyInput').value.replace(/^\s+|\s+$/g, '');
     var rep = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '');
     var vehicle = document.getElementById('vehicleInput').value.replace(/^\s+|\s+$/g, '');
@@ -1029,9 +1483,24 @@ var app = {
       return;
     }
 
+    if (exitTime && exitTime < entryTime &&
+        !confirm('Exit ' + exitTime + ' is before entry ' + entryTime +
+                 '. Record it anyway? Choose cancel if the times are the wrong way round.')) {
+      return;
+    }
+
+    /* A double tap on a phone fires submit twice. Suppress only when the
+       very same movement comes through again within a couple of seconds,
+       so two different visitors logged quickly are never blocked. */
+    var sig = [this.viewDate, company, rep, vehicle, entryTime].join('|').toLowerCase();
+    var now = Date.now();
+    if (sig === this._lastSig && (now - this._lastSubmit) < 2000) return;
+    this._lastSig = sig;
+    this._lastSubmit = now;
+
     this.visitors.push({
       id: this.nextId(),
-      date: this.currentDate,
+      date: this.viewDate,
       company: company,
       rep: rep,
       vehicle: vehicle,
@@ -1045,6 +1514,7 @@ var app = {
     e.target.reset();
     document.getElementById('repPickRow').style.display = 'none';
     document.getElementById('vehiclePickRow').style.display = 'none';
+    document.getElementById('inductionNote').style.display = 'none';
     document.getElementById('companyInput').focus();
     this.toast('Entry recorded');
   },
@@ -1056,7 +1526,8 @@ var app = {
         this.visitors[i].exitTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
         this.saveData();
         this.renderLog();
-        this.toast('Exit time logged');
+        this.toast('Exit logged for ' + this.visitors[i].company +
+          (this.visitors[i].date !== this.viewDate ? ' (' + this.ukDate(this.visitors[i].date) + ')' : ''));
         return;
       }
     }
@@ -1064,25 +1535,45 @@ var app = {
 
   renderLog: function () {
     var container = document.getElementById('logContainer');
-    var today = [];
-    for (var i = 0; i < this.visitors.length; i++) {
-      if (this.visitors[i].date === this.currentDate) today.push(this.visitors[i]);
-    }
+    var summary = document.getElementById('sheetSummary');
+    var all = this.entriesFor(this.viewDate);
+    var openAll = this.openEntries();
+    var openHere = this.stillOnSite(all);
+    var carried = openAll.length - openHere.length;
 
-    if (!today.length) {
-      container.innerHTML = '<div class="empty-state">No visitors logged today</div>';
+    var label = (this.viewDate === this.currentDate ? 'Today' : this.ukDate(this.viewDate)) + ': ' +
+      all.length + (all.length === 1 ? ' movement' : ' movements');
+
+    var chip;
+    if (!openAll.length) {
+      chip = '<span class="onsite-chip none">Nobody on site</span>';
+    } else {
+      chip = '<button type="button" class="onsite-chip' + (this.onSiteOnly ? ' active' : '') +
+        '" onclick="app.toggleOnSite()">' + openAll.length + ' still on site' +
+        (carried ? ' \u00b7 ' + carried + ' from an earlier day' : '') + '</button>';
+    }
+    summary.innerHTML = '<span>' + label + '</span>' + chip;
+
+    var src = this.onSiteOnly ? openAll : all;
+
+    if (!src.length) {
+      container.innerHTML = '<div class="empty-state">' +
+        (this.onSiteOnly ? 'Nobody is on site' : 'No visitors logged for this day') + '</div>';
       return;
     }
 
     var rows = '';
-    for (var j = 0; j < today.length; j++) {
-      var v = today[j];
+    for (var j = 0; j < src.length; j++) {
+      var v = src[j];
       var exitCell = v.exitTime
         ? this.esc(v.exitTime)
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
-      rows += '<tr>' +
+      var otherDay = v.date !== this.viewDate;
+      rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
         '<td>' + this.esc(v.company) +
-          (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') + '</td>' +
+          (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
+          (otherDay ? '<span class="cell-sub carried">in on ' + this.ukDate(v.date) + '</span>' : '') +
+        '</td>' +
         '<td>' + this.esc(v.vehicle || '-') + '</td>' +
         '<td>' + this.esc(v.reason) + '</td>' +
         '<td>' + this.esc(v.entryTime) + '</td>' +
@@ -1147,7 +1638,25 @@ var app = {
     var name = document.getElementById('contractorName').value.replace(/^\s+|\s+$/g, '');
     var date = document.getElementById('inductionDate').value;
     var reps = this.readRepRows('contractorReps');
-    if (!name || !date) { this.toast('Add a company and an expiry date', 'error'); return; }
+
+    if (!name) { this.toast('Add a company name', 'error'); return; }
+
+    var dupRep = this.duplicateRepName(reps);
+    if (dupRep) {
+      this.toast(dupRep + ' is listed twice - merge the rows or rename one', 'error');
+      return;
+    }
+
+    if (!reps.length && !date) {
+      this.toast('Add a representative with an expiry, or set a default date', 'error');
+      return;
+    }
+    for (var q = 0; q < reps.length; q++) {
+      if (!reps[q].inductionDate && !date) {
+        this.toast('Give ' + (reps[q].name || 'each representative') + ' an expiry date, or set a default', 'error');
+        return;
+      }
+    }
 
     var i, existing = null;
     for (i = 0; i < this.contractors.length; i++) {
@@ -1188,6 +1697,72 @@ var app = {
     this.toast('Contractor added');
   },
 
+  /* One entry per inducted individual. A contractor with nobody listed
+     yet falls back to a single company-wide entry so nothing is hidden. */
+  inductionEntries: function (c) {
+    var out = [], i, d, today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    var self = this;
+    function status(dateStr) {
+      if (!dateStr) return { date: '', valid: false, missing: true };
+      var dt = self.parseLocalDate(dateStr);
+      if (!dt) return { date: dateStr, valid: false, missing: true };
+      dt.setHours(0, 0, 0, 0);
+      return { date: dateStr, valid: dt >= today, missing: false };
+    }
+
+    if ((c.reps || []).length) {
+      for (i = 0; i < c.reps.length; i++) {
+        d = c.reps[i].inductionDate || c.inductionDate || '';
+        var s = status(d);
+        out.push({
+          name: c.reps[i].name || 'Unnamed',
+          vehicles: c.reps[i].vehicles || [],
+          date: s.date, valid: s.valid, missing: s.missing,
+          inherited: !c.reps[i].inductionDate && !!c.inductionDate
+        });
+      }
+    } else {
+      var cs = status(c.inductionDate || '');
+      out.push({
+        name: 'Company-wide', vehicles: c.vehicles || [],
+        date: cs.date, valid: cs.valid, missing: cs.missing,
+        inherited: false, companyWide: true
+      });
+    }
+    return out;
+  },
+
+  inductionSummary: function (c) {
+    var e = this.inductionEntries(c), due = 0, i;
+    for (i = 0; i < e.length; i++) if (!e[i].valid) due++;
+    return { total: e.length, due: due, entries: e };
+  },
+
+  earliestInduction: function (c) {
+    var e = this.inductionEntries(c), best = null, i, t;
+    for (i = 0; i < e.length; i++) {
+      if (!e[i].date) return 0;
+      t = this.parseLocalDate(e[i].date).getTime();
+      if (best === null || t < best) best = t;
+    }
+    return best === null ? 0 : best;
+  },
+
+  findContractor: function (name) {
+    var key = String(name || '').replace(/^\s+|\s+$/g, '').toLowerCase(), i;
+    for (i = 0; i < this.contractors.length; i++) {
+      if (this.contractors[i].name.toLowerCase() === key) return this.contractors[i];
+    }
+    return null;
+  },
+
+  ukDate: function (s) {
+    var d = this.parseLocalDate(s);
+    return d ? d.toLocaleDateString('en-GB') : 'Not set';
+  },
+
   repSummary: function (rec) {
     var bits = [], r;
     for (r = 0; r < (rec.reps || []).length; r++) {
@@ -1205,34 +1780,54 @@ var app = {
       return;
     }
 
-    var now = new Date();
-    now.setHours(0, 0, 0, 0);
-
+    var self = this;
     var sorted = this.contractors.slice().sort(function (a, b) {
-      return new Date(a.inductionDate) - new Date(b.inductionDate);
+      return self.earliestInduction(a) - self.earliestInduction(b);
     });
 
-    var rows = '';
+    var rows = '', totalDue = 0, totalPeople = 0;
+
     for (var i = 0; i < sorted.length; i++) {
       var c = sorted[i];
-      var due = new Date(c.inductionDate);
-      var valid = due >= now;
-      var summary = this.repSummary(c);
-      rows += '<tr>' +
-        '<td>' + this.esc(c.name) +
-          (summary ? '<span class="cell-sub">' + this.esc(summary) + '</span>' : '') + '</td>' +
-        '<td>' + due.toLocaleDateString('en-GB') + '</td>' +
-        '<td><span class="status-badge ' + (valid ? 'status-valid' : 'status-needed') + '">' +
-        '<span class="status-dot" style="background:' + (valid ? '#15803d' : '#b91c1c') + '"></span>' +
-        (valid ? 'Valid' : 'Induction due') + '</span></td>' +
-        '<td class="row-actions">' +
-        '<button type="button" class="edit-btn" onclick="app.editContractor(' + c.id + ')">Edit</button>' +
-        '<button type="button" class="delete-btn" onclick="app.deleteContractor(' + c.id + ')">X</button>' +
-        '</td></tr>';
+      var entries = this.inductionEntries(c);
+
+      for (var e = 0; e < entries.length; e++) {
+        var ent = entries[e];
+        totalPeople++;
+        if (!ent.valid) totalDue++;
+
+        var label;
+        if (ent.missing) label = 'No date set';
+        else label = ent.valid ? 'Valid' : 'Induction due';
+        var cls = ent.valid ? 'status-valid' : 'status-needed';
+        var dot = ent.valid ? '#15803d' : '#b91c1c';
+
+        rows += '<tr' + (e === 0 && i > 0 ? ' class="group-start"' : '') + '>' +
+          '<td>' + (e === 0 ? this.esc(c.name) : '') + '</td>' +
+          '<td>' + this.esc(ent.name) +
+            (ent.vehicles.length ? '<span class="cell-sub">' + this.esc(ent.vehicles.join(', ')) + '</span>' : '') +
+          '</td>' +
+          '<td>' + this.ukDate(ent.date) +
+            (ent.inherited ? '<span class="cell-sub">default</span>' : '') +
+          '</td>' +
+          '<td><span class="status-badge ' + cls + '">' +
+            '<span class="status-dot" style="background:' + dot + '"></span>' + label + '</span></td>' +
+          '<td class="row-actions">' + (e === 0
+            ? '<button type="button" class="edit-btn" onclick="app.editContractor(' + c.id + ')">Edit</button>' +
+              '<button type="button" class="delete-btn" onclick="app.deleteContractor(' + c.id + ')">X</button>'
+            : '') + '</td>' +
+          '</tr>';
+      }
     }
 
-    container.innerHTML = '<table class="data-table"><thead><tr>' +
-      '<th>Company</th><th>Valid until</th><th>Status</th><th></th>' +
+    var banner = totalDue
+      ? '<div class="induction-note bad" style="margin-bottom:.75rem">' + totalDue + ' of ' + totalPeople +
+        ' inductions need renewing</div>'
+      : '<div class="induction-note good" style="margin-bottom:.75rem">All ' + totalPeople +
+        ' inductions are in date</div>';
+
+    container.innerHTML = banner + '<table class="data-table"><thead><tr>' +
+      '<th>Company</th><th>Representative</th><th>Valid until</th><th>Status</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
 
@@ -1292,9 +1887,21 @@ var app = {
     var reps = this.readRepRows('visitorReps');
 
     if (!name) { this.toast('Add a name', 'error'); return; }
+
+    var dupV = this.duplicateRepName(reps);
+    if (dupV) {
+      this.toast(dupV + ' is listed twice - merge the rows or rename one', 'error');
+      return;
+    }
     if (!vehicles.length && !reps.length) {
       this.toast('Add a vehicle or a representative', 'error');
       return;
+    }
+
+    var clash = null, ci;
+    for (ci = 0; ci < this.regularVisitors.length; ci++) {
+      if (this.regularVisitors[ci].name.toLowerCase() === name.toLowerCase() &&
+          this.regularVisitors[ci].id !== this.editingVisitorId) clash = this.regularVisitors[ci];
     }
 
     if (this.editingVisitorId !== null) {
@@ -1310,6 +1917,19 @@ var app = {
       this.renderVisitors();
       this.hideVisitorForm();
       this.toast('Regular visitor updated');
+      return;
+    }
+
+    /* Contractors already fold a repeated company name into the existing
+       record. Regular visitors did not, which left two rows for one firm
+       and split its representatives between them. */
+    if (clash) {
+      this.mergeRecord(clash, { vehicles: vehicles, reps: reps, reason: reason },
+        false, { added: 0, conflicts: 0 });
+      this.saveData();
+      this.renderVisitors();
+      this.hideVisitorForm();
+      this.toast('Added to the existing ' + clash.name + ' record');
       return;
     }
 
@@ -1358,7 +1978,7 @@ var app = {
     }
 
     container.innerHTML = '<table class="data-table"><thead><tr>' +
-      '<th>Company</th><th>Representatives</th><th>Company vehicles</th><th>Usual reason</th><th></th>' +
+      '<th>Company</th><th>Representatives</th><th>Shared pool</th><th>Usual reason</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
 
@@ -1373,7 +1993,183 @@ var app = {
     this.toast('Regular visitor removed');
   },
 
-  buildPdf: function () {
+  currentPeriod: function () {
+    var type = document.getElementById('periodType').value;
+    var year = Number(document.getElementById('periodYear').value) || new Date().getFullYear();
+    var value = document.getElementById('periodValue').value;
+    var week = document.getElementById('periodWeek').value || this.currentDate;
+    return this.periodRange(type, year, value, week);
+  },
+
+  renderPeriodControls: function () {
+    var type = document.getElementById('periodType').value;
+    var valueSel = document.getElementById('periodValue');
+    var yearSel = document.getElementById('periodYear');
+    var weekRow = document.getElementById('periodWeekRow');
+    var valueRow = document.getElementById('periodValueRow');
+    var yearRow = document.getElementById('periodYearRow');
+    var now = new Date();
+    var i, o;
+
+    /* years, only ones with data plus this one */
+    if (!yearSel.children.length) {
+      var years = this.dataYears();
+      for (i = 0; i < years.length; i++) {
+        o = document.createElement('option');
+        o.value = String(years[i]);
+        o.textContent = String(years[i]);
+        yearSel.appendChild(o);
+      }
+      yearSel.value = String(now.getFullYear());
+    }
+
+    if (!document.getElementById('periodWeek').value) {
+      document.getElementById('periodWeek').value = this.currentDate;
+    }
+
+    weekRow.style.display = (type === 'week') ? 'block' : 'none';
+    valueRow.style.display = (type === 'week' || type === 'year') ? 'none' : 'block';
+    yearRow.style.display = (type === 'week') ? 'none' : 'block';
+
+    var opts = [];
+    if (type === 'month') {
+      for (i = 0; i < 12; i++) opts.push({ v: String(i), t: this.MONTHS[i] });
+    } else if (type === 'quarter') {
+      opts = [
+        { v: '1', t: 'Q1  Jan to Mar' }, { v: '2', t: 'Q2  Apr to Jun' },
+        { v: '3', t: 'Q3  Jul to Sep' }, { v: '4', t: 'Q4  Oct to Dec' }
+      ];
+    } else if (type === 'half') {
+      opts = [{ v: '1', t: 'First half  Jan to Jun' }, { v: '2', t: 'Second half  Jul to Dec' }];
+    }
+
+    if (opts.length) {
+      var keep = valueSel.value;
+      valueSel.innerHTML = '';
+      for (i = 0; i < opts.length; i++) {
+        o = document.createElement('option');
+        o.value = opts[i].v;
+        o.textContent = opts[i].t;
+        valueSel.appendChild(o);
+      }
+      var stillThere = false;
+      for (i = 0; i < opts.length; i++) if (opts[i].v === keep) stillThere = true;
+      if (stillThere) valueSel.value = keep;
+      else if (type === 'month') valueSel.value = String(now.getMonth());
+      else if (type === 'quarter') valueSel.value = String(Math.floor(now.getMonth() / 3) + 1);
+      else valueSel.value = now.getMonth() < 6 ? '1' : '2';
+    }
+
+    this.renderPeriodSummary();
+  },
+
+  renderPeriodSummary: function () {
+    var el = document.getElementById('periodSummary');
+    var range = this.currentPeriod();
+    var list = this.entriesBetween(range.from, range.to);
+    var days = {}, i, n = 0;
+    for (i = 0; i < list.length; i++) if (!days[list[i].date]) { days[list[i].date] = 1; n++; }
+
+    el.innerHTML = '<span><strong>' + this.esc(range.label) + '</strong> \u00b7 ' +
+      list.length + (list.length === 1 ? ' movement' : ' movements') +
+      (n ? ' across ' + n + (n === 1 ? ' day' : ' days') : '') + '</span>';
+  },
+
+  /* ---------------- reporting periods ---------------- */
+
+  isoKey: function (d) {
+    return d.getFullYear() + '-' + this.pad2(d.getMonth() + 1) + '-' + this.pad2(d.getDate());
+  },
+
+  MONTHS: ['January', 'February', 'March', 'April', 'May', 'June',
+           'July', 'August', 'September', 'October', 'November', 'December'],
+
+  /* Monday to Sunday, matching how a rota week is usually counted. */
+  weekStart: function (dateKey) {
+    var d = this.parseLocalDate(dateKey) || new Date();
+    var dow = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - dow);
+    return d;
+  },
+
+  isoWeekNumber: function (d) {
+    var t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    t.setDate(t.getDate() + 3 - ((t.getDay() + 6) % 7));
+    var first = new Date(t.getFullYear(), 0, 4);
+    return 1 + Math.round(((t - first) / 86400000 - 3 + ((first.getDay() + 6) % 7)) / 7);
+  },
+
+  periodRange: function (type, year, value, weekDate) {
+    var from, to, label, slug, start, end;
+
+    if (type === 'week') {
+      start = this.weekStart(weekDate);
+      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+      from = this.isoKey(start);
+      to = this.isoKey(end);
+      label = 'Week ' + this.isoWeekNumber(start) + ', ' +
+        start.toLocaleDateString('en-GB') + ' to ' + end.toLocaleDateString('en-GB');
+      slug = start.getFullYear() + '-W' + this.pad2(this.isoWeekNumber(start));
+    } else if (type === 'month') {
+      var m = Number(value);
+      start = new Date(year, m, 1);
+      end = new Date(year, m + 1, 0);
+      label = this.MONTHS[m] + ' ' + year;
+      slug = year + '-' + this.pad2(m + 1);
+      from = this.isoKey(start); to = this.isoKey(end);
+    } else if (type === 'quarter') {
+      var q = Number(value);
+      start = new Date(year, (q - 1) * 3, 1);
+      end = new Date(year, q * 3, 0);
+      label = 'Q' + q + ' ' + year + ' (' + this.MONTHS[(q - 1) * 3] + ' to ' + this.MONTHS[q * 3 - 1] + ')';
+      slug = year + '-Q' + q;
+      from = this.isoKey(start); to = this.isoKey(end);
+    } else if (type === 'half') {
+      var hh = Number(value);
+      start = new Date(year, hh === 1 ? 0 : 6, 1);
+      end = new Date(year, hh === 1 ? 6 : 12, 0);
+      label = (hh === 1 ? 'January to June ' : 'July to December ') + year;
+      slug = year + '-H' + hh;
+      from = this.isoKey(start); to = this.isoKey(end);
+    } else {
+      start = new Date(year, 0, 1);
+      end = new Date(year, 12, 0);
+      label = 'Year ' + year;
+      slug = String(year);
+      from = this.isoKey(start); to = this.isoKey(end);
+    }
+
+    return { type: type, from: from, to: to, label: label, slug: slug };
+  },
+
+  entriesBetween: function (from, to) {
+    var out = [], i, v;
+    for (i = 0; i < this.visitors.length; i++) {
+      v = this.visitors[i];
+      if (v.date >= from && v.date <= to) out.push(v);
+    }
+    out.sort(function (a, b) {
+      var ka = a.date + ' ' + a.entryTime, kb = b.date + ' ' + b.entryTime;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+    return out;
+  },
+
+  /* Years that actually hold data, so the picker never offers empty ones. */
+  dataYears: function () {
+    var years = {}, i, y, now = new Date().getFullYear();
+    years[now] = 1;
+    for (i = 0; i < this.visitors.length; i++) {
+      y = Number(String(this.visitors[i].date).slice(0, 4));
+      if (y) years[y] = 1;
+    }
+    var out = [];
+    for (var k in years) if (Object.prototype.hasOwnProperty.call(years, k)) out.push(Number(k));
+    out.sort(function (a, b) { return b - a; });
+    return out;
+  },
+
+  buildPdf: function (range) {
     var SLATE = [0.118, 0.161, 0.231];
     var WHITE = [1, 1, 1];
     var GREY  = [0.45, 0.49, 0.55];
@@ -1439,72 +2235,193 @@ var app = {
     }
 
     /* ---- gather ---- */
-    var todays = [];
-    for (var i = 0; i < this.visitors.length; i++) {
-      if (this.visitors[i].date === this.currentDate) todays.push(this.visitors[i]);
-    }
-    var dateLabel = new Date().toLocaleDateString('en-GB', {
+    var isRange = !!range;
+    var fromKey = isRange ? range.from : this.viewDate;
+    var toKey = isRange ? range.to : this.viewDate;
+    var todays = this.entriesBetween(fromKey, toKey);
+    var sheetDay = this.parseLocalDate(fromKey) || new Date();
+    var dateLabel = isRange ? range.label : sheetDay.toLocaleDateString('en-GB', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
+    var onSiteAtExport = this.stillOnSite(todays).length;
     var hours = document.getElementById('startTime').value + ' to ' + document.getElementById('endTime').value;
+
+    /* group by day, keeping only days that saw movement */
+    var byDay = {}, dayKeys = [], di;
+    for (di = 0; di < todays.length; di++) {
+      if (!byDay[todays[di].date]) { byDay[todays[di].date] = []; dayKeys.push(todays[di].date); }
+      byDay[todays[di].date].push(todays[di]);
+    }
+    dayKeys.sort();
+
+    /* a full movement listing is useful for a week or a month; across a
+       quarter or a year it would run to hundreds of pages, so those get
+       per-day totals and a frequency table instead */
+    var detailed = !isRange || dayKeys.length <= 31;
 
     /* ---- title ---- */
     newPage();
     doc.rect(M, y, RIGHT - M, 30, SLATE);
-    doc.textCentre('SITE OCCURRENCE SHEET', PDFKit.PW / 2, y + 20, 14, true, WHITE);
+    doc.textCentre(isRange ? 'SITE OCCURRENCE REPORT' : 'SITE OCCURRENCE SHEET',
+      PDFKit.PW / 2, y + 20, 14, true, WHITE);
     y += 38;
     doc.textCentre(dateLabel + '   -   Access hours ' + hours, PDFKit.PW / 2, y, 9.5, false, GREY);
     y += 8;
 
-    /* ---- visitor movements ---- */
-    heading('Visitor movements');
-    if (todays.length) {
-      var vrows = [];
-      for (var t = 0; t < todays.length; t++) {
-        var v = todays[t];
-        vrows.push([v.company, v.rep || '-', v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-']);
+    if (isRange) {
+      heading('Summary');
+      var busiest = '', busiestN = 0, dk;
+      for (dk = 0; dk < dayKeys.length; dk++) {
+        if (byDay[dayKeys[dk]].length > busiestN) {
+          busiestN = byDay[dayKeys[dk]].length;
+          busiest = this.ukDate(dayKeys[dk]);
+        }
       }
-      table([
-        { label: 'Company', w: 128 },
-        { label: 'Representative', w: 95 },
-        { label: 'Vehicle', w: 78 },
-        { label: 'Reason for visit', w: 139 },
-        { label: 'In', w: 37 },
-        { label: 'Out', w: 38 }
-      ], vrows);
-      paragraph(todays.length + (todays.length === 1 ? ' movement recorded.' : ' movements recorded.'));
-    } else {
-      paragraph('No visitors logged for this period.');
+      var srows = [
+        ['Period covered', this.ukDate(fromKey) + ' to ' + this.ukDate(toKey)],
+        ['Total movements', String(todays.length)],
+        ['Days with activity', String(dayKeys.length)],
+        ['Busiest day', busiestN ? busiest + ' (' + busiestN + ')' : '-'],
+        ['No exit time logged', String(onSiteAtExport)]
+      ];
+      table([{ label: 'Measure', w: 200 }, { label: 'Value', w: 315 }], srows);
+
+      /* per-day totals */
+      heading('Movements by day');
+      if (dayKeys.length) {
+        var drows = [];
+        for (dk = 0; dk < dayKeys.length; dk++) {
+          var dayList = byDay[dayKeys[dk]];
+          var firstIn = dayList[0].entryTime, lastOut = '', open = 0, q;
+          for (q = 0; q < dayList.length; q++) {
+            if (dayList[q].exitTime && dayList[q].exitTime > lastOut) lastOut = dayList[q].exitTime;
+            if (!dayList[q].exitTime) open++;
+          }
+          drows.push([
+            this.ukDate(dayKeys[dk]),
+            (this.parseLocalDate(dayKeys[dk]) || new Date()).toLocaleDateString('en-GB', { weekday: 'long' }),
+            String(dayList.length), firstIn, lastOut || '-', open ? String(open) : '-'
+          ]);
+        }
+        table([
+          { label: 'Date', w: 95 }, { label: 'Day', w: 100 }, { label: 'Movements', w: 85 },
+          { label: 'First in', w: 80 }, { label: 'Last out', w: 80 }, { label: 'No exit', w: 75 }
+        ], drows);
+      } else {
+        paragraph('No movements recorded in this period.');
+      }
+
+      /* who came most often - only worth showing on longer reports */
+      if (!detailed) {
+        heading('Most frequent visitors');
+        var tally = {}, key, tk;
+        for (di = 0; di < todays.length; di++) {
+          key = todays[di].company;
+          if (!tally[key]) tally[key] = { n: 0, reps: {} };
+          tally[key].n++;
+          if (todays[di].rep) tally[key].reps[todays[di].rep] = 1;
+        }
+        var ranked = [];
+        for (tk in tally) if (Object.prototype.hasOwnProperty.call(tally, tk)) {
+          var repNames = [];
+          for (var rn in tally[tk].reps) if (Object.prototype.hasOwnProperty.call(tally[tk].reps, rn)) repNames.push(rn);
+          ranked.push([tk, tally[tk].n, repNames]);
+        }
+        ranked.sort(function (a, b) { return b[1] - a[1]; });
+        var frows = [];
+        for (di = 0; di < ranked.length && di < 25; di++) {
+          frows.push([ranked[di][0], String(ranked[di][1]),
+            ranked[di][2].length ? ranked[di][2].join(', ') : '-']);
+        }
+        if (frows.length) {
+          table([{ label: 'Company', w: 200 }, { label: 'Visits', w: 60 },
+                 { label: 'Representatives seen', w: 255 }], frows);
+          paragraph('Showing the top ' + frows.length + ' of ' + ranked.length + ' companies.');
+        } else {
+          paragraph('No movements recorded in this period.');
+        }
+      }
+    }
+
+    /* ---- visitor movements ---- */
+    var MOVE_COLS = [
+      { label: 'Company', w: 128 },
+      { label: 'Representative', w: 95 },
+      { label: 'Vehicle', w: 78 },
+      { label: 'Reason for visit', w: 139 },
+      { label: 'In', w: 37 },
+      { label: 'Out', w: 38 }
+    ];
+
+    function movementRows(list) {
+      var out = [], t, v;
+      for (t = 0; t < list.length; t++) {
+        v = list[t];
+        out.push([v.company, v.rep || '-', v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-']);
+      }
+      return out;
+    }
+
+    if (!isRange) {
+      heading('Visitor movements');
+      if (todays.length) {
+        table(MOVE_COLS, movementRows(todays));
+        paragraph(todays.length + (todays.length === 1 ? ' movement recorded' : ' movements recorded') +
+          (onSiteAtExport ? ', ' + onSiteAtExport + ' with no exit time logged.' : '.'));
+      } else {
+        paragraph('No visitors logged for this period.');
+      }
+    } else if (detailed && dayKeys.length) {
+      heading('Movements in detail');
+      for (var dd = 0; dd < dayKeys.length; dd++) {
+        var dayRows = byDay[dayKeys[dd]];
+        room(60);
+        y += 6;
+        doc.text((this.parseLocalDate(dayKeys[dd]) || new Date()).toLocaleDateString('en-GB', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        }) + '  -  ' + dayRows.length + (dayRows.length === 1 ? ' movement' : ' movements'),
+          M, y + 8, 9.5, true, SLATE);
+        y += 15;
+        table(MOVE_COLS, movementRows(dayRows));
+      }
+    } else if (detailed) {
+      heading('Movements in detail');
+      paragraph('No visitors logged in this period.');
     }
 
     /* ---- contractor inductions ---- */
-    heading('Contractor inductions');
+    heading('Contractor inductions (per representative)');
     if (this.contractors.length) {
       var now = new Date();
       now.setHours(0, 0, 0, 0);
       var sorted = this.contractors.slice().sort(function (a, b) {
         return new Date(a.inductionDate) - new Date(b.inductionDate);
       });
-      var crows = [], due = 0;
+      var crows = [], due = 0, people = 0;
       for (var c2 = 0; c2 < sorted.length; c2++) {
-        var d = new Date(sorted[c2].inductionDate);
-        var ok = d >= now;
-        if (!ok) due++;
-        crows.push([
-          sorted[c2].name,
-          this.repSummary(sorted[c2]) || '-',
-          d.toLocaleDateString('en-GB'),
-          { t: ok ? 'Valid' : 'INDUCTION DUE', c: ok ? GREEN : RED, b: true }
-        ]);
+        var entries = this.inductionEntries(sorted[c2]);
+        for (var ei = 0; ei < entries.length; ei++) {
+          var ent = entries[ei];
+          people++;
+          if (!ent.valid) due++;
+          crows.push([
+            ei === 0 ? sorted[c2].name : '',
+            ent.name,
+            ent.vehicles.join(', ') || '-',
+            this.ukDate(ent.date),
+            { t: ent.valid ? 'Valid' : 'INDUCTION DUE', c: ent.valid ? GREEN : RED, b: true }
+          ]);
+        }
       }
       table([
-        { label: 'Company', w: 155 },
-        { label: 'Representatives', w: 190 },
-        { label: 'Valid until', w: 80 },
-        { label: 'Status', w: 90 }
+        { label: 'Company', w: 130 },
+        { label: 'Representative', w: 105 },
+        { label: 'Vehicle', w: 90 },
+        { label: 'Valid until', w: 82 },
+        { label: 'Status', w: 108 }
       ], crows);
-      paragraph(due ? due + ' of ' + sorted.length + ' require a new induction.'
-                    : 'All ' + sorted.length + ' inductions are in date.');
+      paragraph(due ? due + ' of ' + people + ' individual inductions require renewal.'
+                    : 'All ' + people + ' individual inductions are in date.');
     } else {
       paragraph('No contractors recorded.');
     }
@@ -1512,23 +2429,60 @@ var app = {
     /* ---- regular visitors ---- */
     heading('Regular visitors');
     if (this.regularVisitors.length) {
+      var VEHW = 145 - 10;
+
+      /* A pooled fleet can hold more registrations than fit on one line, so
+         the list wraps onto continuation rows instead of being truncated. */
+      function wrapList(items, maxWidth) {
+        var lines = [], cur = '', piece, k;
+        for (k = 0; k < items.length; k++) {
+          piece = cur ? cur + ', ' + items[k] : items[k];
+          if (PDFKit.width(piece, 8.5, false) > maxWidth && cur) {
+            lines.push(cur + ',');
+            cur = items[k];
+          } else {
+            cur = piece;
+          }
+        }
+        if (cur) lines.push(cur);
+        return lines.length ? lines : ['-'];
+      }
+
       var rrows = [];
       for (var r2 = 0; r2 < this.regularVisitors.length; r2++) {
         var rv = this.regularVisitors[r2];
+        var hasPool = (rv.vehicles || []).length > 0;
+
         if ((rv.reps || []).length) {
           for (var rp = 0; rp < rv.reps.length; rp++) {
-            rrows.push([
-              rp === 0 ? rv.name : '',
-              rv.reps[rp].name || '-',
-              rv.reps[rp].vehicles.join(', ') || '-',
-              rp === 0 ? (rv.reason || '-') : ''
-            ]);
+            var own = rv.reps[rp].vehicles || [];
+            var ownLines = own.length ? wrapList(own, VEHW)
+                                      : [hasPool ? 'Uses shared pool' : '-'];
+            for (var ol = 0; ol < ownLines.length; ol++) {
+              rrows.push([
+                (rp === 0 && ol === 0) ? rv.name : '',
+                ol === 0 ? (rv.reps[rp].name || '-') : '',
+                ownLines[ol],
+                (rp === 0 && ol === 0) ? (rv.reason || '-') : ''
+              ]);
+            }
           }
-          if ((rv.vehicles || []).length) {
-            rrows.push(['', 'Company vehicles', rv.vehicles.join(', '), '']);
+          if (hasPool) {
+            var poolLines = wrapList(rv.vehicles, VEHW);
+            for (var pl = 0; pl < poolLines.length; pl++) {
+              rrows.push(['', pl === 0 ? 'Shared pool' : '', poolLines[pl], '']);
+            }
           }
         } else {
-          rrows.push([rv.name, '-', (rv.vehicles || []).join(', ') || '-', rv.reason || '-']);
+          var soloLines = wrapList(rv.vehicles || [], VEHW);
+          for (var sl = 0; sl < soloLines.length; sl++) {
+            rrows.push([
+              sl === 0 ? rv.name : '',
+              sl === 0 ? '-' : '',
+              soloLines[sl],
+              sl === 0 ? (rv.reason || '-') : ''
+            ]);
+          }
         }
       }
       table([
@@ -1546,7 +2500,7 @@ var app = {
     for (var p = 0; p < total; p++) {
       doc.select(p);
       doc.line(M, 806, RIGHT, 806, LINE, 0.5);
-      doc.text('Security Access Tracker  -  generated ' + dateLabel, M, 816, 7.5, false, GREY);
+      doc.text('Security Access Tracker  -  ' + (isRange ? 'report for ' : 'sheet for ') + dateLabel, M, 816, 7.5, false, GREY);
       doc.textRight('Page ' + (p + 1) + ' of ' + total, RIGHT, 816, 7.5, false, GREY);
       doc.text('This file carries its own backup data - reopen it with Restore to recover these records.',
         M, 826, 7, false, GREY);
@@ -1554,9 +2508,12 @@ var app = {
 
     var payload = {
       app: 'security-access-tracker',
-      version: 2,
+      version: 3,
       exported: new Date().toISOString(),
-      date: this.currentDate,
+      date: fromKey,
+      from: fromKey,
+      to: toKey,
+      period: isRange ? range.slug : null,
       visitors: todays,
       contractors: this.contractors,
       regularVisitors: this.regularVisitors
@@ -1565,22 +2522,88 @@ var app = {
     return doc.build(PDFKit.b64enc(PDFKit.toUtf8(JSON.stringify(payload))));
   },
 
-  exportPdf: function () {
+  exportPeriod: function () {
+    var range = this.currentPeriod();
+    if (!range) return;
+    var count = this.entriesBetween(range.from, range.to).length;
+    if (!count && !confirm('No movements were recorded in ' + range.label +
+        '. Produce the report anyway? It will still list contractors and regular visitors.')) return;
+    this.exportPdf(range);
+  },
+
+  exportPdf: function (range) {
     try {
-      var bytes = this.buildPdf();
+      var bytes = this.buildPdf(range && range.from ? range : null);
       var blob = new Blob([bytes], { type: 'application/pdf' });
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'occurrence-sheet-' + this.currentDate + '.pdf';
+      a.download = (range && range.slug)
+        ? 'occurrence-report-' + range.slug + '.pdf'
+        : 'occurrence-sheet-' + this.viewDate + '.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
-      this.toast('PDF saved');
+      this.toast(range && range.slug ? 'Report saved' : 'PDF saved');
     } catch (err) {
       this.toast('Could not build the PDF', 'error');
     }
+  },
+
+  /* localStorage gives roughly 5 MB. About forty movements a day fills a
+     third of that in a year, so show where it stands and offer a prune
+     rather than letting a save quietly start failing. */
+  renderStorageNote: function () {
+    var note = document.getElementById('storageNote');
+    if (!note) return;
+
+    var movements = this.visitors.length;
+    /* about 186 bytes a movement, measured, plus the record lists */
+    var approx = movements * 186 +
+      (this.contractors.length + this.regularVisitors.length) * 300;
+    var held = movements + (movements === 1 ? ' movement' : ' movements') +
+      ' held, roughly ' + (approx < 1048576
+        ? (approx / 1024).toFixed(0) + ' KB'
+        : (approx / 1048576).toFixed(1) + ' MB') + '.';
+
+    var where = Store.backend() === 'indexeddb'
+      ? ' Stored in this device\u2019s larger database.'
+      : ' Stored in the smaller browser store shared with other sites on this domain.';
+
+    note.textContent = held + where;
+
+    Store.estimate(function (est) {
+      if (!est || !est.quota) return;
+      var pct = Math.round((est.usage / est.quota) * 100);
+      note.textContent = held + where + ' This site is using about ' +
+        (est.usage / 1048576).toFixed(1) + ' MB of an allowance near ' +
+        (est.quota / 1048576).toFixed(0) + ' MB (' + pct + '%).' +
+        (pct >= 80 ? ' Worth clearing older movements.' : '');
+    });
+  },
+
+  pruneOld: function () {
+    var cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+    var key = cutoff.getFullYear() + '-' + this.pad2(cutoff.getMonth() + 1) + '-' + this.pad2(cutoff.getDate());
+
+    var kept = [], removed = 0, i;
+    for (i = 0; i < this.visitors.length; i++) {
+      /* never drop somebody who has not been signed out */
+      if (this.visitors[i].date < key && this.visitors[i].exitTime) removed++;
+      else kept.push(this.visitors[i]);
+    }
+
+    if (!removed) { this.toast('Nothing older than ' + this.ukDate(key) + ' to clear'); return; }
+    if (!confirm('Remove ' + removed + ' movements recorded before ' + this.ukDate(key) +
+                 '? Contractors and regular visitors are not affected. Save a backup first.')) return;
+
+    this.visitors = kept;
+    this.saveData();
+    this.renderLog();
+    this.renderStorageNote();
+    this.toast('Cleared ' + removed + ' older movements');
   },
 
   exportJson: function () {
@@ -1602,41 +2625,109 @@ var app = {
     this.toast('Backup saved');
   },
 
+  /* Fills gaps rather than overwriting. Anything the incoming backup has
+     that this device lacks is added; where both hold a value the copy on
+     this device is kept and counted as a conflict, so a restore can never
+     quietly move an induction date and make an expired person look valid. */
+  mergeRecord: function (target, incoming, isContractor, report) {
+    var i, j;
+
+    function has(list, v) {
+      for (var k = 0; k < list.length; k++) {
+        if (String(list[k]).toLowerCase() === String(v).toLowerCase()) return true;
+      }
+      return false;
+    }
+
+    for (i = 0; i < (incoming.vehicles || []).length; i++) {
+      if (!has(target.vehicles, incoming.vehicles[i])) {
+        target.vehicles.push(incoming.vehicles[i]);
+        report.added++;
+      }
+    }
+
+    for (i = 0; i < (incoming.reps || []).length; i++) {
+      var inc = incoming.reps[i], match = null;
+      for (j = 0; j < target.reps.length; j++) {
+        if (String(target.reps[j].name).toLowerCase() === String(inc.name || '').toLowerCase()) {
+          match = target.reps[j];
+        }
+      }
+
+      if (!match) {
+        var copy = { name: inc.name, vehicles: (inc.vehicles || []).slice() };
+        if (inc.inductionDate) copy.inductionDate = inc.inductionDate;
+        target.reps.push(copy);
+        report.added++;
+        continue;
+      }
+
+      for (j = 0; j < (inc.vehicles || []).length; j++) {
+        if (!has(match.vehicles, inc.vehicles[j])) {
+          match.vehicles.push(inc.vehicles[j]);
+          report.added++;
+        }
+      }
+
+      if (isContractor && inc.inductionDate) {
+        if (!match.inductionDate) { match.inductionDate = inc.inductionDate; report.added++; }
+        else if (match.inductionDate !== inc.inductionDate) report.conflicts++;
+      }
+    }
+
+    if (isContractor && incoming.inductionDate) {
+      if (!target.inductionDate) target.inductionDate = incoming.inductionDate;
+      else if (target.inductionDate !== incoming.inductionDate) report.conflicts++;
+    }
+
+    if (!target.reason && incoming.reason) target.reason = incoming.reason;
+  },
+
   mergeData: function (d) {
-    var merged = 0, i, j;
+    var report = { added: 0, conflicts: 0, records: 0, movements: 0 };
+    var i, j, inc, match;
 
     if (d.contractors) {
       for (i = 0; i < d.contractors.length; i++) {
-        var exists = false;
+        inc = this.normaliseRecord(d.contractors[i], true);
+        match = null;
         for (j = 0; j < this.contractors.length; j++) {
-          if (this.contractors[j].name.toLowerCase() === String(d.contractors[i].name).toLowerCase()) {
-            this.contractors[j].inductionDate = d.contractors[i].inductionDate;
-            exists = true;
-          }
+          if (this.contractors[j].name.toLowerCase() === String(inc.name).toLowerCase()) match = this.contractors[j];
         }
-        if (!exists) { this.contractors.push(d.contractors[i]); merged++; }
+        if (match) this.mergeRecord(match, inc, true, report);
+        else { this.contractors.push(inc); report.records++; }
       }
     }
 
     if (d.regularVisitors) {
       for (i = 0; i < d.regularVisitors.length; i++) {
-        var rvExists = false;
+        inc = this.normaliseRecord(d.regularVisitors[i], false);
+        match = null;
         for (j = 0; j < this.regularVisitors.length; j++) {
-          if (this.regularVisitors[j].name.toLowerCase() === String(d.regularVisitors[i].name).toLowerCase()) {
-            rvExists = true;
-          }
+          if (this.regularVisitors[j].name.toLowerCase() === String(inc.name).toLowerCase()) match = this.regularVisitors[j];
         }
-        if (!rvExists) { this.regularVisitors.push(d.regularVisitors[i]); merged++; }
+        if (match) this.mergeRecord(match, inc, false, report);
+        else { this.regularVisitors.push(inc); report.records++; }
       }
     }
 
     if (d.visitors) {
       for (i = 0; i < d.visitors.length; i++) {
-        var vExists = false;
+        var v = d.visitors[i];
+        /* ids can coincide between devices, so fall back to the shape of
+           the movement itself before deciding it is a duplicate */
+        var dup = false;
         for (j = 0; j < this.visitors.length; j++) {
-          if (this.visitors[j].id === d.visitors[i].id) vExists = true;
+          var e = this.visitors[j];
+          if (e.id === v.id) { dup = true; break; }
+          if (e.date === v.date && e.entryTime === v.entryTime &&
+              String(e.company).toLowerCase() === String(v.company).toLowerCase() &&
+              String(e.rep || '').toLowerCase() === String(v.rep || '').toLowerCase() &&
+              String(e.vehicle || '').toLowerCase() === String(v.vehicle || '').toLowerCase()) {
+            dup = true; break;
+          }
         }
-        if (!vExists) { this.visitors.push(d.visitors[i]); merged++; }
+        if (!dup) { this.visitors.push(v); report.movements++; }
       }
     }
 
@@ -1646,7 +2737,7 @@ var app = {
     this.renderLog();
     this.renderArchive();
     this.renderVisitors();
-    return merged;
+    return report;
   },
 
   /* Accepts either a JSON backup or a PDF produced by this app -
@@ -1686,10 +2777,16 @@ var app = {
         return;
       }
 
-      var merged = self.mergeData(found.data);
-      self.toast(merged
-        ? 'Restored ' + merged + ' records from the ' + found.source
-        : 'Nothing new in that ' + found.source);
+      var r = self.mergeData(found.data);
+      var bits = [];
+      if (r.records) bits.push(r.records + ' companies');
+      if (r.added) bits.push(r.added + ' details');
+      if (r.movements) bits.push(r.movements + ' movements');
+      var msg = bits.length
+        ? 'Restored ' + bits.join(', ') + ' from the ' + found.source
+        : 'Nothing new in that ' + found.source;
+      if (r.conflicts) msg += '. ' + r.conflicts + ' already differed - kept this device\u2019s version';
+      self.toast(msg);
       input.value = '';
     };
 
@@ -1702,10 +2799,11 @@ var app = {
   },
 
   clearToday: function () {
-    if (!confirm('Clear the sheet for ' + this.currentDate + '? This cannot be undone.')) return;
+    if (!confirm('Clear the sheet for ' + this.ukDate(this.viewDate) + '? This cannot be undone.')) return;
     var kept = [];
-    for (var i = 0; i < this.visitors.length; i++) if (this.visitors[i].date !== this.currentDate) kept.push(this.visitors[i]);
+    for (var i = 0; i < this.visitors.length; i++) if (this.visitors[i].date !== this.viewDate) kept.push(this.visitors[i]);
     this.visitors = kept;
+    this.onSiteOnly = false;
     this.saveData();
     this.renderLog();
     this.toast('Sheet cleared');
@@ -1714,10 +2812,15 @@ var app = {
   clearAll: function () {
     if (!confirm('Clear the day sheet, contractor list and regular visitors?')) return;
     if (!confirm('This removes everything on this device. Continue?')) return;
+    this.hideContractorForm();
+    this.hideVisitorForm();
     this.visitors = [];
     this.contractors = [];
     this.regularVisitors = [];
+    this.viewDate = this.currentDate;
+    this.onSiteOnly = false;
     this.saveData();
+    this.renderSheetControls();
     this.renderLog();
     this.renderArchive();
     this.renderVisitors();
@@ -1763,9 +2866,13 @@ if ('serviceWorker' in navigator) {
       })
       .catch(function () { /* app works fine without it */ });
 
+    /* On a first ever visit the worker claims the page and fires
+       controllerchange, which would reload for no reason. Only reload when
+       an older worker was already in charge and has just been replaced. */
+    var hadController = !!navigator.serviceWorker.controller;
     var refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', function () {
-      if (refreshing) return;
+      if (!hadController || refreshing) return;
       refreshing = true;
       window.location.reload();
     });
