@@ -103,7 +103,22 @@ body{background:#f1f5f9;padding-bottom:3rem}
 .onsite-chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:9999px;padding:.35rem .75rem;font-weight:600;cursor:pointer;font-size:.8rem}
 .onsite-chip.active{background:#2563eb;color:#fff;border-color:#2563eb}
 .onsite-chip.none{background:#f1f5f9;border-color:#e2e8f0;color:#64748b;cursor:default}
-tr.on-site td:first-child{box-shadow:inset 3px 0 0 #2563eb}
+tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
+.data-table td.num,.data-table th.num{width:2.6rem;text-align:center;padding:.4rem .2rem}
+.num-btn{width:2rem;height:2rem;border-radius:.3rem;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
+.num-btn.flagged{border-color:transparent;color:#fff}
+.num-btn.carried{border-style:dashed;border-color:#b45309;opacity:.85}
+.flag-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
+.flag-legend span{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:#475569}
+.flag-legend i{width:.8rem;height:.8rem;border-radius:.2rem;display:inline-block}
+.flag-picker{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:2000;display:flex;align-items:flex-end}
+.flag-picker-panel{background:#fff;width:100%;border-radius:.75rem .75rem 0 0;padding:1rem;box-shadow:0 -6px 20px rgba(0,0,0,.25)}
+.flag-picker-title{font-weight:700;margin-bottom:.75rem;color:#1e293b}
+.swatch{display:flex;align-items:center;gap:.6rem;width:100%;padding:.6rem .5rem;border:none;background:none;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:.9rem;color:#0f172a;text-align:left}
+.swatch b{width:1.4rem;height:1.4rem;border-radius:.3rem;flex:0 0 auto;border:1px solid rgba(0,0,0,.1)}
+.flag-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
+.flag-row b{width:1.4rem;height:1.4rem;border-radius:.3rem;flex:0 0 auto}
+.flag-row input{flex:1;min-width:0;padding:.5rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -117,6 +132,7 @@ tr.on-site td:first-child{box-shadow:inset 3px 0 0 #2563eb}
 <button class="tab-button active" data-tab="tracker">Daily Log</button>
 <button class="tab-button" data-tab="archive">Contractor List</button>
 <button class="tab-button" data-tab="visitors">Regular Visitors</button>
+<button class="tab-button" data-tab="staff">Staff</button>
 <button class="tab-button" data-tab="settings">Settings</button>
 </div>
 
@@ -195,7 +211,57 @@ tr.on-site td:first-child{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 <div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
 <div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="flagLegend" class="flag-legend"></div>
 <div id="logContainer"></div>
+</div>
+
+<div class="section">
+<h2>Staff leaving site</h2>
+<form id="staffMoveForm" autocomplete="off">
+<div class="form-group">
+<label for="staffNameInput">Staff member</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="staffNameInput" maxlength="60" placeholder="Start typing a name" autocomplete="off" required>
+<div class="autocomplete-list" id="staffList"></div>
+</div>
+</div>
+<div class="form-group">
+<label for="staffVehicleType">Travelling in</label>
+<select id="staffVehicleType">
+<option value="company">A site vehicle</option>
+<option value="own">Their own vehicle</option>
+<option value="none">On foot or as a passenger</option>
+</select>
+</div>
+<div class="form-group" id="staffVehiclePickRow" style="display:none">
+<label for="staffVehicleSelect">Recorded vehicles</label>
+<select id="staffVehicleSelect"></select>
+</div>
+<div class="form-group" id="staffVehicleRow">
+<label for="staffVehicleInput">Vehicle registration</label>
+<input type="text" id="staffVehicleInput" maxlength="20" placeholder="AB21 XYZ">
+</div>
+<div class="form-group">
+<label for="staffReasonInput">Reason or destination</label>
+<input type="text" id="staffReasonInput" maxlength="120" placeholder="Materials run, site visit, home" required>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="staffOutTime">Out</label>
+<input type="time" id="staffOutTime" required>
+</div>
+<div class="form-group">
+<label for="staffBackTime">Back</label>
+<input type="time" id="staffBackTime">
+</div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary">Record departure</button>
+<button type="button" class="button button-secondary" id="staffNowBtn">Use current time</button>
+</div>
+</form>
+<div id="staffSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="staffMoveContainer"></div>
 </div>
 </div>
 
@@ -266,6 +332,47 @@ tr.on-site td:first-child{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 </div>
 
+<div id="staff" class="tab-content">
+<div class="section">
+<h2>Site vehicles</h2>
+<div class="form-group">
+<label for="siteVehicles">Vehicles kept on site</label>
+<input type="text" id="siteVehicles" placeholder="Comma separate, e.g. VAN1 ABC, TIPPER2 DEF">
+</div>
+<div class="action-row">
+<button type="button" class="button button-primary" id="saveSiteVehiclesBtn">Save site vehicles</button>
+</div>
+<p class="field-hint">Offered whenever a staff member signs out in a site vehicle.</p>
+</div>
+
+<div class="section">
+<h2>Staff register</h2>
+<div class="action-row">
+<button type="button" class="button button-primary" id="addStaffBtn">Add staff member</button>
+</div>
+<form id="staffForm" style="display:none" autocomplete="off">
+<h3 class="form-title" id="staffFormTitle">New staff member</h3>
+<div class="form-group">
+<label for="staffName">Name</label>
+<input type="text" id="staffName" maxlength="60" required>
+</div>
+<div class="form-group">
+<label for="staffRole">Role or company</label>
+<input type="text" id="staffRole" maxlength="60" placeholder="Optional">
+</div>
+<div class="form-group">
+<label for="staffOwnVehicles">Their own vehicles</label>
+<input type="text" id="staffOwnVehicles" maxlength="200" placeholder="Comma separate, or leave blank">
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary" id="staffSubmit">Save staff member</button>
+<button type="button" class="button button-secondary" id="cancelStaffBtn">Cancel</button>
+</div>
+</form>
+<div id="staffRegisterContainer"></div>
+</div>
+</div>
+
 <div id="settings" class="tab-content">
 <div class="section">
 <h2>Export</h2>
@@ -275,6 +382,12 @@ tr.on-site td:first-child{box-shadow:inset 3px 0 0 #2563eb}
 <button type="button" class="button button-secondary" id="importJsonBtn">Restore from PDF or backup</button>
 </div>
 <p class="text-muted">The PDF holds the printed sheet plus the same records as hidden recoverable data. Restore accepts either the PDF or a backup file.</p>
+</div>
+
+<div class="section">
+<h2>Row colours</h2>
+<p class="text-muted" style="margin-top:0">Tap the number beside any entry to colour it. Name the colours here and the meanings print on the reports.</p>
+<div id="flagEditor"></div>
 </div>
 
 <div class="section">
@@ -326,6 +439,14 @@ tr.on-site td:first-child{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 
 <input type="file" id="jsonImportInput" accept=".json,.pdf,application/json,application/pdf" style="display:none">
+
+<div id="flagPicker" class="flag-picker" role="dialog" aria-modal="true" aria-labelledby="flagPickerTitle" style="display:none">
+<div class="flag-picker-panel">
+<div class="flag-picker-title" id="flagPickerTitle">Colour this entry</div>
+<div id="flagSwatches"></div>
+<button type="button" class="button button-secondary" id="flagCancel">Cancel</button>
+</div>
+</div>
 
 <script>
 /* ---------------------------------------------------------------
@@ -706,10 +827,17 @@ var app = {
   currentDate: '',
   editingContractorId: null,
   editingVisitorId: null,
+  staff: [],
+  staffMovements: [],
+  siteVehicles: [],
+  editingStaffId: null,
+  flagTarget: null,
   viewDate: '',
   onSiteOnly: false,
   _lastSubmit: 0,
   _lastSig: '',
+  _lastStaffSubmit: 0,
+  _lastStaffSig: '',
   _lastId: 0,
 
   init: function () {
@@ -729,10 +857,15 @@ var app = {
       self.renderLog();
       self.renderArchive();
       self.renderVisitors();
+      self.renderStaffRegister();
+      self.renderStaffMovements();
+      self.renderFlagEditor();
       self.renderSheetControls();
       self.renderPeriodControls();
       self.renderStorageNote();
       self.startDayWatch();
+      var wanted = self.tabFromHash();
+      if (wanted) self.activateTab(wanted);
       if (note === 'migrated') {
         self.toast('Records moved to larger storage on this device');
       }
@@ -748,9 +881,44 @@ var app = {
       setInterval(function () { self.checkDayRollover(); }, 30000);
     }
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) self.checkDayRollover();
+      if (document.hidden) return;
+      self.checkDayRollover();
+      self.refreshFromStore();
     });
     window.addEventListener('focus', function () { self.checkDayRollover(); });
+    window.addEventListener('hashchange', function () {
+      var t = self.tabFromHash();
+      if (t) self.activateTab(t);
+    });
+  },
+
+  /* The same records can be open in a browser tab and the installed app at
+     once. Writes are last-one-wins, so re-read whenever this copy comes back
+     to the front; that way the two converge instead of quietly diverging.
+     Nothing is held unsaved, so there is nothing to lose by re-reading. */
+  refreshFromStore: function () {
+    var self = this;
+    Store.load(function (d) {
+      if (!d) return;
+      var before = self.visitors.length + self.staffMovements.length +
+        self.contractors.length + self.regularVisitors.length + self.staff.length;
+      self.visitors = d.visitors || [];
+      self.contractors = d.contractors || [];
+      self.regularVisitors = d.regularVisitors || [];
+      self.staff = d.staff || [];
+      self.staffMovements = d.staffMovements || [];
+      self.siteVehicles = d.siteVehicles || [];
+      self.migrate();
+      self.seedIds();
+      var after = self.visitors.length + self.staffMovements.length +
+        self.contractors.length + self.regularVisitors.length + self.staff.length;
+      self.renderLog();
+      self.renderStaffMovements();
+      self.renderArchive();
+      self.renderVisitors();
+      self.renderStaffRegister();
+      if (after !== before) self.toast('Updated with changes made elsewhere');
+    });
   },
 
   checkDayRollover: function () {
@@ -761,6 +929,7 @@ var app = {
     if (wasOnToday) this.viewDate = t;
     this.renderSheetControls();
     this.renderLog();
+    this.renderStaffMovements();
     if (wasOnToday) this.toast('New day - now logging to ' + this.ukDate(t));
   },
 
@@ -771,6 +940,7 @@ var app = {
     this.onSiteOnly = false;
     this.renderSheetControls();
     this.renderLog();
+    this.renderStaffMovements();
   },
 
   shiftViewDate: function (days) {
@@ -843,7 +1013,8 @@ var app = {
   },
 
   seedIds: function () {
-    var all = this.visitors.concat(this.contractors, this.regularVisitors), i;
+    var all = this.visitors.concat(this.contractors, this.regularVisitors,
+      this.staff, this.staffMovements), i;
     for (i = 0; i < all.length; i++) {
       if (typeof all[i].id === 'number' && all[i].id > this._lastId) this._lastId = all[i].id;
     }
@@ -879,6 +1050,9 @@ var app = {
           self.visitors = d.visitors || [];
           self.contractors = d.contractors || [];
           self.regularVisitors = d.regularVisitors || [];
+          self.staff = d.staff || [];
+          self.staffMovements = d.staffMovements || [];
+          self.siteVehicles = d.siteVehicles || [];
         }
         self.migrate();
         self.seedIds();
@@ -891,6 +1065,40 @@ var app = {
      single comma separated `vehicle` string per company and had no notion
      of representatives, so those registrations become company vehicles and
      nothing is lost. Safe to run repeatedly. */
+  FLAGS: [
+    { id: 1, hex: '#dc2626', name: 'Red' },
+    { id: 2, hex: '#d97706', name: 'Amber' },
+    { id: 3, hex: '#16a34a', name: 'Green' },
+    { id: 4, hex: '#2563eb', name: 'Blue' },
+    { id: 5, hex: '#7c3aed', name: 'Purple' },
+    { id: 6, hex: '#475569', name: 'Slate' }
+  ],
+
+  flagLabels: function () {
+    var out = [], i, stored = null;
+    try { stored = JSON.parse(localStorage.getItem('sat-flags') || 'null'); } catch (e) {}
+    for (i = 0; i < this.FLAGS.length; i++) {
+      out.push((stored && stored[i]) ? String(stored[i]) : '');
+    }
+    return out;
+  },
+
+  setFlagLabels: function (labels) {
+    try { localStorage.setItem('sat-flags', JSON.stringify(labels)); } catch (e) {}
+  },
+
+  flagById: function (id) {
+    for (var i = 0; i < this.FLAGS.length; i++) if (this.FLAGS[i].id === id) return this.FLAGS[i];
+    return null;
+  },
+
+  flagName: function (id) {
+    var f = this.flagById(id);
+    if (!f) return '';
+    var labels = this.flagLabels();
+    return labels[id - 1] || f.name;
+  },
+
   splitRegs: function (s) {
     var out = [], parts = String(s || '').split(','), j, t;
     for (j = 0; j < parts.length; j++) {
@@ -933,6 +1141,17 @@ var app = {
     for (i = 0; i < this.contractors.length; i++) this.normaliseRecord(this.contractors[i], true);
     for (i = 0; i < this.visitors.length; i++) {
       if (this.visitors[i].rep === undefined) this.visitors[i].rep = '';
+      if (this.visitors[i].flag === undefined) this.visitors[i].flag = 0;
+    }
+    if (!this.staff) this.staff = [];
+    if (!this.staffMovements) this.staffMovements = [];
+    if (!this.siteVehicles) this.siteVehicles = [];
+    for (i = 0; i < this.staff.length; i++) {
+      if (!this.staff[i].vehicles) this.staff[i].vehicles = [];
+      if (typeof this.staff[i].vehicles === 'string') this.staff[i].vehicles = this.splitRegs(this.staff[i].vehicles);
+    }
+    for (i = 0; i < this.staffMovements.length; i++) {
+      if (this.staffMovements[i].flag === undefined) this.staffMovements[i].flag = 0;
     }
   },
 
@@ -984,7 +1203,10 @@ var app = {
     Store.save({
       visitors: this.visitors,
       contractors: this.contractors,
-      regularVisitors: this.regularVisitors
+      regularVisitors: this.regularVisitors,
+      staff: this.staff,
+      staffMovements: this.staffMovements,
+      siteVehicles: this.siteVehicles
     }, function () {
       self.toast('Could not save - export a backup and clear older movements', 'error');
     });
@@ -1007,15 +1229,7 @@ var app = {
     var tabs = document.querySelectorAll('.tab-button');
     for (var i = 0; i < tabs.length; i++) {
       tabs[i].addEventListener('click', function (e) {
-        var name = e.currentTarget.getAttribute('data-tab');
-        var panes = document.querySelectorAll('.tab-content');
-        for (var j = 0; j < panes.length; j++) panes[j].classList.remove('active');
-        var btns = document.querySelectorAll('.tab-button');
-        for (var k = 0; k < btns.length; k++) btns[k].classList.remove('active');
-        document.getElementById(name).classList.add('active');
-        e.currentTarget.classList.add('active');
-        window.scrollTo(0, 0);
-        if (name === 'settings') self.renderStorageNote();
+        self.activateTab(e.currentTarget.getAttribute('data-tab'));
       });
     }
 
@@ -1073,6 +1287,43 @@ var app = {
     document.getElementById('todayBtn').addEventListener('click', function () { self.setViewDate(self.currentDate); });
     document.getElementById('sheetDate').addEventListener('change', function (ev) { self.setViewDate(ev.target.value); });
 
+    document.getElementById('staffMoveForm').addEventListener('submit', function (e) { self.recordStaffMove(e); });
+    document.getElementById('staffNowBtn').addEventListener('click', function () {
+      var d = new Date();
+      document.getElementById('staffOutTime').value = self.pad2(d.getHours()) + ':' + self.pad2(d.getMinutes());
+    });
+    var sn = document.getElementById('staffNameInput');
+    sn.addEventListener('input', function () { self.showStaffSuggestions(); });
+    sn.addEventListener('focus', function () { self.showStaffSuggestions(); });
+    sn.addEventListener('blur', function () {
+      setTimeout(function () {
+        document.getElementById('staffList').classList.remove('active');
+        self.refreshStaffVehiclePicker();
+      }, 200);
+    });
+    document.getElementById('staffVehicleType').addEventListener('change', function () {
+      document.getElementById('staffVehicleInput').value = '';
+      self.refreshStaffVehiclePicker();
+    });
+    document.getElementById('staffVehicleSelect').addEventListener('change', function (ev) {
+      if (ev.target.value) document.getElementById('staffVehicleInput').value = ev.target.value;
+    });
+
+    document.getElementById('addStaffBtn').addEventListener('click', function () { self.showStaffForm(); });
+    document.getElementById('staffForm').addEventListener('submit', function (e) { self.saveStaff(e); });
+    document.getElementById('cancelStaffBtn').addEventListener('click', function () { self.hideStaffForm(); });
+    document.getElementById('saveSiteVehiclesBtn').addEventListener('click', function () { self.saveSiteVehicles(); });
+
+    document.getElementById('flagCancel').addEventListener('click', function () { self.closeFlagPicker(); });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && document.getElementById('flagPicker').style.display === 'flex') {
+        self.closeFlagPicker();
+      }
+    });
+    document.getElementById('flagPicker').addEventListener('click', function (ev) {
+      if (ev.target && ev.target.id === 'flagPicker') self.closeFlagPicker();
+    });
+
     document.getElementById('periodType').addEventListener('change', function () { self.renderPeriodControls(); });
     document.getElementById('periodValue').addEventListener('change', function () { self.renderPeriodSummary(); });
     document.getElementById('periodYear').addEventListener('change', function () { self.renderPeriodSummary(); });
@@ -1082,6 +1333,34 @@ var app = {
     document.getElementById('pruneBtn').addEventListener('click', function () { self.pruneOld(); });
     document.getElementById('clearTodayBtn').addEventListener('click', function () { self.clearToday(); });
     document.getElementById('clearAllBtn').addEventListener('click', function () { self.clearAll(); });
+  },
+
+  /* The home screen shortcuts point at #tracker and #archive, so the tab
+     named in the address has to actually open. */
+  TABS: ['tracker', 'archive', 'visitors', 'staff', 'settings'],
+
+  activateTab: function (name) {
+    if (this.TABS.indexOf(name) === -1) return;
+    var panes = document.querySelectorAll('.tab-content');
+    var btns = document.querySelectorAll('.tab-button');
+    var target = document.getElementById(name);
+    var j, k;
+    if (!target) return;
+
+    for (j = 0; j < panes.length; j++) panes[j].classList.remove('active');
+    for (k = 0; k < btns.length; k++) {
+      btns[k].classList.remove('active');
+      if (btns[k].getAttribute('data-tab') === name) btns[k].classList.add('active');
+    }
+    target.classList.add('active');
+    window.scrollTo(0, 0);
+    if (name === 'settings') this.renderStorageNote();
+  },
+
+  tabFromHash: function () {
+    var h = '';
+    try { h = String(window.location.hash || '').replace('#', ''); } catch (e) {}
+    return this.TABS.indexOf(h) === -1 ? '' : h;
   },
 
   setCurrentTime: function () {
@@ -1562,6 +1841,7 @@ var app = {
       return;
     }
 
+    var seq = this.daySequence(this.visitors);
     var rows = '';
     for (var j = 0; j < src.length; j++) {
       var v = src[j];
@@ -1570,6 +1850,7 @@ var app = {
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
       var otherDay = v.date !== this.viewDate;
       rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
+        this.numCell(v, seq[v.id], 'visitor', otherDay) +
         '<td>' + this.esc(v.company) +
           (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
           (otherDay ? '<span class="cell-sub carried">in on ' + this.ukDate(v.date) + '</span>' : '') +
@@ -1583,8 +1864,10 @@ var app = {
     }
 
     container.innerHTML = '<table class="data-table"><thead><tr>' +
-      '<th>Company / rep</th><th>Vehicle</th><th>Reason</th><th>In</th><th>Out</th><th></th>' +
+      '<th class="num">#</th><th>Company / rep</th><th>Vehicle</th><th>Reason</th><th>In</th><th>Out</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
+
+    this.renderFlagLegend();
   },
 
   deleteVisitor: function (id) {
@@ -1734,12 +2017,6 @@ var app = {
     return out;
   },
 
-  inductionSummary: function (c) {
-    var e = this.inductionEntries(c), due = 0, i;
-    for (i = 0; i < e.length; i++) if (!e[i].valid) due++;
-    return { total: e.length, due: due, entries: e };
-  },
-
   earliestInduction: function (c) {
     var e = this.inductionEntries(c), best = null, i, t;
     for (i = 0; i < e.length; i++) {
@@ -1761,16 +2038,6 @@ var app = {
   ukDate: function (s) {
     var d = this.parseLocalDate(s);
     return d ? d.toLocaleDateString('en-GB') : 'Not set';
-  },
-
-  repSummary: function (rec) {
-    var bits = [], r;
-    for (r = 0; r < (rec.reps || []).length; r++) {
-      bits.push(rec.reps[r].name +
-        (rec.reps[r].vehicles.length ? ' (' + rec.reps[r].vehicles.join(', ') + ')' : ''));
-    }
-    if ((rec.vehicles || []).length) bits.push(rec.vehicles.join(', '));
-    return bits.join('; ');
   },
 
   renderArchive: function () {
@@ -2075,6 +2342,473 @@ var app = {
       (n ? ' across ' + n + (n === 1 ? ' day' : ' days') : '') + '</span>';
   },
 
+  /* ---------------- staff ---------------- */
+
+  showStaffForm: function () {
+    this.editingStaffId = null;
+    document.getElementById('staffForm').reset();
+    document.getElementById('staffFormTitle').textContent = 'New staff member';
+    document.getElementById('staffSubmit').textContent = 'Save staff member';
+    document.getElementById('staffForm').style.display = 'block';
+    document.getElementById('staffName').focus();
+  },
+
+  hideStaffForm: function () {
+    this.editingStaffId = null;
+    document.getElementById('staffForm').style.display = 'none';
+    document.getElementById('staffForm').reset();
+  },
+
+  editStaff: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.staff.length && !rec; i++) if (this.staff[i].id === id) rec = this.staff[i];
+    if (!rec) return;
+    this.editingStaffId = id;
+    document.getElementById('staffName').value = rec.name;
+    document.getElementById('staffRole').value = rec.role || '';
+    document.getElementById('staffOwnVehicles').value = (rec.vehicles || []).join(', ');
+    document.getElementById('staffFormTitle').textContent = 'Editing ' + rec.name;
+    document.getElementById('staffSubmit').textContent = 'Update staff member';
+    document.getElementById('staffForm').style.display = 'block';
+    document.getElementById('staffName').focus();
+  },
+
+  saveStaff: function (e) {
+    e.preventDefault();
+    var name = document.getElementById('staffName').value.replace(/^\s+|\s+$/g, '');
+    var role = document.getElementById('staffRole').value.replace(/^\s+|\s+$/g, '');
+    var vehicles = this.splitList(document.getElementById('staffOwnVehicles').value);
+    if (!name) { this.toast('Add a name', 'error'); return; }
+
+    var clash = null, i;
+    for (i = 0; i < this.staff.length; i++) {
+      if (this.staff[i].name.toLowerCase() === name.toLowerCase() &&
+          this.staff[i].id !== this.editingStaffId) clash = this.staff[i];
+    }
+    if (clash) { this.toast(name + ' is already on the register', 'error'); return; }
+
+    if (this.editingStaffId !== null) {
+      for (i = 0; i < this.staff.length; i++) {
+        if (this.staff[i].id === this.editingStaffId) {
+          this.staff[i].name = name;
+          this.staff[i].role = role;
+          this.staff[i].vehicles = vehicles;
+        }
+      }
+      this.saveData();
+      this.renderStaffRegister();
+      this.hideStaffForm();
+      this.toast('Staff member updated');
+      return;
+    }
+
+    this.staff.push({ id: this.nextId(), name: name, role: role, vehicles: vehicles });
+    this.saveData();
+    this.renderStaffRegister();
+    this.hideStaffForm();
+    this.toast('Staff member added');
+  },
+
+  deleteStaff: function (id) {
+    if (!confirm('Remove this staff member? Their recorded movements stay on the sheets.')) return;
+    var kept = [], i;
+    for (i = 0; i < this.staff.length; i++) if (this.staff[i].id !== id) kept.push(this.staff[i]);
+    this.staff = kept;
+    if (this.editingStaffId === id) this.hideStaffForm();
+    this.saveData();
+    this.renderStaffRegister();
+    this.toast('Staff member removed');
+  },
+
+  renderStaffRegister: function () {
+    var box = document.getElementById('staffRegisterContainer');
+    document.getElementById('siteVehicles').value = (this.siteVehicles || []).join(', ');
+
+    if (!this.staff.length) {
+      box.innerHTML = '<div class="empty-state">Nobody on the staff register</div>';
+      return;
+    }
+
+    var rows = '', i;
+    for (i = 0; i < this.staff.length; i++) {
+      var s = this.staff[i];
+      rows += '<tr>' +
+        '<td>' + this.esc(s.name) +
+          (s.role ? '<span class="cell-sub">' + this.esc(s.role) + '</span>' : '') + '</td>' +
+        '<td>' + this.esc((s.vehicles || []).join(', ') || '-') + '</td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editStaff(' + s.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteStaff(' + s.id + ')">X</button>' +
+        '</td></tr>';
+    }
+
+    box.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Name</th><th>Own vehicles</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  },
+
+  saveSiteVehicles: function () {
+    this.siteVehicles = this.splitList(document.getElementById('siteVehicles').value);
+    this.saveData();
+    this.refreshStaffVehiclePicker();
+    this.toast(this.siteVehicles.length
+      ? this.siteVehicles.length + (this.siteVehicles.length === 1 ? ' site vehicle saved' : ' site vehicles saved')
+      : 'Site vehicles cleared');
+  },
+
+  findStaff: function (name) {
+    var key = String(name || '').replace(/^\s+|\s+$/g, '').toLowerCase(), i;
+    for (i = 0; i < this.staff.length; i++) {
+      if (this.staff[i].name.toLowerCase() === key) return this.staff[i];
+    }
+    return null;
+  },
+
+  showStaffSuggestions: function () {
+    var q = document.getElementById('staffNameInput').value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var list = document.getElementById('staffList');
+    list.innerHTML = '';
+
+    var matches = [], i;
+    for (i = 0; i < this.staff.length && matches.length < 10; i++) {
+      if (!q || this.staff[i].name.toLowerCase().indexOf(q) !== -1) matches.push(this.staff[i]);
+    }
+    if (!matches.length) { list.classList.remove('active'); return; }
+
+    var self = this;
+    var build = function (s) {
+      var item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      var hint = [s.role, (s.vehicles || []).join(', ')];
+      var hintText = [];
+      for (var h = 0; h < hint.length; h++) if (hint[h]) hintText.push(hint[h]);
+      item.innerHTML = self.esc(s.name) +
+        (hintText.length ? ' <span class="ac-reg">' + self.esc(hintText.join(' - ')) + '</span>' : '');
+      item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+      item.addEventListener('click', function () {
+        document.getElementById('staffNameInput').value = s.name;
+        list.classList.remove('active');
+        self.refreshStaffVehiclePicker();
+        document.getElementById('staffOutTime').focus();
+      });
+      list.appendChild(item);
+    };
+    for (i = 0; i < matches.length; i++) build(matches[i]);
+    list.classList.add('active');
+  },
+
+  refreshStaffVehiclePicker: function () {
+    var mode = document.getElementById('staffVehicleType').value;
+    var row = document.getElementById('staffVehiclePickRow');
+    var sel = document.getElementById('staffVehicleSelect');
+    var textRow = document.getElementById('staffVehicleRow');
+    var input = document.getElementById('staffVehicleInput');
+    var options = [], i;
+
+    if (mode === 'none') {
+      row.style.display = 'none';
+      textRow.style.display = 'none';
+      input.value = '';
+      return;
+    }
+    textRow.style.display = 'block';
+
+    if (mode === 'company') {
+      options = (this.siteVehicles || []).slice();
+    } else {
+      var s = this.findStaff(document.getElementById('staffNameInput').value);
+      options = s ? (s.vehicles || []).slice() : [];
+    }
+
+    sel.innerHTML = '';
+    if (options.length > 1) {
+      var blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = options.length + ' recorded - choose a vehicle';
+      sel.appendChild(blank);
+      for (i = 0; i < options.length; i++) {
+        var o = document.createElement('option');
+        o.value = options[i];
+        o.textContent = options[i];
+        sel.appendChild(o);
+      }
+      sel.value = input.value || '';
+      row.style.display = 'block';
+    } else {
+      row.style.display = 'none';
+      if (options.length === 1 && !input.value) input.value = options[0];
+    }
+  },
+
+  recordStaffMove: function (e) {
+    e.preventDefault();
+    var name = document.getElementById('staffNameInput').value.replace(/^\s+|\s+$/g, '');
+    var mode = document.getElementById('staffVehicleType').value;
+    var vehicle = document.getElementById('staffVehicleInput').value.replace(/^\s+|\s+$/g, '');
+    var reason = document.getElementById('staffReasonInput').value.replace(/^\s+|\s+$/g, '');
+    var outTime = document.getElementById('staffOutTime').value;
+    var backTime = document.getElementById('staffBackTime').value;
+
+    if (!name || !reason || !outTime) {
+      this.toast('Add a name, a reason and a time out', 'error');
+      return;
+    }
+    if (mode === 'none') vehicle = '';
+
+    if (backTime && backTime < outTime &&
+        !confirm('Back ' + backTime + ' is before out ' + outTime + '. Record it anyway?')) return;
+
+    var sig = [this.viewDate, name, vehicle, outTime].join('|').toLowerCase();
+    var now = Date.now();
+    if (sig === this._lastStaffSig && (now - this._lastStaffSubmit) < 2000) return;
+    this._lastStaffSig = sig;
+    this._lastStaffSubmit = now;
+
+    this.staffMovements.push({
+      id: this.nextId(),
+      date: this.viewDate,
+      name: name,
+      vehicleType: mode,
+      vehicle: vehicle,
+      reason: reason,
+      outTime: outTime,
+      backTime: backTime,
+      flag: 0
+    });
+
+    this.saveData();
+    this.renderStaffMovements();
+    e.target.reset();
+    document.getElementById('staffVehiclePickRow').style.display = 'none';
+    document.getElementById('staffVehicleRow').style.display = 'block';
+    document.getElementById('staffNameInput').focus();
+    this.toast('Departure recorded');
+  },
+
+  setStaffBack: function (id) {
+    for (var i = 0; i < this.staffMovements.length; i++) {
+      if (this.staffMovements[i].id === id) {
+        var d = new Date();
+        this.staffMovements[i].backTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+        this.saveData();
+        this.renderStaffMovements();
+        this.toast(this.staffMovements[i].name + ' back on site');
+        return;
+      }
+    }
+  },
+
+  staffMovesFor: function (date) {
+    var out = [], i;
+    for (i = 0; i < this.staffMovements.length; i++) {
+      if (this.staffMovements[i].date === date) out.push(this.staffMovements[i]);
+    }
+    return out;
+  },
+
+  staffOffSite: function () {
+    var out = [], i;
+    for (i = 0; i < this.staffMovements.length; i++) {
+      if (!this.staffMovements[i].backTime) out.push(this.staffMovements[i]);
+    }
+    return out;
+  },
+
+  vehicleLabel: function (m) {
+    if (m.vehicleType === 'none') return 'On foot / passenger';
+    var own = m.vehicleType === 'own';
+    if (!m.vehicle) return own ? 'Own vehicle' : 'Site vehicle';
+    return m.vehicle + (own ? ' (own)' : ' (site)');
+  },
+
+  renderStaffMovements: function () {
+    var box = document.getElementById('staffMoveContainer');
+    var summary = document.getElementById('staffSummary');
+    if (!box) return;
+
+    var list = this.staffMovesFor(this.viewDate);
+    var away = this.staffOffSite();
+    var seq = this.daySequence(this.staffMovements);
+
+    /* Someone who signed out at 23:10 is still off site at 00:30. Tying the
+       table to the calendar day would hide them and leave no way to mark
+       them back, so anyone still out is carried onto the current sheet. */
+    var carried = [], i;
+    for (i = 0; i < away.length; i++) {
+      if (away[i].date !== this.viewDate) carried.push(away[i]);
+    }
+    var display = carried.concat(list);
+
+    summary.innerHTML = '<span>' + list.length +
+      (list.length === 1 ? ' departure' : ' departures') + '</span>' +
+      (away.length
+        ? '<span class="onsite-chip none">' + away.length + ' still off site' +
+          (carried.length ? ' \u00b7 ' + carried.length + ' from an earlier day' : '') + '</span>'
+        : '<span class="onsite-chip none">Everyone back</span>');
+
+    if (!display.length) {
+      box.innerHTML = '<div class="empty-state">No staff departures logged for this day</div>';
+      this.renderFlagLegend();
+      return;
+    }
+
+    var rows = '';
+    for (i = 0; i < display.length; i++) {
+      var m = display[i];
+      var otherDay = m.date !== this.viewDate;
+      var backCell = m.backTime
+        ? this.esc(m.backTime)
+        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button>';
+      rows += '<tr' + (m.backTime ? '' : ' class="on-site"') + '>' +
+        this.numCell(m, seq[m.id], 'staff', otherDay) +
+        '<td>' + this.esc(m.name) +
+          (otherDay ? '<span class="cell-sub carried">out on ' + this.ukDate(m.date) + '</span>' : '') +
+        '</td>' +
+        '<td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
+        '<td>' + this.esc(m.reason) + '</td>' +
+        '<td>' + this.esc(m.outTime) + '</td>' +
+        '<td>' + backCell + '</td>' +
+        '<td class="row-actions"><button type="button" class="delete-btn" onclick="app.deleteStaffMove(' + m.id + ')">X</button></td>' +
+        '</tr>';
+    }
+
+    box.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th class="num">#</th><th>Name</th><th>Vehicle</th><th>Reason</th><th>Out</th><th>Back</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+
+    this.renderFlagLegend();
+  },
+
+  deleteStaffMove: function (id) {
+    if (!confirm('Remove this staff movement?')) return;
+    var kept = [], i;
+    for (i = 0; i < this.staffMovements.length; i++) if (this.staffMovements[i].id !== id) kept.push(this.staffMovements[i]);
+    this.staffMovements = kept;
+    this.saveData();
+    this.renderStaffMovements();
+    this.toast('Movement removed');
+  },
+
+  /* ---------------- row colour flags ---------------- */
+
+  /* Numbers run in the order entries were logged that day, so the number
+     beside a row stays meaningful even when the list is filtered. */
+  daySequence: function (list) {
+    var map = {}, byDate = {}, i, v;
+    for (i = 0; i < list.length; i++) {
+      v = list[i];
+      if (!byDate[v.date]) byDate[v.date] = 0;
+      byDate[v.date]++;
+      map[v.id] = byDate[v.date];
+    }
+    return map;
+  },
+
+  numCell: function (entry, seq, kind, otherDay) {
+    var f = this.flagById(entry.flag);
+    var style = f ? ' style="background:' + f.hex + '"' : '';
+    var colour = f ? this.esc(this.flagName(entry.flag)) : 'No colour';
+    /* Numbering is per day, so a row carried over from an earlier day can
+       otherwise show the same number as today's first entry. Mark it. */
+    var where = otherDay ? 'Entry ' + seq + ' from ' + this.ukDate(entry.date) : 'Entry ' + seq;
+    return '<td class="num"><button type="button" class="num-btn' + (f ? ' flagged' : '') +
+      (otherDay ? ' carried' : '') + '"' + style + ' title="' + where + ', ' + colour +
+      '" aria-label="' + where + ', ' + colour +
+      '" onclick="app.openFlagPicker(\'' + kind + '\',' + entry.id + ')">' + seq + '</button></td>';
+  },
+
+  openFlagPicker: function (kind, id) {
+    this.flagTarget = { kind: kind, id: id };
+    var panel = document.getElementById('flagSwatches');
+    var labels = this.flagLabels();
+    var self = this;
+    panel.innerHTML = '';
+
+    function row(hex, text, value) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'swatch';
+      b.innerHTML = '<b style="background:' + (hex || '#f8fafc') + '"></b><span>' + self.esc(text) + '</span>';
+      b.addEventListener('click', function () { self.applyFlag(value); });
+      panel.appendChild(b);
+    }
+
+    row('', 'No colour', 0);
+    for (var i = 0; i < this.FLAGS.length; i++) {
+      row(this.FLAGS[i].hex, labels[i] || this.FLAGS[i].name, this.FLAGS[i].id);
+    }
+
+    document.getElementById('flagPickerTitle').textContent =
+      kind === 'staff' ? 'Colour this staff movement' : 'Colour this entry';
+    document.getElementById('flagPicker').style.display = 'flex';
+  },
+
+  closeFlagPicker: function () {
+    document.getElementById('flagPicker').style.display = 'none';
+    this.flagTarget = null;
+  },
+
+  applyFlag: function (value) {
+    if (!this.flagTarget) return;
+    var list = this.flagTarget.kind === 'staff' ? this.staffMovements : this.visitors;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === this.flagTarget.id) { list[i].flag = value; break; }
+    }
+    this.closeFlagPicker();
+    this.saveData();
+    this.renderLog();
+    this.renderStaffMovements();
+  },
+
+  renderFlagLegend: function () {
+    var el = document.getElementById('flagLegend');
+    var labels = this.flagLabels();
+    var used = {}, i;
+    for (i = 0; i < this.visitors.length; i++) if (this.visitors[i].flag) used[this.visitors[i].flag] = 1;
+    for (i = 0; i < this.staffMovements.length; i++) if (this.staffMovements[i].flag) used[this.staffMovements[i].flag] = 1;
+
+    var html = '';
+    for (i = 0; i < this.FLAGS.length; i++) {
+      if (!used[this.FLAGS[i].id] && !labels[i]) continue;
+      html += '<span><i style="background:' + this.FLAGS[i].hex + '"></i>' +
+        this.esc(labels[i] || this.FLAGS[i].name) + '</span>';
+    }
+    el.innerHTML = html;
+  },
+
+  renderFlagEditor: function () {
+    var box = document.getElementById('flagEditor');
+    if (!box) return;
+    var labels = this.flagLabels();
+    var self = this;
+    box.innerHTML = '';
+
+    for (var i = 0; i < this.FLAGS.length; i++) {
+      (function (idx) {
+        var row = document.createElement('div');
+        row.className = 'flag-row';
+        var dot = document.createElement('b');
+        dot.style.background = self.FLAGS[idx].hex;
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 40;
+        input.placeholder = self.FLAGS[idx].name + ' - what does it mean?';
+        input.value = labels[idx] || '';
+        input.addEventListener('change', function () {
+          var current = self.flagLabels();
+          current[idx] = input.value.replace(/^\s+|\s+$/g, '');
+          self.setFlagLabels(current);
+          self.renderFlagLegend();
+          self.renderLog();
+          self.renderStaffMovements();
+        });
+        row.appendChild(dot);
+        row.appendChild(input);
+        box.appendChild(row);
+      })(i);
+    }
+  },
+
   /* ---------------- reporting periods ---------------- */
 
   isoKey: function (d) {
@@ -2225,6 +2959,7 @@ var app = {
           var txt = PDFKit.normalize(isObj ? cell.t : cell);
           var col = (isObj && cell.c) ? cell.c : INK;
           var bold = !!(isObj && cell.b);
+          if (isObj && cell.fill) doc.rect(x - 3, y + 1.5, cols[c].w - 4, ROW - 3, cell.fill);
           doc.text(PDFKit.fit(txt, cols[c].w - 10, 8.5, bold), x, y + 10.5, 8.5, bold, col);
           x += cols[c].w;
         }
@@ -2284,6 +3019,15 @@ var app = {
         ['Busiest day', busiestN ? busiest + ' (' + busiestN + ')' : '-'],
         ['No exit time logged', String(onSiteAtExport)]
       ];
+      var staffInRange = 0, staffOut = 0, sp;
+      for (sp = 0; sp < this.staffMovements.length; sp++) {
+        if (this.staffMovements[sp].date >= fromKey && this.staffMovements[sp].date <= toKey) {
+          staffInRange++;
+          if (!this.staffMovements[sp].backTime) staffOut++;
+        }
+      }
+      srows.push(['Staff departures', String(staffInRange) +
+        (staffOut ? ' (' + staffOut + ' with no return logged)' : '')]);
       table([{ label: 'Measure', w: 200 }, { label: 'Value', w: 315 }], srows);
 
       /* per-day totals */
@@ -2344,20 +3088,34 @@ var app = {
     }
 
     /* ---- visitor movements ---- */
+    var FLAG_HEX = {};
+    for (var fh = 0; fh < this.FLAGS.length; fh++) FLAG_HEX[this.FLAGS[fh].id] = this.FLAGS[fh].hex;
+    function hexToRgb(h) {
+      return [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+    }
+
     var MOVE_COLS = [
-      { label: 'Company', w: 128 },
-      { label: 'Representative', w: 95 },
-      { label: 'Vehicle', w: 78 },
-      { label: 'Reason for visit', w: 139 },
+      { label: '#', w: 24 },
+      { label: 'Company', w: 116 },
+      { label: 'Representative', w: 92 },
+      { label: 'Vehicle', w: 74 },
+      { label: 'Reason for visit', w: 134 },
       { label: 'In', w: 37 },
       { label: 'Out', w: 38 }
     ];
+
+    var visitorSeq = this.daySequence(this.visitors);
+    var staffSeq = this.daySequence(this.staffMovements);
 
     function movementRows(list) {
       var out = [], t, v;
       for (t = 0; t < list.length; t++) {
         v = list[t];
-        out.push([v.company, v.rep || '-', v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-']);
+        out.push([
+          { t: String(visitorSeq[v.id] || ''), fill: v.flag ? hexToRgb(FLAG_HEX[v.flag]) : null,
+            c: v.flag ? [1, 1, 1] : null, b: !!v.flag },
+          v.company, v.rep || '-', v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-'
+        ]);
       }
       return out;
     }
@@ -2387,6 +3145,86 @@ var app = {
     } else if (detailed) {
       heading('Movements in detail');
       paragraph('No visitors logged in this period.');
+    }
+
+    /* ---- staff leaving site ---- */
+    var staffList = [];
+    for (var sm = 0; sm < this.staffMovements.length; sm++) {
+      if (this.staffMovements[sm].date >= fromKey && this.staffMovements[sm].date <= toKey) {
+        staffList.push(this.staffMovements[sm]);
+      }
+    }
+    staffList.sort(function (a, b) {
+      var ka = a.date + ' ' + a.outTime, kb = b.date + ' ' + b.outTime;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+
+    heading('Staff leaving site');
+    if (staffList.length && !detailed) {
+      /* same reasoning as the visitor listing - a year of departures would
+         run to hundreds of rows, so summarise by person instead */
+      var tally = {}, order = [], tk;
+      for (sm = 0; sm < staffList.length; sm++) {
+        tk = staffList[sm].name;
+        if (!tally[tk]) { tally[tk] = { n: 0, out: 0 }; order.push(tk); }
+        tally[tk].n++;
+        if (!staffList[sm].backTime) tally[tk].out++;
+      }
+      order.sort(function (a, b) { return tally[b].n - tally[a].n; });
+      var sumRows = [], totalOut = 0;
+      for (sm = 0; sm < order.length; sm++) {
+        totalOut += tally[order[sm]].out;
+        sumRows.push([order[sm], String(tally[order[sm]].n),
+          tally[order[sm]].out ? String(tally[order[sm]].out) : '-']);
+      }
+      table([{ label: 'Name', w: 250 }, { label: 'Departures', w: 130 },
+             { label: 'No return logged', w: 135 }], sumRows);
+      paragraph(staffList.length + ' departures by ' + order.length +
+        (order.length === 1 ? ' person' : ' people') +
+        (totalOut ? ', ' + totalOut + ' with no return time logged.' : '.'));
+    } else if (staffList.length) {
+      var strows = [], stillOut = 0;
+      for (sm = 0; sm < staffList.length; sm++) {
+        var mv = staffList[sm];
+        if (!mv.backTime) stillOut++;
+        var numCell = { t: String(staffSeq[mv.id] || ''),
+          fill: mv.flag ? hexToRgb(FLAG_HEX[mv.flag]) : null,
+          c: mv.flag ? [1, 1, 1] : null, b: !!mv.flag };
+        strows.push(isRange
+          ? [numCell, this.ukDate(mv.date), mv.name, this.vehicleLabel(mv), mv.reason,
+             mv.outTime, mv.backTime || '-']
+          : [numCell, mv.name, this.vehicleLabel(mv), mv.reason,
+             mv.outTime, mv.backTime || '-']);
+      }
+      var stCols = isRange
+        ? [{ label: '#', w: 24 }, { label: 'Date', w: 70 }, { label: 'Name', w: 96 },
+           { label: 'Vehicle', w: 110 }, { label: 'Reason', w: 111 },
+           { label: 'Out', w: 52 }, { label: 'Back', w: 52 }]
+        : [{ label: '#', w: 24 }, { label: 'Name', w: 125 }, { label: 'Vehicle', w: 130 },
+           { label: 'Reason or destination', w: 165 }, { label: 'Out', w: 45 },
+           { label: 'Back', w: 46 }];
+      table(stCols, strows);
+      paragraph(staffList.length + (staffList.length === 1 ? ' departure recorded' : ' departures recorded') +
+        (stillOut ? ', ' + stillOut + ' with no return time logged.' : '.'));
+    } else {
+      paragraph('No staff departures recorded.');
+    }
+
+    /* ---- colour key, only if colours were actually used ---- */
+    var usedFlags = {}, uf;
+    for (uf = 0; uf < todays.length; uf++) if (todays[uf].flag) usedFlags[todays[uf].flag] = 1;
+    for (uf = 0; uf < staffList.length; uf++) if (staffList[uf].flag) usedFlags[staffList[uf].flag] = 1;
+    var flagRows = [];
+    for (uf = 0; uf < this.FLAGS.length; uf++) {
+      if (!usedFlags[this.FLAGS[uf].id]) continue;
+      flagRows.push([
+        { t: '  ', fill: hexToRgb(this.FLAGS[uf].hex) },
+        this.flagName(this.FLAGS[uf].id)
+      ]);
+    }
+    if (flagRows.length) {
+      heading('Colour key');
+      table([{ label: 'Colour', w: 70 }, { label: 'Meaning', w: 445 }], flagRows);
     }
 
     /* ---- contractor inductions ---- */
@@ -2516,7 +3354,10 @@ var app = {
       period: isRange ? range.slug : null,
       visitors: todays,
       contractors: this.contractors,
-      regularVisitors: this.regularVisitors
+      regularVisitors: this.regularVisitors,
+      staff: this.staff,
+      staffMovements: staffList,
+      siteVehicles: this.siteVehicles
     };
 
     return doc.build(PDFKit.b64enc(PDFKit.toUtf8(JSON.stringify(payload))));
@@ -2595,13 +3436,21 @@ var app = {
       else kept.push(this.visitors[i]);
     }
 
+    var keptMoves = [];
+    for (i = 0; i < this.staffMovements.length; i++) {
+      if (this.staffMovements[i].date < key && this.staffMovements[i].backTime) removed++;
+      else keptMoves.push(this.staffMovements[i]);
+    }
+
     if (!removed) { this.toast('Nothing older than ' + this.ukDate(key) + ' to clear'); return; }
     if (!confirm('Remove ' + removed + ' movements recorded before ' + this.ukDate(key) +
                  '? Contractors and regular visitors are not affected. Save a backup first.')) return;
 
     this.visitors = kept;
+    this.staffMovements = keptMoves;
     this.saveData();
     this.renderLog();
+    this.renderStaffMovements();
     this.renderStorageNote();
     this.toast('Cleared ' + removed + ' older movements');
   },
@@ -2611,7 +3460,10 @@ var app = {
       exported: new Date().toISOString(),
       visitors: this.visitors,
       contractors: this.contractors,
-      regularVisitors: this.regularVisitors
+      regularVisitors: this.regularVisitors,
+      staff: this.staff,
+      staffMovements: this.staffMovements,
+      siteVehicles: this.siteVehicles
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -2711,6 +3563,50 @@ var app = {
       }
     }
 
+    if (d.siteVehicles) {
+      for (i = 0; i < d.siteVehicles.length; i++) {
+        var sv = d.siteVehicles[i], svHas = false;
+        for (j = 0; j < this.siteVehicles.length; j++) {
+          if (String(this.siteVehicles[j]).toLowerCase() === String(sv).toLowerCase()) svHas = true;
+        }
+        if (!svHas) { this.siteVehicles.push(sv); report.added++; }
+      }
+    }
+
+    if (d.staff) {
+      for (i = 0; i < d.staff.length; i++) {
+        inc = d.staff[i];
+        if (!inc.vehicles) inc.vehicles = [];
+        if (typeof inc.vehicles === 'string') inc.vehicles = this.splitRegs(inc.vehicles);
+        match = null;
+        for (j = 0; j < this.staff.length; j++) {
+          if (this.staff[j].name.toLowerCase() === String(inc.name).toLowerCase()) match = this.staff[j];
+        }
+        if (!match) { this.staff.push(inc); report.records++; continue; }
+        for (j = 0; j < inc.vehicles.length; j++) {
+          var vHas = false;
+          for (var w = 0; w < match.vehicles.length; w++) {
+            if (String(match.vehicles[w]).toLowerCase() === String(inc.vehicles[j]).toLowerCase()) vHas = true;
+          }
+          if (!vHas) { match.vehicles.push(inc.vehicles[j]); report.added++; }
+        }
+        if (!match.role && inc.role) match.role = inc.role;
+      }
+    }
+
+    if (d.staffMovements) {
+      for (i = 0; i < d.staffMovements.length; i++) {
+        var sMove = d.staffMovements[i], sDup = false;
+        for (j = 0; j < this.staffMovements.length; j++) {
+          var ex = this.staffMovements[j];
+          if (ex.id === sMove.id) { sDup = true; break; }
+          if (ex.date === sMove.date && ex.outTime === sMove.outTime &&
+              String(ex.name).toLowerCase() === String(sMove.name).toLowerCase()) { sDup = true; break; }
+        }
+        if (!sDup) { this.staffMovements.push(sMove); report.movements++; }
+      }
+    }
+
     if (d.visitors) {
       for (i = 0; i < d.visitors.length; i++) {
         var v = d.visitors[i];
@@ -2737,6 +3633,8 @@ var app = {
     this.renderLog();
     this.renderArchive();
     this.renderVisitors();
+    this.renderStaffRegister();
+    this.renderStaffMovements();
     return report;
   },
 
@@ -2803,9 +3701,17 @@ var app = {
     var kept = [];
     for (var i = 0; i < this.visitors.length; i++) if (this.visitors[i].date !== this.viewDate) kept.push(this.visitors[i]);
     this.visitors = kept;
+
+    var keptMoves = [];
+    for (i = 0; i < this.staffMovements.length; i++) {
+      if (this.staffMovements[i].date !== this.viewDate) keptMoves.push(this.staffMovements[i]);
+    }
+    this.staffMovements = keptMoves;
+
     this.onSiteOnly = false;
     this.saveData();
     this.renderLog();
+    this.renderStaffMovements();
     this.toast('Sheet cleared');
   },
 
@@ -2814,9 +3720,13 @@ var app = {
     if (!confirm('This removes everything on this device. Continue?')) return;
     this.hideContractorForm();
     this.hideVisitorForm();
+    this.hideStaffForm();
     this.visitors = [];
     this.contractors = [];
     this.regularVisitors = [];
+    this.staff = [];
+    this.staffMovements = [];
+    this.siteVehicles = [];
     this.viewDate = this.currentDate;
     this.onSiteOnly = false;
     this.saveData();
@@ -2824,6 +3734,8 @@ var app = {
     this.renderLog();
     this.renderArchive();
     this.renderVisitors();
+    this.renderStaffRegister();
+    this.renderStaffMovements();
     this.toast('All data cleared');
   },
 

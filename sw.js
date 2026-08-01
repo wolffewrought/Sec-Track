@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION on every deploy to evict old entries.
  */
 
-var CACHE_VERSION = 'sat-v9';
+var CACHE_VERSION = 'sat-v13';
 var CACHE_NAME = 'security-access-tracker-' + CACHE_VERSION;
 
 var PRECACHE = [
@@ -20,7 +20,8 @@ var PRECACHE = [
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  './favicon.ico'
 ];
 
 self.addEventListener('install', function (event) {
