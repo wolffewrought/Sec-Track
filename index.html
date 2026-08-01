@@ -206,9 +206,9 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <div class="action-row">
 <button type="button" class="button button-primary" id="exportPdfBtn">Export day sheet as PDF</button>
 <button type="button" class="button button-secondary" id="exportJsonBtn">Save backup file</button>
-<button type="button" class="button button-secondary" id="importJsonBtn">Restore backup file</button>
+<button type="button" class="button button-secondary" id="importJsonBtn">Restore from PDF or backup</button>
 </div>
-<p class="text-muted">The PDF carries the day sheet, contractor list and regular visitors as hidden recoverable data alongside the printed tables.</p>
+<p class="text-muted">The PDF holds the printed sheet plus the same records as hidden recoverable data. Restore accepts either the PDF or a backup file.</p>
 </div>
 <div class="section">
 <h2>Data</h2>
@@ -222,9 +222,258 @@ body{background:#f1f5f9;padding-bottom:3rem}
 
 </div>
 
-<input type="file" id="jsonImportInput" accept=".json,application/json" style="display:none">
+<input type="file" id="jsonImportInput" accept=".json,.pdf,application/json,application/pdf" style="display:none">
 
 <script>
+/* ---------------------------------------------------------------
+ * PDFKit - minimal PDF writer. No libraries, works fully offline.
+ *
+ * Emits PDF 1.4 with uncompressed content streams and the base-14
+ * Helvetica faces, so no font data needs embedding. The occurrence
+ * data is appended as base64 AFTER %%EOF - readers ignore trailing
+ * bytes, so the file opens normally in any viewer while the app can
+ * read it back to restore the records.
+ * --------------------------------------------------------------- */
+var PDFKit = (function () {
+  var PW = 595.28, PH = 841.89;
+  var MARK_A = 'SAT-BACKUP-V1-BEGIN';
+  var MARK_B = 'SAT-BACKUP-V1-END';
+
+  /* Helvetica advance widths, chars 32-126, units per 1000 */
+  var W_REG = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,
+    556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,
+    667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,
+    667,611,722,667,944,667,667,611,278,278,278,469,556,333,
+    556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,
+    500,278,556,500,722,500,500,500,334,260,334,584];
+  var W_BOLD = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,
+    556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,
+    722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,
+    667,611,722,667,944,667,667,611,333,278,333,584,556,333,
+    556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,
+    556,333,611,556,778,556,556,500,389,280,389,584];
+
+  function n(v) { return (Math.round(v * 100) / 100).toString(); }
+
+  function normalize(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/[\u2018\u2019\u201A]/g, "'")
+      .replace(/[\u201C\u201D\u201E]/g, '"')
+      .replace(/[\u2013\u2014]/g, '-')
+      .replace(/\u2026/g, '...')
+      .replace(/\u00A0/g, ' ');
+  }
+
+  function width(str, size, bold) {
+    var t = bold ? W_BOLD : W_REG, w = 0, i, c;
+    for (i = 0; i < str.length; i++) {
+      c = str.charCodeAt(i);
+      w += (c >= 32 && c <= 126) ? t[c - 32] : 556;
+    }
+    return w * size / 1000;
+  }
+
+  function fit(str, max, size, bold) {
+    if (width(str, size, bold) <= max) return str;
+    var s = str;
+    while (s.length > 1 && width(s + '...', size, bold) > max) s = s.slice(0, -1);
+    return s + '...';
+  }
+
+  function esc(s) {
+    var out = '', i, c, ch;
+    for (i = 0; i < s.length; i++) {
+      ch = s.charAt(i);
+      c = s.charCodeAt(i);
+      if (ch === '\\') out += '\\\\';
+      else if (ch === '(') out += '\\(';
+      else if (ch === ')') out += '\\)';
+      else if (c < 32) out += ' ';
+      else if (c > 255) out += '?';
+      else if (c > 126) out += '\\' + ('00' + c.toString(8)).slice(-3);
+      else out += ch;
+    }
+    return out;
+  }
+
+  /* ---- UTF-8 and base64, implemented directly so there is no
+     dependency on btoa/atob or the deprecated escape helpers ---- */
+
+  var B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+  function toUtf8(str) {
+    var out = [], i, c, c2, cp;
+    for (i = 0; i < str.length; i++) {
+      c = str.charCodeAt(i);
+      if (c < 0x80) out.push(c);
+      else if (c < 0x800) out.push(0xC0 | (c >> 6), 0x80 | (c & 63));
+      else if (c >= 0xD800 && c <= 0xDBFF) {
+        c2 = str.charCodeAt(++i);
+        cp = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+        out.push(0xF0 | (cp >> 18), 0x80 | ((cp >> 12) & 63), 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
+      } else out.push(0xE0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    }
+    return out;
+  }
+
+  function fromUtf8(bytes) {
+    var out = '', i = 0, c, cp;
+    while (i < bytes.length) {
+      c = bytes[i++];
+      if (c < 0x80) out += String.fromCharCode(c);
+      else if (c < 0xE0) out += String.fromCharCode(((c & 31) << 6) | (bytes[i++] & 63));
+      else if (c < 0xF0) out += String.fromCharCode(((c & 15) << 12) | ((bytes[i++] & 63) << 6) | (bytes[i++] & 63));
+      else {
+        cp = ((c & 7) << 18) | ((bytes[i++] & 63) << 12) | ((bytes[i++] & 63) << 6) | (bytes[i++] & 63);
+        cp -= 0x10000;
+        out += String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 1023));
+      }
+    }
+    return out;
+  }
+
+  function b64enc(bytes) {
+    var out = '', i, b0, b1, b2;
+    for (i = 0; i < bytes.length; i += 3) {
+      b0 = bytes[i]; b1 = bytes[i + 1]; b2 = bytes[i + 2];
+      out += B64.charAt(b0 >> 2);
+      out += B64.charAt(((b0 & 3) << 4) | ((b1 === undefined ? 0 : b1) >> 4));
+      out += (b1 === undefined) ? '=' : B64.charAt(((b1 & 15) << 2) | ((b2 === undefined ? 0 : b2) >> 6));
+      out += (b2 === undefined) ? '=' : B64.charAt(b2 & 63);
+    }
+    return out;
+  }
+
+  function b64dec(str) {
+    var clean = str.replace(/[^A-Za-z0-9+/]/g, ''), out = [], i, c1, c2, c3, n0, n1, n2, n3;
+    for (i = 0; i < clean.length; i += 4) {
+      c1 = clean.charAt(i + 1); c2 = clean.charAt(i + 2); c3 = clean.charAt(i + 3);
+      n0 = B64.indexOf(clean.charAt(i));
+      n1 = c1 ? B64.indexOf(c1) : -1;
+      n2 = c2 ? B64.indexOf(c2) : -1;
+      n3 = c3 ? B64.indexOf(c3) : -1;
+      if (n1 < 0) break;
+      out.push((n0 << 2) | (n1 >> 4));
+      if (n2 >= 0) out.push(((n1 & 15) << 4) | (n2 >> 2));
+      if (n3 >= 0) out.push(((n2 & 3) << 6) | n3);
+    }
+    return out;
+  }
+
+  function bytesToBinary(bytes) {
+    var s = '', i, CH = 8192;
+    for (i = 0; i < bytes.length; i += CH) {
+      s += String.fromCharCode.apply(null, Array.prototype.slice.call(bytes.subarray ? bytes.subarray(i, i + CH) : bytes.slice(i, i + CH)));
+    }
+    return s;
+  }
+
+  /* Pull the embedded backup out of a PDF produced by this app.
+     Returns the parsed object, or null if the file has no payload. */
+  function extractPayload(bytes) {
+    var s = bytesToBinary(bytes);
+    var re = new RegExp(MARK_A + '\\s*([A-Za-z0-9+/=\\s]*?)\\s*' + MARK_B);
+    var m = re.exec(s);
+    if (!m) return null;
+    return JSON.parse(fromUtf8(b64dec(m[1])));
+  }
+
+  /* ---- document ---- */
+
+  function Doc() { this.pages = []; this.ops = null; }
+
+  Doc.prototype.addPage = function () { this.ops = []; this.pages.push(this.ops); };
+  Doc.prototype.select = function (i) { this.ops = this.pages[i]; };
+
+  Doc.prototype.text = function (str, x, yTop, size, bold, rgb) {
+    var c = rgb || [0, 0, 0];
+    this.ops.push('BT ' + n(c[0]) + ' ' + n(c[1]) + ' ' + n(c[2]) + ' rg /' +
+      (bold ? 'F2' : 'F1') + ' ' + n(size) + ' Tf 1 0 0 1 ' + n(x) + ' ' +
+      n(PH - yTop) + ' Tm (' + esc(str) + ') Tj ET');
+  };
+
+  Doc.prototype.textRight = function (str, xRight, yTop, size, bold, rgb) {
+    this.text(str, xRight - width(str, size, bold), yTop, size, bold, rgb);
+  };
+
+  Doc.prototype.textCentre = function (str, cx, yTop, size, bold, rgb) {
+    this.text(str, cx - width(str, size, bold) / 2, yTop, size, bold, rgb);
+  };
+
+  Doc.prototype.rect = function (x, yTop, w, h, rgb) {
+    this.ops.push(n(rgb[0]) + ' ' + n(rgb[1]) + ' ' + n(rgb[2]) + ' rg ' +
+      n(x) + ' ' + n(PH - yTop - h) + ' ' + n(w) + ' ' + n(h) + ' re f');
+  };
+
+  Doc.prototype.line = function (x1, y1, x2, y2, rgb, lw) {
+    this.ops.push(n(rgb[0]) + ' ' + n(rgb[1]) + ' ' + n(rgb[2]) + ' RG ' + n(lw || 0.5) +
+      ' w ' + n(x1) + ' ' + n(PH - y1) + ' m ' + n(x2) + ' ' + n(PH - y2) + ' l S');
+  };
+
+  Doc.prototype.build = function (payloadB64) {
+    var i, id, out = '%PDF-1.4\n', offsets = {}, kids = [];
+    var CATALOG = 1, PAGES = 2, F_REG = 3, F_BOLD = 4, BACKUP = 5, FIRST = 6;
+
+    for (i = 0; i < this.pages.length; i++) kids.push((FIRST + i * 2) + ' 0 R');
+
+    function add(objId, body) {
+      offsets[objId] = out.length;
+      out += objId + ' 0 obj\n' + body + '\nendobj\n';
+    }
+
+    /* The backup rides inside the file as a real object hung off the
+       catalog, NOT as trailing bytes after %%EOF. Readers only scan the
+       last kilobyte or so for startxref, and a large trailing payload
+       pushes it out of that window - qpdf and friends then report the
+       file as damaged. Keeping it as an object leaves startxref last
+       and the document structurally valid. */
+    add(CATALOG, '<< /Type /Catalog /Pages ' + PAGES + ' 0 R' +
+      (payloadB64 ? ' /SATBackup ' + BACKUP + ' 0 R' : '') + ' >>');
+    add(PAGES, '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + this.pages.length + ' >>');
+    add(F_REG, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+    add(F_BOLD, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+
+    var payloadStream = payloadB64 ? (MARK_A + '\n' + payloadB64 + '\n' + MARK_B) : '';
+    add(BACKUP, '<< /Type /SATBackup /Format /JSON-Base64 /Length ' + payloadStream.length +
+      ' >>\nstream\n' + payloadStream + '\nendstream');
+
+    for (i = 0; i < this.pages.length; i++) {
+      id = FIRST + i * 2;
+      add(id, '<< /Type /Page /Parent ' + PAGES + ' 0 R /MediaBox [0 0 ' + n(PW) + ' ' + n(PH) +
+        '] /Resources << /Font << /F1 ' + F_REG + ' 0 R /F2 ' + F_BOLD + ' 0 R >> >> /Contents ' + (id + 1) + ' 0 R >>');
+      var stream = this.pages[i].join('\n');
+      add(id + 1, '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
+    }
+
+    var total = FIRST + this.pages.length * 2;
+    var xrefPos = out.length;
+    out += 'xref\n0 ' + total + '\n0000000000 65535 f \n';
+    for (id = 1; id < total; id++) {
+      out += ('0000000000' + (offsets[id] || 0)).slice(-10) + ' 00000 n \n';
+    }
+    out += 'trailer\n<< /Size ' + total + ' /Root ' + CATALOG + ' 0 R >>\nstartxref\n' + xrefPos + '\n%%EOF\n';
+
+    var bytes = new Uint8Array(out.length);
+    for (i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xFF;
+    return bytes;
+  };
+
+  return {
+    Doc: Doc,
+    PW: PW,
+    PH: PH,
+    width: width,
+    fit: fit,
+    normalize: normalize,
+    toUtf8: toUtf8,
+    fromUtf8: fromUtf8,
+    b64enc: b64enc,
+    b64dec: b64dec,
+    extractPayload: extractPayload,
+    bytesToBinary: bytesToBinary
+  };
+})();
+
 var app = {
   visitors: [],
   contractors: [],
@@ -630,72 +879,170 @@ var app = {
     this.toast('Regular visitor removed');
   },
 
-  buildSheet: function () {
+  buildPdf: function () {
+    var SLATE = [0.118, 0.161, 0.231];
+    var WHITE = [1, 1, 1];
+    var GREY  = [0.45, 0.49, 0.55];
+    var LINE  = [0.80, 0.84, 0.88];
+    var GREEN = [0.08, 0.50, 0.24];
+    var RED   = [0.73, 0.11, 0.11];
+    var INK   = [0.06, 0.09, 0.15];
+
+    var M = 40, RIGHT = PDFKit.PW - 40, TOP = 52, FLOOR = 792;
+    var doc = new PDFKit.Doc();
+    var y = 0;
+
+    function newPage() { doc.addPage(); y = TOP; }
+    function room(h) { if (y + h > FLOOR) { newPage(); return true; } return false; }
+
+    function heading(t) {
+      room(40);
+      y += 14;
+      doc.text(t, M, y, 11.5, true, SLATE);
+      y += 4;
+      doc.line(M, y, RIGHT, y, LINE, 0.8);
+      y += 13;
+    }
+
+    function paragraph(t) {
+      room(16);
+      doc.text(PDFKit.normalize(t), M, y + 8, 9, false, GREY);
+      y += 16;
+    }
+
+    function table(cols, rows) {
+      var HDR = 16, ROW = 15, i;
+
+      function head() {
+        doc.rect(M, y, RIGHT - M, HDR, SLATE);
+        var x = M + 5;
+        for (i = 0; i < cols.length; i++) {
+          doc.text(PDFKit.fit(cols[i].label, cols[i].w - 10, 8, true), x, y + 11, 8, true, WHITE);
+          x += cols[i].w;
+        }
+        y += HDR;
+      }
+
+      room(HDR + ROW);
+      head();
+
+      for (var r = 0; r < rows.length; r++) {
+        if (y + ROW > FLOOR) { newPage(); head(); }
+        var x = M + 5;
+        for (var c = 0; c < cols.length; c++) {
+          var cell = rows[r][c];
+          var isObj = cell !== null && typeof cell === 'object';
+          var txt = PDFKit.normalize(isObj ? cell.t : cell);
+          var col = (isObj && cell.c) ? cell.c : INK;
+          var bold = !!(isObj && cell.b);
+          doc.text(PDFKit.fit(txt, cols[c].w - 10, 8.5, bold), x, y + 10.5, 8.5, bold, col);
+          x += cols[c].w;
+        }
+        y += ROW;
+        doc.line(M, y, RIGHT, y, LINE, 0.4);
+      }
+      y += 4;
+    }
+
+    /* ---- gather ---- */
     var todays = [];
     for (var i = 0; i < this.visitors.length; i++) {
       if (this.visitors[i].date === this.currentDate) todays.push(this.visitors[i]);
     }
-
     var dateLabel = new Date().toLocaleDateString('en-GB', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     var hours = document.getElementById('startTime').value + ' to ' + document.getElementById('endTime').value;
 
-    var css = 'body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.45;margin:14mm}' +
-      'h1{font-size:20px;text-align:center;border-bottom:2px solid #1e293b;padding-bottom:8px;margin-bottom:6px}' +
-      '.sub{text-align:center;color:#475569;font-size:12px;margin-bottom:18px}' +
-      'h2{font-size:14px;margin:18px 0 8px;border-bottom:1px solid #cbd5e1;padding-bottom:5px}' +
-      'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}' +
-      'th{background:#1e293b;color:#fff;padding:6px;border:1px solid #94a3b8;text-align:left}' +
-      'td{padding:6px;border:1px solid #cbd5e1}' +
-      '.ok{color:#15803d;font-weight:bold}.due{color:#b91c1c;font-weight:bold}' +
-      '.foot{margin-top:22px;font-size:9px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:6px}' +
-      '@media print{body{margin:10mm}h2{page-break-after:avoid}tr{page-break-inside:avoid}}';
+    /* ---- title ---- */
+    newPage();
+    doc.rect(M, y, RIGHT - M, 30, SLATE);
+    doc.textCentre('SITE OCCURRENCE SHEET', PDFKit.PW / 2, y + 20, 14, true, WHITE);
+    y += 38;
+    doc.textCentre(dateLabel + '   -   Access hours ' + hours, PDFKit.PW / 2, y, 9.5, false, GREY);
+    y += 8;
 
-    var h = '<h1>Site Occurrence Sheet</h1><div class="sub">' + this.esc(dateLabel) + ' &middot; Access hours ' + this.esc(hours) + '</div>';
-
-    h += '<h2>Visitor movements</h2>';
+    /* ---- visitor movements ---- */
+    heading('Visitor movements');
     if (todays.length) {
-      h += '<table><thead><tr><th>Company / visitor</th><th>Vehicle</th><th>Reason for visit</th><th>In</th><th>Out</th></tr></thead><tbody>';
+      var vrows = [];
       for (var t = 0; t < todays.length; t++) {
         var v = todays[t];
-        h += '<tr><td>' + this.esc(v.company) + '</td><td>' + this.esc(v.vehicle || '-') + '</td><td>' +
-          this.esc(v.reason) + '</td><td>' + this.esc(v.entryTime) + '</td><td>' + this.esc(v.exitTime || '-') + '</td></tr>';
+        vrows.push([v.company, v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-']);
       }
-      h += '</tbody></table>';
+      table([
+        { label: 'Company / visitor', w: 150 },
+        { label: 'Vehicle', w: 85 },
+        { label: 'Reason for visit', w: 160 },
+        { label: 'In', w: 60 },
+        { label: 'Out', w: 60 }
+      ], vrows);
+      paragraph(todays.length + (todays.length === 1 ? ' movement recorded.' : ' movements recorded.'));
     } else {
-      h += '<p>No visitors logged for this period.</p>';
+      paragraph('No visitors logged for this period.');
     }
 
-    h += '<h2>Contractor inductions</h2>';
+    /* ---- contractor inductions ---- */
+    heading('Contractor inductions');
     if (this.contractors.length) {
       var now = new Date();
       now.setHours(0, 0, 0, 0);
-      h += '<table><thead><tr><th>Company</th><th>Valid until</th><th>Status</th></tr></thead><tbody>';
-      for (var c = 0; c < this.contractors.length; c++) {
-        var due = new Date(this.contractors[c].inductionDate);
-        var valid = due >= now;
-        h += '<tr><td>' + this.esc(this.contractors[c].name) + '</td><td>' + due.toLocaleDateString('en-GB') +
-          '</td><td class="' + (valid ? 'ok' : 'due') + '">' + (valid ? 'Valid' : 'Induction due') + '</td></tr>';
+      var sorted = this.contractors.slice().sort(function (a, b) {
+        return new Date(a.inductionDate) - new Date(b.inductionDate);
+      });
+      var crows = [], due = 0;
+      for (var c2 = 0; c2 < sorted.length; c2++) {
+        var d = new Date(sorted[c2].inductionDate);
+        var ok = d >= now;
+        if (!ok) due++;
+        crows.push([
+          sorted[c2].name,
+          d.toLocaleDateString('en-GB'),
+          { t: ok ? 'Valid' : 'INDUCTION DUE', c: ok ? GREEN : RED, b: true }
+        ]);
       }
-      h += '</tbody></table>';
+      table([
+        { label: 'Company', w: 260 },
+        { label: 'Valid until', w: 130 },
+        { label: 'Status', w: 125 }
+      ], crows);
+      paragraph(due ? due + ' of ' + sorted.length + ' require a new induction.'
+                    : 'All ' + sorted.length + ' inductions are in date.');
     } else {
-      h += '<p>No contractors recorded.</p>';
+      paragraph('No contractors recorded.');
     }
 
-    h += '<h2>Regular visitors</h2>';
+    /* ---- regular visitors ---- */
+    heading('Regular visitors');
     if (this.regularVisitors.length) {
-      h += '<table><thead><tr><th>Name</th><th>Vehicle</th><th>Usual reason</th></tr></thead><tbody>';
-      for (var r = 0; r < this.regularVisitors.length; r++) {
-        var rv = this.regularVisitors[r];
-        h += '<tr><td>' + this.esc(rv.name) + '</td><td>' + this.esc(rv.vehicle) + '</td><td>' + this.esc(rv.reason || '-') + '</td></tr>';
+      var rrows = [];
+      for (var r2 = 0; r2 < this.regularVisitors.length; r2++) {
+        var rv = this.regularVisitors[r2];
+        rrows.push([rv.name, rv.vehicle, rv.reason || '-']);
       }
-      h += '</tbody></table>';
+      table([
+        { label: 'Name', w: 180 },
+        { label: 'Vehicle registration', w: 150 },
+        { label: 'Usual reason', w: 185 }
+      ], rrows);
     } else {
-      h += '<p>No regular visitors recorded.</p>';
+      paragraph('No regular visitors recorded.');
+    }
+
+    /* ---- footers, once the page count is known ---- */
+    var total = doc.pages.length;
+    for (var p = 0; p < total; p++) {
+      doc.select(p);
+      doc.line(M, 806, RIGHT, 806, LINE, 0.5);
+      doc.text('Security Access Tracker  -  generated ' + dateLabel, M, 816, 7.5, false, GREY);
+      doc.textRight('Page ' + (p + 1) + ' of ' + total, RIGHT, 816, 7.5, false, GREY);
+      doc.text('This file carries its own backup data - reopen it with Restore to recover these records.',
+        M, 826, 7, false, GREY);
     }
 
     var payload = {
+      app: 'security-access-tracker',
+      version: 1,
       exported: new Date().toISOString(),
       date: this.currentDate,
       visitors: todays,
@@ -703,32 +1050,25 @@ var app = {
       regularVisitors: this.regularVisitors
     };
 
-    h += '<div class="foot">Generated ' + this.esc(dateLabel) + '</div>';
-    h += '<div style="display:none" data-sat-payload="' + this.esc(JSON.stringify(payload)) + '"></div>';
-
-    return { css: css, body: h, title: 'Occurrence sheet ' + this.currentDate };
+    return doc.build(PDFKit.b64enc(PDFKit.toUtf8(JSON.stringify(payload))));
   },
 
   exportPdf: function () {
-    var sheet = this.buildSheet();
-    var w = window.open('', '_blank');
-    if (!w) { this.toast('Allow pop-ups to export the sheet', 'error'); return; }
-
-    var doc = w.document;
-    doc.title = sheet.title;
-
-    var style = doc.createElement('style');
-    style.appendChild(doc.createTextNode(sheet.css));
-    doc.head.appendChild(style);
-
-    doc.body.innerHTML = sheet.body;
-
-    setTimeout(function () {
-      w.focus();
-      w.print();
-    }, 400);
-
-    this.toast('Choose Save as PDF in the print sheet');
+    try {
+      var bytes = this.buildPdf();
+      var blob = new Blob([bytes], { type: 'application/pdf' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'occurrence-sheet-' + this.currentDate + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      this.toast('PDF saved');
+    } catch (err) {
+      this.toast('Could not build the PDF', 'error');
+    }
   },
 
   exportJson: function () {
@@ -750,63 +1090,102 @@ var app = {
     this.toast('Backup saved');
   },
 
+  mergeData: function (d) {
+    var merged = 0, i, j;
+
+    if (d.contractors) {
+      for (i = 0; i < d.contractors.length; i++) {
+        var exists = false;
+        for (j = 0; j < this.contractors.length; j++) {
+          if (this.contractors[j].name.toLowerCase() === String(d.contractors[i].name).toLowerCase()) {
+            this.contractors[j].inductionDate = d.contractors[i].inductionDate;
+            exists = true;
+          }
+        }
+        if (!exists) { this.contractors.push(d.contractors[i]); merged++; }
+      }
+    }
+
+    if (d.regularVisitors) {
+      for (i = 0; i < d.regularVisitors.length; i++) {
+        var rvExists = false;
+        for (j = 0; j < this.regularVisitors.length; j++) {
+          if (this.regularVisitors[j].name.toLowerCase() === String(d.regularVisitors[i].name).toLowerCase() &&
+              this.regularVisitors[j].vehicle.toLowerCase() === String(d.regularVisitors[i].vehicle).toLowerCase()) {
+            rvExists = true;
+          }
+        }
+        if (!rvExists) { this.regularVisitors.push(d.regularVisitors[i]); merged++; }
+      }
+    }
+
+    if (d.visitors) {
+      for (i = 0; i < d.visitors.length; i++) {
+        var vExists = false;
+        for (j = 0; j < this.visitors.length; j++) {
+          if (this.visitors[j].id === d.visitors[i].id) vExists = true;
+        }
+        if (!vExists) { this.visitors.push(d.visitors[i]); merged++; }
+      }
+    }
+
+    this.saveData();
+    this.renderLog();
+    this.renderArchive();
+    this.renderVisitors();
+    return merged;
+  },
+
+  /* Accepts either a JSON backup or a PDF produced by this app -
+     the PDF carries the same records base64-encoded after %%EOF. */
+  readBackup: function (bytes) {
+    var data = null;
+    try { data = PDFKit.extractPayload(bytes); } catch (err) { data = null; }
+    if (data) return { data: data, source: 'PDF' };
+
+    try {
+      data = JSON.parse(PDFKit.fromUtf8(Array.prototype.slice.call(bytes)));
+      return { data: data, source: 'backup file' };
+    } catch (err) {
+      return null;
+    }
+  },
+
   handleImport: function (e) {
-    var file = e.target.files && e.target.files[0];
+    var input = e.target;
+    var file = input.files && input.files[0];
     if (!file) return;
+
     var self = this;
     var reader = new FileReader();
 
     reader.onload = function (ev) {
+      var found = null;
       try {
-        var d = JSON.parse(ev.target.result);
-        var merged = 0;
-        var i, j;
-
-        if (d.contractors) {
-          for (i = 0; i < d.contractors.length; i++) {
-            var exists = false;
-            for (j = 0; j < self.contractors.length; j++) {
-              if (self.contractors[j].name.toLowerCase() === String(d.contractors[i].name).toLowerCase()) {
-                self.contractors[j].inductionDate = d.contractors[i].inductionDate;
-                exists = true;
-              }
-            }
-            if (!exists) { self.contractors.push(d.contractors[i]); merged++; }
-          }
-        }
-
-        if (d.regularVisitors) {
-          for (i = 0; i < d.regularVisitors.length; i++) {
-            var rvExists = false;
-            for (j = 0; j < self.regularVisitors.length; j++) {
-              if (self.regularVisitors[j].name.toLowerCase() === String(d.regularVisitors[i].name).toLowerCase()) rvExists = true;
-            }
-            if (!rvExists) { self.regularVisitors.push(d.regularVisitors[i]); merged++; }
-          }
-        }
-
-        if (d.visitors) {
-          for (i = 0; i < d.visitors.length; i++) {
-            var vExists = false;
-            for (j = 0; j < self.visitors.length; j++) {
-              if (self.visitors[j].id === d.visitors[i].id) vExists = true;
-            }
-            if (!vExists) { self.visitors.push(d.visitors[i]); merged++; }
-          }
-        }
-
-        self.saveData();
-        self.renderLog();
-        self.renderArchive();
-        self.renderVisitors();
-        self.toast('Restored ' + merged + ' records');
+        found = self.readBackup(new Uint8Array(ev.target.result));
       } catch (err) {
-        self.toast('That file could not be read', 'error');
+        found = null;
       }
+
+      if (!found || !found.data) {
+        self.toast('No saved records found in that file', 'error');
+        input.value = '';
+        return;
+      }
+
+      var merged = self.mergeData(found.data);
+      self.toast(merged
+        ? 'Restored ' + merged + ' records from the ' + found.source
+        : 'Nothing new in that ' + found.source);
+      input.value = '';
     };
 
-    reader.readAsText(file);
-    e.target.value = '';
+    reader.onerror = function () {
+      self.toast('That file could not be read', 'error');
+      input.value = '';
+    };
+
+    reader.readAsArrayBuffer(file);
   },
 
   clearToday: function () {
