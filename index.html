@@ -4,14 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1e293b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Access Tracker">
 <title>Security Access Tracker</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}html{background:#f1f5f9;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}body{background:#f1f5f9}.header{background:#1e293b;color:white;padding:1rem;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,0.1)}.header h1{font-size:1.25rem;font-weight:600;margin-bottom:0.5rem}.header-date{font-size:0.875rem;opacity:0.9}.tab-nav{display:flex;background:white;border-bottom:1px solid #cbd5e1;overflow-x:auto;position:sticky;top:3.5rem;z-index:50}.tab-nav button{flex:1;min-width:100px;padding:1rem 0.75rem;border:none;background:white;color:#475569;font-weight:500;font-size:0.875rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}.tab-nav button.active{color:#2563eb;border-bottom-color:#2563eb;background:linear-gradient(to bottom,rgba(37,99,235,0.05),transparent)}.container{max-width:900px;margin:0 auto;padding:1rem}.tab-content{display:none}.tab-content.active{display:block}.form-group{margin-bottom:1.25rem}.form-group label{display:block;font-weight:600;margin-bottom:0.5rem;color:#334155;font-size:0.875rem}.form-group input,.form-group select{width:100%;padding:0.625rem 0.75rem;border:1px solid #cbd5e1;border-radius:0.375rem;font-family:inherit;font-size:1rem}.form-group input:focus,.form-group select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}@media (max-width:640px){.grid-2{grid-template-columns:1fr}}.button{padding:0.75rem 1.5rem;border:none;border-radius:0.375rem;font-weight:600;font-size:0.9rem;cursor:pointer;display:inline-block}.button-primary{background:#2563eb;color:white}.button-secondary{background:#e2e8f0;color:#0f172a}.button-danger{background:#dc2626;color:white;font-size:0.75rem;padding:0.5rem 0.75rem}.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #cbd5e1;border-top:none;border-radius:0 0 0.375rem 0.375rem;max-height:200px;overflow-y:auto;display:none;z-index:10;box-shadow:0 4px 6px rgba(0,0,0,0.1)}.autocomplete-list.active{display:block}.autocomplete-item{padding:0.75rem;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:0.9rem}.autocomplete-item:hover{background:#2563eb;color:white}.log-table,.archive-table{width:100%;border-collapse:collapse;background:white;border-radius:0.375rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05);font-size:0.875rem}.log-table thead,.archive-table thead{background:#1e293b;color:white}.log-table th,.archive-table th{padding:0.75rem;text-align:left;font-weight:600}.log-table td,.archive-table td{padding:0.75rem;border-bottom:1px solid #e2e8f0}.log-table tbody tr:hover,.archive-table tbody tr:hover{background:var(--slate-50)}.status-badge{display:inline-flex;align-items:center;gap:0.375rem;padding:0.375rem 0.75rem;border-radius:9999px;font-weight:600;font-size:0.75rem}.status-valid{background:#f0fdf4;color:#16a34a}.status-needed{background:#fef2f2;color:#dc2626}.status-dot{width:0.5rem;height:0.5rem;border-radius:50%;display:inline-block}.section{background:white;padding:1.25rem;border-radius:0.375rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,0.05)}.section h2{font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:#1e293b;border-bottom:2px solid #1e293b;padding-bottom:0.75rem}.empty-state{text-align:center;padding:2rem 1rem;color:#64748b}.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:white;padding:1rem 1.5rem;border-radius:0.375rem;box-shadow:0 10px 15px rgba(0,0,0,0.2);animation:slideUp 0.3s ease-out;z-index:1000;font-size:0.875rem}.toast.success{background:#16a34a}.toast.error{background:#dc2626}@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}.action-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem}.action-row button{flex:1;min-width:120px}.delete-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:0.25rem 0.5rem;opacity:0.6}.text-muted{color:#64748b;font-size:0.875rem;margin-top:1rem}.autocomplete-wrapper{position:relative}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:#f1f5f9;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
+body{background:#f1f5f9;padding-bottom:3rem}
+.header{background:#1e293b;color:#fff;padding:1rem;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.header h1{font-size:1.25rem;font-weight:600;margin-bottom:.25rem}
+.header-date{font-size:.875rem;opacity:.9}
+.tab-nav{display:flex;background:#fff;border-bottom:1px solid #cbd5e1;overflow-x:auto;position:sticky;top:4.4rem;z-index:50}
+.tab-nav button{flex:1;min-width:104px;padding:1rem .75rem;border:none;background:#fff;color:#475569;font-weight:500;font-size:.875rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tab-nav button.active{color:#2563eb;border-bottom-color:#2563eb;background:#eff6ff}
+.container{max-width:900px;margin:0 auto;padding:1rem}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.section{background:#fff;padding:1.25rem;border-radius:.375rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.section h2{font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:#1e293b;border-bottom:2px solid #1e293b;padding-bottom:.75rem}
+.form-group{margin-bottom:1.25rem}
+.form-group label{display:block;font-weight:600;margin-bottom:.5rem;color:#334155;font-size:.875rem}
+.form-group input{width:100%;padding:.625rem .75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:1rem;background:#fff;color:#0f172a}
+.form-group input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media (max-width:640px){.grid-2{grid-template-columns:1fr}}
+.button{padding:.75rem 1.25rem;border:none;border-radius:.375rem;font-weight:600;font-size:.9rem;cursor:pointer}
+.button-primary{background:#2563eb;color:#fff}
+.button-primary:active{background:#1d4ed8}
+.button-secondary{background:#e2e8f0;color:#0f172a}
+.button-secondary:active{background:#cbd5e1}
+.button-danger{background:#dc2626;color:#fff}
+.button-danger:active{background:#b91c1c}
+.action-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.action-row .button{flex:1;min-width:130px}
+.autocomplete-wrapper{position:relative}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #cbd5e1;border-top:none;border-radius:0 0 .375rem .375rem;max-height:220px;overflow-y:auto;display:none;z-index:20;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+.autocomplete-list.active{display:block}
+.autocomplete-item{padding:.75rem;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:.9rem}
+.autocomplete-item:last-child{border-bottom:none}
+.autocomplete-item:active{background:#2563eb;color:#fff}
+.ac-reg{color:#64748b;font-size:.8rem}
+.data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:.375rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);font-size:.875rem}
+.data-table thead{background:#1e293b;color:#fff}
+.data-table th{padding:.75rem;text-align:left;font-weight:600}
+.data-table td{padding:.75rem;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+.data-table tbody tr:last-child td{border-bottom:none}
+.status-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .625rem;border-radius:9999px;font-weight:600;font-size:.75rem;white-space:nowrap}
+.status-valid{background:#f0fdf4;color:#15803d}
+.status-needed{background:#fef2f2;color:#b91c1c}
+.status-dot{width:.5rem;height:.5rem;border-radius:50%;display:inline-block}
+.empty-state{text-align:center;padding:2rem 1rem;color:#64748b}
+.delete-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:.25rem .5rem}
+.text-muted{color:#64748b;font-size:.875rem;margin-top:1rem}
+.toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:.875rem 1.25rem;border-radius:.375rem;box-shadow:0 10px 15px rgba(0,0,0,.2);z-index:1000;font-size:.875rem;max-width:90vw;text-align:center}
+.toast.success{background:#15803d}
+.toast.error{background:#b91c1c}
+@media (max-width:640px){
+.tab-nav button{font-size:.75rem;padding:.75rem .4rem;min-width:88px}
+.container{padding:.75rem}
+.section{padding:1rem}
+.data-table{font-size:.78rem}
+.data-table th,.data-table td{padding:.5rem .35rem}
+.button{padding:.625rem .75rem;font-size:.8rem}
+}
 </style>
 </head>
 <body>
+
 <div class="header">
-<h1>🔐 Security Access Tracker</h1>
+<h1>Security Access Tracker</h1>
 <div class="header-date" id="headerDate"></div>
 </div>
 
@@ -23,79 +91,80 @@
 </div>
 
 <div class="container">
+
 <div id="tracker" class="tab-content active">
 <div class="section">
 <h2>Site Access Hours</h2>
 <div class="grid-2">
 <div class="form-group">
-<label>Start Time</label>
+<label for="startTime">Start time</label>
 <input type="time" id="startTime" value="05:00">
 </div>
 <div class="form-group">
-<label>End Time</label>
-<input type="time" id="endTime" value="17:00">
+<label for="endTime">End time</label>
+<input type="time" id="endTime" value="13:00">
 </div>
 </div>
 </div>
 
 <div class="section">
-<h2>Record Visitor Entry/Exit</h2>
-<form id="visitorForm">
+<h2>Record visitor</h2>
+<form id="visitorForm" autocomplete="off">
 <div class="form-group">
-<label>Company / Visitor Name *</label>
+<label for="companyInput">Company / visitor name</label>
 <div class="autocomplete-wrapper">
-<input type="text" id="companyInput" placeholder="Start typing..." autocomplete="off" required>
+<input type="text" id="companyInput" placeholder="Start typing to see saved visitors" autocomplete="off" required>
 <div class="autocomplete-list" id="companyList"></div>
 </div>
 </div>
 <div class="form-group">
-<label>Vehicle Registration</label>
-<input type="text" id="vehicleInput" placeholder="e.g., AB21 XYZ">
+<label for="vehicleInput">Vehicle registration</label>
+<input type="text" id="vehicleInput" placeholder="AB21 XYZ">
 </div>
 <div class="form-group">
-<label>Reason for Visit *</label>
-<input type="text" id="reasonInput" placeholder="Maintenance, Delivery, etc." required>
+<label for="reasonInput">Reason for site visit</label>
+<input type="text" id="reasonInput" placeholder="Delivery, maintenance, meeting" required>
 </div>
 <div class="grid-2">
 <div class="form-group">
-<label>Entry Time *</label>
+<label for="entryTime">Entry time</label>
 <input type="time" id="entryTime" required>
 </div>
 <div class="form-group">
-<label>Exit Time</label>
+<label for="exitTime">Exit time</label>
 <input type="time" id="exitTime">
 </div>
 </div>
 <div class="action-row">
-<button type="submit" class="button button-primary">Record Entry</button>
-<button type="button" class="button button-secondary" id="setCurrentTime">Use Current Time</button>
+<button type="submit" class="button button-primary">Record entry</button>
+<button type="button" class="button button-secondary" id="setCurrentTime">Use current time</button>
 </div>
 </form>
 </div>
 
 <div class="section">
-<h2>Today's Visitor Log</h2>
+<h2>Today's occurrence sheet</h2>
 <div id="logContainer"></div>
 </div>
 </div>
 
 <div id="archive" class="tab-content">
 <div class="section">
-<h2>Contractor Inductions</h2>
+<h2>Contractor inductions</h2>
 <div class="action-row">
-<button class="button button-primary" id="addContractorBtn">+ Add Contractor</button>
+<button type="button" class="button button-primary" id="addContractorBtn">Add contractor</button>
 </div>
-<form id="contractorForm" style="display: none; margin-bottom: 1.25rem;">
+<form id="contractorForm" style="display:none" autocomplete="off">
 <div class="form-group">
-<label>Company Name *</label>
+<label for="contractorName">Company name</label>
 <input type="text" id="contractorName" required>
 </div>
 <div class="form-group">
-<label>Induction Valid Until *</label>
+<label for="inductionDate">Induction valid until</label>
 <input type="date" id="inductionDate" required>
 </div>
 <div class="action-row">
-<button type="submit" class="button button-primary">Save Contractor</button>
+<button type="submit" class="button button-primary">Save contractor</button>
 <button type="button" class="button button-secondary" id="cancelContractorBtn">Cancel</button>
 </div>
 </form>
@@ -105,25 +174,25 @@
 
 <div id="visitors" class="tab-content">
 <div class="section">
-<h2>Regular Visitors Database</h2>
+<h2>Regular visitors</h2>
 <div class="action-row">
-<button class="button button-primary" id="addVisitorBtn">+ Add Regular Visitor</button>
+<button type="button" class="button button-primary" id="addVisitorBtn">Add regular visitor</button>
 </div>
-<form id="regularVisitorForm" style="display: none; margin-bottom: 1.25rem;">
+<form id="regularVisitorForm" style="display:none" autocomplete="off">
 <div class="form-group">
-<label>Visitor Name / Company *</label>
+<label for="visitorName">Visitor / company name</label>
 <input type="text" id="visitorName" required>
 </div>
 <div class="form-group">
-<label>Vehicle Registration *</label>
-<input type="text" id="visitorVehicle" required>
+<label for="visitorVehicle">Vehicle registration</label>
+<input type="text" id="visitorVehicle" placeholder="Comma separate multiple vehicles" required>
 </div>
 <div class="form-group">
-<label>Common Reason for Visit</label>
+<label for="visitorReason">Usual reason for visit</label>
 <input type="text" id="visitorReason" placeholder="Optional">
 </div>
 <div class="action-row">
-<button type="submit" class="button button-primary">Save Visitor</button>
+<button type="submit" class="button button-primary">Save visitor</button>
 <button type="button" class="button button-secondary" id="cancelVisitorBtn">Cancel</button>
 </div>
 </form>
@@ -133,174 +202,226 @@
 
 <div id="settings" class="tab-content">
 <div class="section">
-<h2>Export & Backup</h2>
+<h2>Export</h2>
 <div class="action-row">
-<button class="button button-primary" id="exportPdfBtn">Export Today as PDF</button>
-<button class="button button-secondary" id="exportJsonBtn">Export as JSON</button>
-<button class="button button-secondary" id="importJsonBtn">Import from JSON</button>
+<button type="button" class="button button-primary" id="exportPdfBtn">Export day sheet as PDF</button>
+<button type="button" class="button button-secondary" id="exportJsonBtn">Save backup file</button>
+<button type="button" class="button button-secondary" id="importJsonBtn">Restore backup file</button>
 </div>
+<p class="text-muted">The PDF carries the day sheet, contractor list and regular visitors as hidden recoverable data alongside the printed tables.</p>
 </div>
 <div class="section">
-<h2>Data Management</h2>
+<h2>Data</h2>
 <div class="action-row">
-<button class="button button-danger" id="clearTodayBtn">Clear Today's Log</button>
-<button class="button button-danger" id="clearAllBtn">Clear All Data</button>
+<button type="button" class="button button-danger" id="clearTodayBtn">Clear today's sheet</button>
+<button type="button" class="button button-danger" id="clearAllBtn">Clear everything</button>
 </div>
-<p class="text-muted">⚠️ Actions cannot be undone. Export your data before clearing.</p>
-</div>
+<p class="text-muted">Everything is stored on this device only. Clearing cannot be undone, so save a backup first.</p>
 </div>
 </div>
 
-<input type="file" id="jsonImportInput" accept=".json" style="display: none;">
+</div>
+
+<input type="file" id="jsonImportInput" accept=".json,application/json" style="display:none">
 
 <script>
-const app = {
+var app = {
   visitors: [],
   contractors: [],
   regularVisitors: [],
-  currentDate: new Date().toISOString().split('T')[0],
-  
-  init: function() {
+  currentDate: '',
+
+  init: function () {
+    this.currentDate = this.todayKey();
     this.loadData();
-    this.setupEventListeners();
     this.updateHeaderDate();
+    this.setDefaultTimes();
+    this.bindEvents();
     this.renderLog();
     this.renderArchive();
     this.renderVisitors();
-    this.setDefaultTimes();
   },
-  
-  loadData: function() {
-    const stored = localStorage.getItem('security-tracker-data');
-    if (stored) {
-      try {
-        const data = JSON.parse(stored);
-        this.visitors = data.visitors || [];
-        this.contractors = data.contractors || [];
-        this.regularVisitors = data.regularVisitors || [];
-      } catch (e) {}
+
+  todayKey: function () {
+    var d = new Date();
+    var m = String(d.getMonth() + 1);
+    if (m.length < 2) m = '0' + m;
+    var day = String(d.getDate());
+    if (day.length < 2) day = '0' + day;
+    return d.getFullYear() + '-' + m + '-' + day;
+  },
+
+  pad2: function (n) {
+    var s = String(n);
+    return s.length < 2 ? '0' + s : s;
+  },
+
+  esc: function (s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  },
+
+  loadData: function () {
+    try {
+      var raw = localStorage.getItem('security-tracker-data');
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      this.visitors = d.visitors || [];
+      this.contractors = d.contractors || [];
+      this.regularVisitors = d.regularVisitors || [];
+    } catch (e) {}
+  },
+
+  saveData: function () {
+    try {
+      localStorage.setItem('security-tracker-data', JSON.stringify({
+        visitors: this.visitors,
+        contractors: this.contractors,
+        regularVisitors: this.regularVisitors
+      }));
+    } catch (e) {
+      this.toast('Could not save to this device', 'error');
     }
   },
-  
-  saveData: function() {
-    localStorage.setItem('security-tracker-data', JSON.stringify({
-      visitors: this.visitors,
-      contractors: this.contractors,
-      regularVisitors: this.regularVisitors
-    }));
+
+  setDefaultTimes: function () {
+    document.getElementById('startTime').value = localStorage.getItem('sat-start') || '05:00';
+    document.getElementById('endTime').value = localStorage.getItem('sat-end') || '13:00';
   },
-  
-  setDefaultTimes: function() {
-    const startTime = localStorage.getItem('security-start-time') || '05:00';
-    const endTime = localStorage.getItem('security-end-time') || '17:00';
-    document.getElementById('startTime').value = startTime;
-    document.getElementById('endTime').value = endTime;
-  },
-  
-  updateHeaderDate: function() {
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('headerDate').textContent = now.toLocaleDateString('en-GB', options);
-  },
-  
-  setupEventListeners: function() {
-    const self = this;
-    
-    document.querySelectorAll('.tab-button').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        const tabName = e.currentTarget.dataset.tab;
-        document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-        document.querySelectorAll('.tab-button').forEach(function(b) { b.classList.remove('active'); });
-        document.getElementById(tabName).classList.add('active');
-        e.currentTarget.classList.add('active');
-      });
+
+  updateHeaderDate: function () {
+    document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-GB', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
-    
-    document.getElementById('visitorForm').addEventListener('submit', function(e) { self.recordVisitor(e); });
-    document.getElementById('setCurrentTime').addEventListener('click', function() { self.setCurrentTime(); });
-    document.getElementById('companyInput').addEventListener('input', function() { self.showCompanyAutocomplete(); });
-    document.getElementById('companyInput').addEventListener('focus', function() { self.showCompanyAutocomplete(); });
-    document.getElementById('companyInput').addEventListener('blur', function() { setTimeout(function() { self.hideCompanyAutocomplete(); }, 200); });
-    
-    document.getElementById('startTime').addEventListener('change', function(e) { localStorage.setItem('security-start-time', e.target.value); });
-    document.getElementById('endTime').addEventListener('change', function(e) { localStorage.setItem('security-end-time', e.target.value); });
-    
-    document.getElementById('addContractorBtn').addEventListener('click', function() { self.showContractorForm(); });
-    document.getElementById('contractorForm').addEventListener('submit', function(e) { self.addContractor(e); });
-    document.getElementById('cancelContractorBtn').addEventListener('click', function() { self.hideContractorForm(); });
-    
-    document.getElementById('addVisitorBtn').addEventListener('click', function() { self.showVisitorForm(); });
-    document.getElementById('regularVisitorForm').addEventListener('submit', function(e) { self.addRegularVisitor(e); });
-    document.getElementById('cancelVisitorBtn').addEventListener('click', function() { self.hideVisitorForm(); });
-    
-    document.getElementById('exportPdfBtn').addEventListener('click', function() { self.exportPdf(); });
-    document.getElementById('exportJsonBtn').addEventListener('click', function() { self.exportJson(); });
-    document.getElementById('importJsonBtn').addEventListener('click', function() { self.importJson(); });
-    document.getElementById('jsonImportInput').addEventListener('change', function(e) { self.handleJsonImport(e); });
-    
-    document.getElementById('clearTodayBtn').addEventListener('click', function() { self.clearToday(); });
-    document.getElementById('clearAllBtn').addEventListener('click', function() { self.clearAll(); });
   },
-  
-  setCurrentTime: function() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    document.getElementById('entryTime').value = hours + ':' + minutes;
-  },
-  
-  showCompanyAutocomplete: function() {
-    const input = document.getElementById('companyInput').value.toLowerCase();
-    const list = document.getElementById('companyList');
-    list.innerHTML = '';
-    
-    const unique = new Set();
-    const allCompanies = [];
-    
-    this.visitors.forEach(function(v) { if (v.company) allCompanies.push(v.company); });
-    this.regularVisitors.forEach(function(v) { allCompanies.push(v.name); });
-    this.contractors.forEach(function(c) { allCompanies.push(c.name); });
-    
-    const filtered = allCompanies.filter(function(c) { return c.toLowerCase().includes(input) && !unique.has(c.toLowerCase()); }).filter(function(c) { unique.add(c.toLowerCase()); return true; }).slice(0, 10);
-    
-    if (filtered.length > 0) {
-      list.classList.add('active');
-      const self = this;
-      filtered.forEach(function(company) {
-        const item = document.createElement('div');
-        item.className = 'autocomplete-item';
-        const vehicle = self.regularVisitors.find(function(v) { return v.name === company; });
-        const vehicleReg = vehicle ? vehicle.vehicle : '';
-        item.textContent = vehicleReg ? company + ' (' + vehicleReg + ')' : company;
-        item.addEventListener('click', function() {
-          document.getElementById('companyInput').value = company;
-          if (vehicleReg) document.getElementById('vehicleInput').value = vehicleReg;
-          self.hideCompanyAutocomplete();
-        });
-        list.appendChild(item);
+
+  bindEvents: function () {
+    var self = this;
+
+    var tabs = document.querySelectorAll('.tab-button');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function (e) {
+        var name = e.currentTarget.getAttribute('data-tab');
+        var panes = document.querySelectorAll('.tab-content');
+        for (var j = 0; j < panes.length; j++) panes[j].classList.remove('active');
+        var btns = document.querySelectorAll('.tab-button');
+        for (var k = 0; k < btns.length; k++) btns[k].classList.remove('active');
+        document.getElementById(name).classList.add('active');
+        e.currentTarget.classList.add('active');
+        window.scrollTo(0, 0);
       });
-    } else {
-      list.classList.remove('active');
     }
+
+    document.getElementById('visitorForm').addEventListener('submit', function (e) { self.recordVisitor(e); });
+    document.getElementById('setCurrentTime').addEventListener('click', function () { self.setCurrentTime(); });
+
+    var ci = document.getElementById('companyInput');
+    ci.addEventListener('input', function () { self.showSuggestions(); });
+    ci.addEventListener('focus', function () { self.showSuggestions(); });
+    ci.addEventListener('blur', function () { setTimeout(function () { self.hideSuggestions(); }, 200); });
+
+    document.getElementById('startTime').addEventListener('change', function (e) { localStorage.setItem('sat-start', e.target.value); });
+    document.getElementById('endTime').addEventListener('change', function (e) { localStorage.setItem('sat-end', e.target.value); });
+
+    document.getElementById('addContractorBtn').addEventListener('click', function () { self.showContractorForm(); });
+    document.getElementById('contractorForm').addEventListener('submit', function (e) { self.addContractor(e); });
+    document.getElementById('cancelContractorBtn').addEventListener('click', function () { self.hideContractorForm(); });
+
+    document.getElementById('addVisitorBtn').addEventListener('click', function () { self.showVisitorForm(); });
+    document.getElementById('regularVisitorForm').addEventListener('submit', function (e) { self.addRegularVisitor(e); });
+    document.getElementById('cancelVisitorBtn').addEventListener('click', function () { self.hideVisitorForm(); });
+
+    document.getElementById('exportPdfBtn').addEventListener('click', function () { self.exportPdf(); });
+    document.getElementById('exportJsonBtn').addEventListener('click', function () { self.exportJson(); });
+    document.getElementById('importJsonBtn').addEventListener('click', function () { document.getElementById('jsonImportInput').click(); });
+    document.getElementById('jsonImportInput').addEventListener('change', function (e) { self.handleImport(e); });
+
+    document.getElementById('clearTodayBtn').addEventListener('click', function () { self.clearToday(); });
+    document.getElementById('clearAllBtn').addEventListener('click', function () { self.clearAll(); });
   },
-  
-  hideCompanyAutocomplete: function() {
+
+  setCurrentTime: function () {
+    var d = new Date();
+    document.getElementById('entryTime').value = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+  },
+
+  suggestionPool: function () {
+    var pool = [];
+    var seen = {};
+    var add = function (name, reg, reason) {
+      if (!name) return;
+      var key = String(name).toLowerCase() + '|' + String(reg || '').toLowerCase();
+      if (seen[key]) return;
+      seen[key] = 1;
+      pool.push({ name: name, vehicle: reg || '', reason: reason || '' });
+    };
+
+    for (var i = 0; i < this.regularVisitors.length; i++) {
+      var rv = this.regularVisitors[i];
+      var regs = String(rv.vehicle || '').split(',');
+      for (var r = 0; r < regs.length; r++) add(rv.name, regs[r].replace(/^\s+|\s+$/g, ''), rv.reason);
+    }
+    for (var c = 0; c < this.contractors.length; c++) add(this.contractors[c].name, '', '');
+    for (var v = this.visitors.length - 1; v >= 0; v--) add(this.visitors[v].company, this.visitors[v].vehicle, this.visitors[v].reason);
+
+    return pool;
+  },
+
+  showSuggestions: function () {
+    var q = document.getElementById('companyInput').value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var list = document.getElementById('companyList');
+    list.innerHTML = '';
+
+    var pool = this.suggestionPool();
+    var matches = [];
+    for (var i = 0; i < pool.length && matches.length < 8; i++) {
+      if (!q || pool[i].name.toLowerCase().indexOf(q) !== -1) matches.push(pool[i]);
+    }
+
+    if (!matches.length) { list.classList.remove('active'); return; }
+
+    var self = this;
+    var build = function (entry) {
+      var item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.innerHTML = self.esc(entry.name) + (entry.vehicle ? ' <span class="ac-reg">' + self.esc(entry.vehicle) + '</span>' : '');
+      item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+      item.addEventListener('click', function () {
+        document.getElementById('companyInput').value = entry.name;
+        if (entry.vehicle) document.getElementById('vehicleInput').value = entry.vehicle;
+        if (entry.reason && !document.getElementById('reasonInput').value) {
+          document.getElementById('reasonInput').value = entry.reason;
+        }
+        self.hideSuggestions();
+        document.getElementById('entryTime').focus();
+      });
+      list.appendChild(item);
+    };
+
+    for (var m = 0; m < matches.length; m++) build(matches[m]);
+    list.classList.add('active');
+  },
+
+  hideSuggestions: function () {
     document.getElementById('companyList').classList.remove('active');
   },
-  
-  recordVisitor: function(e) {
+
+  recordVisitor: function (e) {
     e.preventDefault();
-    const company = document.getElementById('companyInput').value.trim();
-    const vehicle = document.getElementById('vehicleInput').value.trim();
-    const reason = document.getElementById('reasonInput').value.trim();
-    const entryTime = document.getElementById('entryTime').value;
-    const exitTime = document.getElementById('exitTime').value;
-    
+    var company = document.getElementById('companyInput').value.replace(/^\s+|\s+$/g, '');
+    var vehicle = document.getElementById('vehicleInput').value.replace(/^\s+|\s+$/g, '');
+    var reason = document.getElementById('reasonInput').value.replace(/^\s+|\s+$/g, '');
+    var entryTime = document.getElementById('entryTime').value;
+    var exitTime = document.getElementById('exitTime').value;
+
     if (!company || !reason || !entryTime) {
-      this.showToast('Missing required fields', 'error');
+      this.toast('Add a name, a reason and an entry time', 'error');
       return;
     }
-    
+
     this.visitors.push({
       id: Date.now(),
       date: this.currentDate,
@@ -310,297 +431,455 @@ const app = {
       entryTime: entryTime,
       exitTime: exitTime
     });
-    
+
     this.saveData();
     this.renderLog();
     e.target.reset();
-    document.getElementById('entryTime').focus();
-    this.showToast('Visitor recorded', 'success');
+    document.getElementById('companyInput').focus();
+    this.toast('Entry recorded');
   },
-  
-  renderLog: function() {
-    const container = document.getElementById('logContainer');
-    const todayVisitors = this.visitors.filter(function(v) { return v.date === app.currentDate; });
-    
-    if (todayVisitors.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>No visitors recorded today</p></div>';
+
+  setExit: function (id) {
+    for (var i = 0; i < this.visitors.length; i++) {
+      if (this.visitors[i].id === id) {
+        var d = new Date();
+        this.visitors[i].exitTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+        this.saveData();
+        this.renderLog();
+        this.toast('Exit time logged');
+        return;
+      }
+    }
+  },
+
+  renderLog: function () {
+    var container = document.getElementById('logContainer');
+    var today = [];
+    for (var i = 0; i < this.visitors.length; i++) {
+      if (this.visitors[i].date === this.currentDate) today.push(this.visitors[i]);
+    }
+
+    if (!today.length) {
+      container.innerHTML = '<div class="empty-state">No visitors logged today</div>';
       return;
     }
-    
-    let html = '<table class="log-table"><thead><tr><th>Company</th><th>Vehicle</th><th>Reason</th><th>Entry</th><th>Exit</th><th></th></tr></thead><tbody>';
-    todayVisitors.forEach(function(v) {
-      html += '<tr><td>' + v.company + '</td><td>' + (v.vehicle || '—') + '</td><td>' + v.reason + '</td><td>' + v.entryTime + '</td><td>' + (v.exitTime || '—') + '</td><td><button class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">✕</button></td></tr>';
-    });
-    html += '</tbody></table>';
-    container.innerHTML = html;
-  },
-  
-  deleteVisitor: function(id) {
-    if (confirm('Delete this entry?')) {
-      this.visitors = this.visitors.filter(function(v) { return v.id !== id; });
-      this.saveData();
-      this.renderLog();
-      this.showToast('Entry deleted', 'success');
+
+    var rows = '';
+    for (var j = 0; j < today.length; j++) {
+      var v = today[j];
+      var exitCell = v.exitTime
+        ? this.esc(v.exitTime)
+        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
+      rows += '<tr>' +
+        '<td>' + this.esc(v.company) + '</td>' +
+        '<td>' + this.esc(v.vehicle || '-') + '</td>' +
+        '<td>' + this.esc(v.reason) + '</td>' +
+        '<td>' + this.esc(v.entryTime) + '</td>' +
+        '<td>' + exitCell + '</td>' +
+        '<td><button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
+        '</tr>';
     }
+
+    container.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Company</th><th>Vehicle</th><th>Reason</th><th>In</th><th>Out</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
-  
-  showContractorForm: function() {
+
+  deleteVisitor: function (id) {
+    if (!confirm('Remove this entry from the sheet?')) return;
+    var kept = [];
+    for (var i = 0; i < this.visitors.length; i++) if (this.visitors[i].id !== id) kept.push(this.visitors[i]);
+    this.visitors = kept;
+    this.saveData();
+    this.renderLog();
+    this.toast('Entry removed');
+  },
+
+  showContractorForm: function () {
     document.getElementById('contractorForm').style.display = 'block';
     document.getElementById('contractorName').focus();
   },
-  
-  hideContractorForm: function() {
+
+  hideContractorForm: function () {
     document.getElementById('contractorForm').style.display = 'none';
     document.getElementById('contractorForm').reset();
   },
-  
-  addContractor: function(e) {
+
+  addContractor: function (e) {
     e.preventDefault();
-    const name = document.getElementById('contractorName').value.trim();
-    const inductionDate = document.getElementById('inductionDate').value;
-    
-    if (!name || !inductionDate) {
-      this.showToast('Missing required fields', 'error');
-      return;
+    var name = document.getElementById('contractorName').value.replace(/^\s+|\s+$/g, '');
+    var date = document.getElementById('inductionDate').value;
+    if (!name || !date) { this.toast('Add a company and an expiry date', 'error'); return; }
+
+    for (var i = 0; i < this.contractors.length; i++) {
+      if (this.contractors[i].name.toLowerCase() === name.toLowerCase()) {
+        this.contractors[i].inductionDate = date;
+        this.saveData();
+        this.renderArchive();
+        this.hideContractorForm();
+        this.toast('Induction date updated');
+        return;
+      }
     }
-    
-    this.contractors.push({
-      id: Date.now(),
-      name: name,
-      inductionDate: inductionDate
-    });
-    
+
+    this.contractors.push({ id: Date.now(), name: name, inductionDate: date });
     this.saveData();
     this.renderArchive();
     this.hideContractorForm();
-    this.showToast('Contractor added', 'success');
+    this.toast('Contractor added');
   },
-  
-  renderArchive: function() {
-    const container = document.getElementById('archiveContainer');
-    
-    if (this.contractors.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>No contractors registered</p></div>';
+
+  renderArchive: function () {
+    var container = document.getElementById('archiveContainer');
+    if (!this.contractors.length) {
+      container.innerHTML = '<div class="empty-state">No contractors on the list</div>';
       return;
     }
-    
-    const today = new Date();
-    let html = '<table class="archive-table"><thead><tr><th>Company</th><th>Induction Valid</th><th>Status</th><th></th></tr></thead><tbody>';
-    
-    this.contractors.forEach(function(c) {
-      const inductDate = new Date(c.inductionDate);
-      const isValid = inductDate > today;
-      const status = isValid ? 'Valid' : 'Needed';
-      const statusClass = isValid ? 'status-valid' : 'status-needed';
-      const dotColor = isValid ? '#16a34a' : '#dc2626';
-      
-      html += '<tr><td>' + c.name + '</td><td>' + inductDate.toLocaleDateString() + '</td><td><span class="status-badge ' + statusClass + '"><span class="status-dot" style="background: ' + dotColor + '"></span>' + status + '</span></td><td><button class="delete-btn" onclick="app.deleteContractor(' + c.id + ')">✕</button></td></tr>';
+
+    var now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    var sorted = this.contractors.slice().sort(function (a, b) {
+      return new Date(a.inductionDate) - new Date(b.inductionDate);
     });
-    
-    html += '</tbody></table>';
-    container.innerHTML = html;
-  },
-  
-  deleteContractor: function(id) {
-    if (confirm('Delete this contractor?')) {
-      this.contractors = this.contractors.filter(function(c) { return c.id !== id; });
-      this.saveData();
-      this.renderArchive();
-      this.showToast('Contractor deleted', 'success');
+
+    var rows = '';
+    for (var i = 0; i < sorted.length; i++) {
+      var c = sorted[i];
+      var due = new Date(c.inductionDate);
+      var valid = due >= now;
+      rows += '<tr>' +
+        '<td>' + this.esc(c.name) + '</td>' +
+        '<td>' + due.toLocaleDateString('en-GB') + '</td>' +
+        '<td><span class="status-badge ' + (valid ? 'status-valid' : 'status-needed') + '">' +
+        '<span class="status-dot" style="background:' + (valid ? '#15803d' : '#b91c1c') + '"></span>' +
+        (valid ? 'Valid' : 'Induction due') + '</span></td>' +
+        '<td><button type="button" class="delete-btn" onclick="app.deleteContractor(' + c.id + ')">X</button></td>' +
+        '</tr>';
     }
+
+    container.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Company</th><th>Valid until</th><th>Status</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
-  
-  showVisitorForm: function() {
+
+  deleteContractor: function (id) {
+    if (!confirm('Remove this contractor?')) return;
+    var kept = [];
+    for (var i = 0; i < this.contractors.length; i++) if (this.contractors[i].id !== id) kept.push(this.contractors[i]);
+    this.contractors = kept;
+    this.saveData();
+    this.renderArchive();
+    this.toast('Contractor removed');
+  },
+
+  showVisitorForm: function () {
     document.getElementById('regularVisitorForm').style.display = 'block';
     document.getElementById('visitorName').focus();
   },
-  
-  hideVisitorForm: function() {
+
+  hideVisitorForm: function () {
     document.getElementById('regularVisitorForm').style.display = 'none';
     document.getElementById('regularVisitorForm').reset();
   },
-  
-  addRegularVisitor: function(e) {
+
+  addRegularVisitor: function (e) {
     e.preventDefault();
-    const name = document.getElementById('visitorName').value.trim();
-    const vehicle = document.getElementById('visitorVehicle').value.trim();
-    const reason = document.getElementById('visitorReason').value.trim();
-    
-    if (!name || !vehicle) {
-      this.showToast('Name and vehicle required', 'error');
-      return;
-    }
-    
-    this.regularVisitors.push({
-      id: Date.now(),
-      name: name,
-      vehicle: vehicle,
-      reason: reason
-    });
-    
+    var name = document.getElementById('visitorName').value.replace(/^\s+|\s+$/g, '');
+    var vehicle = document.getElementById('visitorVehicle').value.replace(/^\s+|\s+$/g, '');
+    var reason = document.getElementById('visitorReason').value.replace(/^\s+|\s+$/g, '');
+    if (!name || !vehicle) { this.toast('Add a name and a registration', 'error'); return; }
+
+    this.regularVisitors.push({ id: Date.now(), name: name, vehicle: vehicle, reason: reason });
     this.saveData();
     this.renderVisitors();
     this.hideVisitorForm();
-    this.showToast('Regular visitor added', 'success');
+    this.toast('Regular visitor saved');
   },
-  
-  renderVisitors: function() {
-    const container = document.getElementById('visitorsContainer');
-    
-    if (this.regularVisitors.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>No regular visitors saved</p></div>';
+
+  renderVisitors: function () {
+    var container = document.getElementById('visitorsContainer');
+    if (!this.regularVisitors.length) {
+      container.innerHTML = '<div class="empty-state">No regular visitors saved</div>';
       return;
     }
-    
-    let html = '<table class="archive-table"><thead><tr><th>Name/Company</th><th>Vehicle</th><th>Typical Reason</th><th></th></tr></thead><tbody>';
-    this.regularVisitors.forEach(function(v) {
-      html += '<tr><td>' + v.name + '</td><td>' + v.vehicle + '</td><td>' + (v.reason || '—') + '</td><td><button class="delete-btn" onclick="app.deleteRegularVisitor(' + v.id + ')">✕</button></td></tr>';
+
+    var rows = '';
+    for (var i = 0; i < this.regularVisitors.length; i++) {
+      var v = this.regularVisitors[i];
+      rows += '<tr>' +
+        '<td>' + this.esc(v.name) + '</td>' +
+        '<td>' + this.esc(v.vehicle) + '</td>' +
+        '<td>' + this.esc(v.reason || '-') + '</td>' +
+        '<td><button type="button" class="delete-btn" onclick="app.deleteRegularVisitor(' + v.id + ')">X</button></td>' +
+        '</tr>';
+    }
+
+    container.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Name</th><th>Vehicle</th><th>Usual reason</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  },
+
+  deleteRegularVisitor: function (id) {
+    if (!confirm('Remove this regular visitor?')) return;
+    var kept = [];
+    for (var i = 0; i < this.regularVisitors.length; i++) if (this.regularVisitors[i].id !== id) kept.push(this.regularVisitors[i]);
+    this.regularVisitors = kept;
+    this.saveData();
+    this.renderVisitors();
+    this.toast('Regular visitor removed');
+  },
+
+  buildSheet: function () {
+    var todays = [];
+    for (var i = 0; i < this.visitors.length; i++) {
+      if (this.visitors[i].date === this.currentDate) todays.push(this.visitors[i]);
+    }
+
+    var dateLabel = new Date().toLocaleDateString('en-GB', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
-    html += '</tbody></table>';
-    container.innerHTML = html;
-  },
-  
-  deleteRegularVisitor: function(id) {
-    if (confirm('Delete this regular visitor?')) {
-      this.regularVisitors = this.regularVisitors.filter(function(v) { return v.id !== id; });
-      this.saveData();
-      this.renderVisitors();
-      this.showToast('Visitor deleted', 'success');
-    }
-  },
-  
-  exportPdf: function() {
-    const todayVisitors = this.visitors.filter(function(v) { return v.date === app.currentDate; });
-    const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    
-    let html = '<div style="font-family: Arial; padding: 20px;"><h1 style="text-align: center; color: #1e293b; border-bottom: 2px solid #1e293b; padding-bottom: 10px;">Security Access Log</h1>';
-    html += '<p style="text-align: center; color: #64748b; margin-bottom: 20px;">' + today + '</p>';
-    
-    html += '<h2 style="color: #1e293b; margin-top: 20px; font-size: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Daily Visitor Log</h2>';
-    if (todayVisitors.length > 0) {
-      html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;"><thead><tr style="background: #1e293b; color: white;"><th style="padding: 8px; border: 1px solid #cbd5e1;">Company</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Vehicle</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Reason</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Entry</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Exit</th></tr></thead><tbody>';
-      todayVisitors.forEach(function(v) {
-        html += '<tr><td style="padding: 8px; border: 1px solid #cbd5e1;">' + v.company + '</td><td style="padding: 8px; border: 1px solid #cbd5e1;">' + (v.vehicle || '—') + '</td><td style="padding: 8px; border: 1px solid #cbd5e1;">' + v.reason + '</td><td style="padding: 8px; border: 1px solid #cbd5e1;">' + v.entryTime + '</td><td style="padding: 8px; border: 1px solid #cbd5e1;">' + (v.exitTime || '—') + '</td></tr>';
-      });
-      html += '</tbody></table>';
+    var hours = document.getElementById('startTime').value + ' to ' + document.getElementById('endTime').value;
+
+    var css = 'body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.45;margin:14mm}' +
+      'h1{font-size:20px;text-align:center;border-bottom:2px solid #1e293b;padding-bottom:8px;margin-bottom:6px}' +
+      '.sub{text-align:center;color:#475569;font-size:12px;margin-bottom:18px}' +
+      'h2{font-size:14px;margin:18px 0 8px;border-bottom:1px solid #cbd5e1;padding-bottom:5px}' +
+      'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}' +
+      'th{background:#1e293b;color:#fff;padding:6px;border:1px solid #94a3b8;text-align:left}' +
+      'td{padding:6px;border:1px solid #cbd5e1}' +
+      '.ok{color:#15803d;font-weight:bold}.due{color:#b91c1c;font-weight:bold}' +
+      '.foot{margin-top:22px;font-size:9px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:6px}' +
+      '@media print{body{margin:10mm}h2{page-break-after:avoid}tr{page-break-inside:avoid}}';
+
+    var h = '<h1>Site Occurrence Sheet</h1><div class="sub">' + this.esc(dateLabel) + ' &middot; Access hours ' + this.esc(hours) + '</div>';
+
+    h += '<h2>Visitor movements</h2>';
+    if (todays.length) {
+      h += '<table><thead><tr><th>Company / visitor</th><th>Vehicle</th><th>Reason for visit</th><th>In</th><th>Out</th></tr></thead><tbody>';
+      for (var t = 0; t < todays.length; t++) {
+        var v = todays[t];
+        h += '<tr><td>' + this.esc(v.company) + '</td><td>' + this.esc(v.vehicle || '-') + '</td><td>' +
+          this.esc(v.reason) + '</td><td>' + this.esc(v.entryTime) + '</td><td>' + this.esc(v.exitTime || '-') + '</td></tr>';
+      }
+      h += '</tbody></table>';
     } else {
-      html += '<p style="color: #64748b;">No visitors recorded today.</p>';
+      h += '<p>No visitors logged for this period.</p>';
     }
-    
-    html += '<h2 style="color: #1e293b; margin-top: 20px; font-size: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Contractor Inductions</h2>';
-    if (this.contractors.length > 0) {
-      html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;"><thead><tr style="background: #1e293b; color: white;"><th style="padding: 8px; border: 1px solid #cbd5e1;">Company</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Valid Until</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Status</th></tr></thead><tbody>';
-      this.contractors.forEach(function(c) {
-        const inductDate = new Date(c.inductionDate);
-        const isValid = inductDate > new Date();
-        html += '<tr><td style="padding: 8px; border: 1px solid #cbd5e1;">' + c.name + '</td><td style="padding: 8px; border: 1px solid #cbd5e1;">' + inductDate.toLocaleDateString() + '</td><td style="padding: 8px; border: 1px solid #cbd5e1; color: ' + (isValid ? '#16a34a' : '#dc2626') + '; font-weight: bold;">' + (isValid ? '✓ Valid' : '✗ Renewal Needed') + '</td></tr>';
-      });
-      html += '</tbody></table>';
+
+    h += '<h2>Contractor inductions</h2>';
+    if (this.contractors.length) {
+      var now = new Date();
+      now.setHours(0, 0, 0, 0);
+      h += '<table><thead><tr><th>Company</th><th>Valid until</th><th>Status</th></tr></thead><tbody>';
+      for (var c = 0; c < this.contractors.length; c++) {
+        var due = new Date(this.contractors[c].inductionDate);
+        var valid = due >= now;
+        h += '<tr><td>' + this.esc(this.contractors[c].name) + '</td><td>' + due.toLocaleDateString('en-GB') +
+          '</td><td class="' + (valid ? 'ok' : 'due') + '">' + (valid ? 'Valid' : 'Induction due') + '</td></tr>';
+      }
+      h += '</tbody></table>';
     } else {
-      html += '<p style="color: #64748b;">No contractors registered.</p>';
+      h += '<p>No contractors recorded.</p>';
     }
-    
-    html += '<h2 style="color: #1e293b; margin-top: 20px; font-size: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Regular Visitors</h2>';
-    if (this.regularVisitors.length > 0) {
-      html += '<table style="width: 100%; border-collapse: collapse; font-size: 12px;"><thead><tr style="background: #1e293b; color: white;"><th style="padding: 8px; border: 1px solid #cbd5e1;">Name/Company</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Vehicle</th><th style="padding: 8px; border: 1px solid #cbd5e1;">Reason</th></tr></thead><tbody>';
-      this.regularVisitors.forEach(function(v) {
-        html += '<tr><td style="padding: 8px; border: 1px solid #cbd5e1;">' + v.name + '</td><td style="padding: 8px; border: 1px solid #cbd5e1;">' + v.vehicle + '</td><td style="padding: 8px; border: 1px solid #cbd5e1;">' + (v.reason || '—') + '</td></tr>';
-      });
-      html += '</tbody></table>';
+
+    h += '<h2>Regular visitors</h2>';
+    if (this.regularVisitors.length) {
+      h += '<table><thead><tr><th>Name</th><th>Vehicle</th><th>Usual reason</th></tr></thead><tbody>';
+      for (var r = 0; r < this.regularVisitors.length; r++) {
+        var rv = this.regularVisitors[r];
+        h += '<tr><td>' + this.esc(rv.name) + '</td><td>' + this.esc(rv.vehicle) + '</td><td>' + this.esc(rv.reason || '-') + '</td></tr>';
+      }
+      h += '</tbody></table>';
     } else {
-      html += '<p style="color: #64748b;">No regular visitors saved.</p>';
+      h += '<p>No regular visitors recorded.</p>';
     }
-    
-    html += '</div>';
-    
-    const w = window.open('', '_blank');
-    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Security Access Log</title><style>body{font-family:Arial;line-height:1.6}@media print{body{margin:10mm}}</style></head><body>' + html + '<script>setTimeout(function(){window.print()},500);window.addEventListener("afterprint",function(){window.close();});</script></body></html>');
-    w.document.close();
-    this.showToast('Print dialog opened', 'success');
+
+    var payload = {
+      exported: new Date().toISOString(),
+      date: this.currentDate,
+      visitors: todays,
+      contractors: this.contractors,
+      regularVisitors: this.regularVisitors
+    };
+
+    h += '<div class="foot">Generated ' + this.esc(dateLabel) + '</div>';
+    h += '<div style="display:none" data-sat-payload="' + this.esc(JSON.stringify(payload)) + '"></div>';
+
+    return { css: css, body: h, title: 'Occurrence sheet ' + this.currentDate };
   },
-  
-  exportJson: function() {
-    const data = {
-      exportDate: new Date().toISOString(),
+
+  exportPdf: function () {
+    var sheet = this.buildSheet();
+    var w = window.open('', '_blank');
+    if (!w) { this.toast('Allow pop-ups to export the sheet', 'error'); return; }
+
+    var doc = w.document;
+    doc.title = sheet.title;
+
+    var style = doc.createElement('style');
+    style.appendChild(doc.createTextNode(sheet.css));
+    doc.head.appendChild(style);
+
+    doc.body.innerHTML = sheet.body;
+
+    setTimeout(function () {
+      w.focus();
+      w.print();
+    }, 400);
+
+    this.toast('Choose Save as PDF in the print sheet');
+  },
+
+  exportJson: function () {
+    var data = {
+      exported: new Date().toISOString(),
       visitors: this.visitors,
       contractors: this.contractors,
       regularVisitors: this.regularVisitors
     };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
     a.href = url;
-    a.download = 'security-tracker-' + this.currentDate + '.json';
+    a.download = 'access-tracker-backup-' + this.currentDate + '.json';
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
-    this.showToast('Data exported', 'success');
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    this.toast('Backup saved');
   },
-  
-  importJson: function() {
-    document.getElementById('jsonImportInput').click();
-  },
-  
-  handleJsonImport: function(e) {
-    const file = e.target.files[0];
+
+  handleImport: function (e) {
+    var file = e.target.files && e.target.files[0];
     if (!file) return;
-    
-    const reader = new FileReader();
-    const self = this;
-    reader.onload = function(event) {
+    var self = this;
+    var reader = new FileReader();
+
+    reader.onload = function (ev) {
       try {
-        const data = JSON.parse(event.target.result);
-        if (data.visitors) self.visitors = data.visitors;
-        if (data.contractors) self.contractors = data.contractors;
-        if (data.regularVisitors) self.regularVisitors = data.regularVisitors;
-        
+        var d = JSON.parse(ev.target.result);
+        var merged = 0;
+        var i, j;
+
+        if (d.contractors) {
+          for (i = 0; i < d.contractors.length; i++) {
+            var exists = false;
+            for (j = 0; j < self.contractors.length; j++) {
+              if (self.contractors[j].name.toLowerCase() === String(d.contractors[i].name).toLowerCase()) {
+                self.contractors[j].inductionDate = d.contractors[i].inductionDate;
+                exists = true;
+              }
+            }
+            if (!exists) { self.contractors.push(d.contractors[i]); merged++; }
+          }
+        }
+
+        if (d.regularVisitors) {
+          for (i = 0; i < d.regularVisitors.length; i++) {
+            var rvExists = false;
+            for (j = 0; j < self.regularVisitors.length; j++) {
+              if (self.regularVisitors[j].name.toLowerCase() === String(d.regularVisitors[i].name).toLowerCase()) rvExists = true;
+            }
+            if (!rvExists) { self.regularVisitors.push(d.regularVisitors[i]); merged++; }
+          }
+        }
+
+        if (d.visitors) {
+          for (i = 0; i < d.visitors.length; i++) {
+            var vExists = false;
+            for (j = 0; j < self.visitors.length; j++) {
+              if (self.visitors[j].id === d.visitors[i].id) vExists = true;
+            }
+            if (!vExists) { self.visitors.push(d.visitors[i]); merged++; }
+          }
+        }
+
         self.saveData();
         self.renderLog();
         self.renderArchive();
         self.renderVisitors();
-        self.showToast('Data imported', 'success');
+        self.toast('Restored ' + merged + ' records');
       } catch (err) {
-        self.showToast('Invalid JSON file', 'error');
+        self.toast('That file could not be read', 'error');
       }
     };
+
     reader.readAsText(file);
     e.target.value = '';
   },
-  
-  clearToday: function() {
-    if (confirm('Clear all entries for ' + this.currentDate + '? This cannot be undone.')) {
-      this.visitors = this.visitors.filter(function(v) { return v.date !== app.currentDate; });
-      this.saveData();
-      this.renderLog();
-      this.showToast('Today\'s log cleared', 'success');
-    }
+
+  clearToday: function () {
+    if (!confirm('Clear the sheet for ' + this.currentDate + '? This cannot be undone.')) return;
+    var kept = [];
+    for (var i = 0; i < this.visitors.length; i++) if (this.visitors[i].date !== this.currentDate) kept.push(this.visitors[i]);
+    this.visitors = kept;
+    this.saveData();
+    this.renderLog();
+    this.toast('Sheet cleared');
   },
-  
-  clearAll: function() {
-    if (confirm('Clear ALL data? This cannot be undone.')) {
-      if (confirm('Really clear everything?')) {
-        this.visitors = [];
-        this.contractors = [];
-        this.regularVisitors = [];
-        this.saveData();
-        this.renderLog();
-        this.renderArchive();
-        this.renderVisitors();
-        this.showToast('All data cleared', 'success');
-      }
-    }
+
+  clearAll: function () {
+    if (!confirm('Clear the day sheet, contractor list and regular visitors?')) return;
+    if (!confirm('This removes everything on this device. Continue?')) return;
+    this.visitors = [];
+    this.contractors = [];
+    this.regularVisitors = [];
+    this.saveData();
+    this.renderLog();
+    this.renderArchive();
+    this.renderVisitors();
+    this.toast('All data cleared');
   },
-  
-  showToast: function(message, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast ' + (type || 'success');
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(function() { toast.remove(); }, 3000);
+
+  toast: function (message, type) {
+    var existing = document.querySelector('.toast');
+    if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+    var el = document.createElement('div');
+    el.className = 'toast ' + (type === 'error' ? 'error' : 'success');
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 2600);
   }
 };
 
-document.addEventListener('DOMContentLoaded', function() { app.init(); });
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () { app.init(); });
+} else {
+  app.init();
+}
+
+/* Service worker registration.
+ * reg.update() runs on every load because Samsung Internet otherwise clings
+ * to a stale worker and serves an old build after a redeploy. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(function (reg) {
+        reg.update();
+        reg.addEventListener('updatefound', function () {
+          var incoming = reg.installing;
+          if (!incoming) return;
+          incoming.addEventListener('statechange', function () {
+            if (incoming.state === 'installed' && navigator.serviceWorker.controller) {
+              incoming.postMessage('skipWaiting');
+            }
+          });
+        });
+      })
+      .catch(function () { /* app works fine without it */ });
+
+    var refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  });
+}
 </script>
+
 </body>
 </html>
