@@ -73,7 +73,22 @@ body{background:#f1f5f9;padding-bottom:3rem}
 .data-table{font-size:.78rem}
 .data-table th,.data-table td{padding:.5rem .35rem}
 .button{padding:.625rem .75rem;font-size:.8rem}
+.rep-row{flex-wrap:wrap}
+.rep-row input{flex:1 1 100%}
+.rep-row .rep-remove{margin-left:auto}
 }
+.form-group select{width:100%;padding:.625rem .75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:1rem;background:#fff;color:#0f172a}
+.form-group select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+#repPickRow label,#vehiclePickRow label{color:#2563eb}
+.form-title{font-size:.95rem;font-weight:700;color:#2563eb;margin-bottom:.9rem}
+.rep-row{display:flex;gap:.4rem;margin-bottom:.5rem;align-items:center}
+.rep-row input{flex:1;min-width:0;padding:.55rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.9rem}
+.rep-row .rep-remove{flex:0 0 auto;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:.375rem;padding:.5rem .65rem;cursor:pointer;font-weight:700;line-height:1}
+.add-rep{font-size:.8rem;padding:.5rem .75rem}
+.rep-empty{color:#64748b;font-size:.85rem;margin-bottom:.5rem}
+.cell-sub{display:block;color:#64748b;font-size:.78rem;margin-top:.1rem}
+.row-actions{white-space:nowrap;text-align:right}
+.edit-btn{background:none;border:none;color:#2563eb;cursor:pointer;font-size:.8rem;font-weight:600;padding:.25rem .4rem}
 </style>
 </head>
 <body>
@@ -117,6 +132,18 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <div class="autocomplete-list" id="companyList"></div>
 </div>
 </div>
+<div class="form-group" id="repPickRow" style="display:none">
+<label for="repSelect">Recorded representatives</label>
+<select id="repSelect"></select>
+</div>
+<div class="form-group">
+<label for="repInput">Representative</label>
+<input type="text" id="repInput" placeholder="Driver or visitor name (optional)">
+</div>
+<div class="form-group" id="vehiclePickRow" style="display:none">
+<label for="vehicleSelect">Recorded vehicles</label>
+<select id="vehicleSelect"></select>
+</div>
 <div class="form-group">
 <label for="vehicleInput">Vehicle registration</label>
 <input type="text" id="vehicleInput" placeholder="AB21 XYZ">
@@ -155,6 +182,7 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <button type="button" class="button button-primary" id="addContractorBtn">Add contractor</button>
 </div>
 <form id="contractorForm" style="display:none" autocomplete="off">
+<h3 class="form-title" id="contractorFormTitle">New contractor</h3>
 <div class="form-group">
 <label for="contractorName">Company name</label>
 <input type="text" id="contractorName" required>
@@ -163,8 +191,13 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <label for="inductionDate">Induction valid until</label>
 <input type="date" id="inductionDate" required>
 </div>
+<div class="form-group">
+<label>Representatives and their vehicles</label>
+<div id="contractorReps"></div>
+<button type="button" class="button button-secondary add-rep" data-target="contractorReps">Add representative</button>
+</div>
 <div class="action-row">
-<button type="submit" class="button button-primary">Save contractor</button>
+<button type="submit" class="button button-primary" id="contractorSubmit">Save contractor</button>
 <button type="button" class="button button-secondary" id="cancelContractorBtn">Cancel</button>
 </div>
 </form>
@@ -179,20 +212,26 @@ body{background:#f1f5f9;padding-bottom:3rem}
 <button type="button" class="button button-primary" id="addVisitorBtn">Add regular visitor</button>
 </div>
 <form id="regularVisitorForm" style="display:none" autocomplete="off">
+<h3 class="form-title" id="visitorFormTitle">New regular visitor</h3>
 <div class="form-group">
 <label for="visitorName">Visitor / company name</label>
 <input type="text" id="visitorName" required>
 </div>
 <div class="form-group">
-<label for="visitorVehicle">Vehicle registration</label>
-<input type="text" id="visitorVehicle" placeholder="Comma separate multiple vehicles" required>
+<label for="visitorVehicle">Company vehicles</label>
+<input type="text" id="visitorVehicle" placeholder="Comma separate, or leave blank if per representative">
+</div>
+<div class="form-group">
+<label>Representatives and their vehicles</label>
+<div id="visitorReps"></div>
+<button type="button" class="button button-secondary add-rep" data-target="visitorReps">Add representative</button>
 </div>
 <div class="form-group">
 <label for="visitorReason">Usual reason for visit</label>
 <input type="text" id="visitorReason" placeholder="Optional">
 </div>
 <div class="action-row">
-<button type="submit" class="button button-primary">Save visitor</button>
+<button type="submit" class="button button-primary" id="visitorSubmit">Save visitor</button>
 <button type="button" class="button button-secondary" id="cancelVisitorBtn">Cancel</button>
 </div>
 </form>
@@ -479,6 +518,9 @@ var app = {
   contractors: [],
   regularVisitors: [],
   currentDate: '',
+  editingContractorId: null,
+  editingVisitorId: null,
+  _lastId: 0,
 
   init: function () {
     this.currentDate = this.todayKey();
@@ -489,6 +531,26 @@ var app = {
     this.renderLog();
     this.renderArchive();
     this.renderVisitors();
+    this.renderRepPlaceholder('contractorReps');
+    this.renderRepPlaceholder('visitorReps');
+  },
+
+  /* Date.now() alone collides when several records are created inside the
+     same millisecond, which produced duplicate ids - and a duplicate id
+     makes edit pick the wrong record and delete remove both. This keeps
+     ids strictly increasing. */
+  nextId: function () {
+    var t = Date.now();
+    if (t <= this._lastId) t = this._lastId + 1;
+    this._lastId = t;
+    return t;
+  },
+
+  seedIds: function () {
+    var all = this.visitors.concat(this.contractors, this.regularVisitors), i;
+    for (i = 0; i < all.length; i++) {
+      if (typeof all[i].id === 'number' && all[i].id > this._lastId) this._lastId = all[i].id;
+    }
   },
 
   todayKey: function () {
@@ -521,7 +583,81 @@ var app = {
       this.visitors = d.visitors || [];
       this.contractors = d.contractors || [];
       this.regularVisitors = d.regularVisitors || [];
+      this.migrate();
+      this.seedIds();
     } catch (e) {}
+  },
+
+  /* Brings older records up to the current shape. Early versions stored a
+     single comma separated `vehicle` string per company and had no notion
+     of representatives, so those registrations become company vehicles and
+     nothing is lost. Safe to run repeatedly. */
+  migrate: function () {
+    var i;
+
+    function splitRegs(s) {
+      var out = [], parts = String(s || '').split(','), j, t;
+      for (j = 0; j < parts.length; j++) {
+        t = parts[j].replace(/^\s+|\s+$/g, '');
+        if (t) out.push(t);
+      }
+      return out;
+    }
+
+    function normaliseRecord(rec) {
+      if (!rec.reps) rec.reps = [];
+      for (var r = 0; r < rec.reps.length; r++) {
+        if (!rec.reps[r].vehicles) rec.reps[r].vehicles = [];
+        if (typeof rec.reps[r].vehicles === 'string') rec.reps[r].vehicles = splitRegs(rec.reps[r].vehicles);
+      }
+      if (!rec.vehicles) rec.vehicles = [];
+      if (typeof rec.vehicles === 'string') rec.vehicles = splitRegs(rec.vehicles);
+      if (rec.vehicle) {
+        var legacy = splitRegs(rec.vehicle);
+        for (var k = 0; k < legacy.length; k++) {
+          if (rec.vehicles.indexOf(legacy[k]) === -1) rec.vehicles.push(legacy[k]);
+        }
+        delete rec.vehicle;
+      }
+    }
+
+    for (i = 0; i < this.regularVisitors.length; i++) normaliseRecord(this.regularVisitors[i]);
+    for (i = 0; i < this.contractors.length; i++) normaliseRecord(this.contractors[i]);
+    for (i = 0; i < this.visitors.length; i++) {
+      if (this.visitors[i].rep === undefined) this.visitors[i].rep = '';
+    }
+  },
+
+  /* Every saved company, from both lists, keyed by lower case name. */
+  companyRecords: function () {
+    var map = {}, i, rec, key;
+    function merge(src) {
+      key = String(src.name || '').toLowerCase();
+      if (!key) return;
+      if (!map[key]) map[key] = { name: src.name, vehicles: [], reps: [] };
+      rec = map[key];
+      for (var v = 0; v < (src.vehicles || []).length; v++) {
+        if (rec.vehicles.indexOf(src.vehicles[v]) === -1) rec.vehicles.push(src.vehicles[v]);
+      }
+      for (var r = 0; r < (src.reps || []).length; r++) {
+        var incoming = src.reps[r];
+        var found = null;
+        for (var e = 0; e < rec.reps.length; e++) {
+          if (rec.reps[e].name.toLowerCase() === String(incoming.name || '').toLowerCase()) found = rec.reps[e];
+        }
+        if (!found) { found = { name: incoming.name, vehicles: [] }; rec.reps.push(found); }
+        for (var w = 0; w < (incoming.vehicles || []).length; w++) {
+          if (found.vehicles.indexOf(incoming.vehicles[w]) === -1) found.vehicles.push(incoming.vehicles[w]);
+        }
+      }
+    }
+    for (i = 0; i < this.regularVisitors.length; i++) merge(this.regularVisitors[i]);
+    for (i = 0; i < this.contractors.length; i++) merge(this.contractors[i]);
+    return map;
+  },
+
+  findCompany: function (name) {
+    return this.companyRecords()[String(name || '').replace(/^\s+|\s+$/g, '').toLowerCase()] || null;
   },
 
   saveData: function () {
@@ -570,7 +706,27 @@ var app = {
     var ci = document.getElementById('companyInput');
     ci.addEventListener('input', function () { self.showSuggestions(); });
     ci.addEventListener('focus', function () { self.showSuggestions(); });
-    ci.addEventListener('blur', function () { setTimeout(function () { self.hideSuggestions(); }, 200); });
+    ci.addEventListener('blur', function () {
+      setTimeout(function () { self.hideSuggestions(); self.refreshPickers(); }, 200);
+    });
+    ci.addEventListener('change', function () { self.refreshPickers(); });
+
+    document.getElementById('repSelect').addEventListener('change', function (ev) {
+      document.getElementById('repInput').value = ev.target.value;
+      document.getElementById('vehicleInput').value = '';
+      self.refreshVehiclePicker();
+    });
+    document.getElementById('repInput').addEventListener('change', function () { self.refreshVehiclePicker(); });
+    document.getElementById('vehicleSelect').addEventListener('change', function (ev) {
+      if (ev.target.value) document.getElementById('vehicleInput').value = ev.target.value;
+    });
+
+    var adders = document.querySelectorAll('.add-rep');
+    for (var a = 0; a < adders.length; a++) {
+      adders[a].addEventListener('click', function (ev) {
+        self.addRepRow(ev.currentTarget.getAttribute('data-target'), '', []);
+      });
+    }
 
     document.getElementById('startTime').addEventListener('change', function (e) { localStorage.setItem('sat-start', e.target.value); });
     document.getElementById('endTime').addEventListener('change', function (e) { localStorage.setItem('sat-end', e.target.value); });
@@ -598,25 +754,60 @@ var app = {
   },
 
   suggestionPool: function () {
-    var pool = [];
-    var seen = {};
-    var add = function (name, reg, reason) {
-      if (!name) return;
-      var key = String(name).toLowerCase() + '|' + String(reg || '').toLowerCase();
-      if (seen[key]) return;
-      seen[key] = 1;
-      pool.push({ name: name, vehicle: reg || '', reason: reason || '' });
-    };
+    var pool = [], seen = {}, map = this.companyRecords(), key, rec, r, v;
 
-    for (var i = 0; i < this.regularVisitors.length; i++) {
-      var rv = this.regularVisitors[i];
-      var regs = String(rv.vehicle || '').split(',');
-      for (var r = 0; r < regs.length; r++) add(rv.name, regs[r].replace(/^\s+|\s+$/g, ''), rv.reason);
+    function add(entry) {
+      var k = (entry.company + '|' + entry.rep + '|' + entry.vehicle).toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1;
+      pool.push(entry);
     }
-    for (var c = 0; c < this.contractors.length; c++) add(this.contractors[c].name, '', '');
-    for (var v = this.visitors.length - 1; v >= 0; v--) add(this.visitors[v].company, this.visitors[v].vehicle, this.visitors[v].reason);
+
+    for (key in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, key)) continue;
+      rec = map[key];
+
+      /* the company on its own - picking it reveals the dropdowns */
+      add({ company: rec.name, rep: '', vehicle: '', label: rec.name, hint: this.companyHint(rec) });
+
+      /* each representative, with each of their vehicles */
+      for (r = 0; r < rec.reps.length; r++) {
+        if (!rec.reps[r].vehicles.length) {
+          add({ company: rec.name, rep: rec.reps[r].name, vehicle: '',
+                label: rec.name, hint: rec.reps[r].name });
+        }
+        for (v = 0; v < rec.reps[r].vehicles.length; v++) {
+          add({ company: rec.name, rep: rec.reps[r].name, vehicle: rec.reps[r].vehicles[v],
+                label: rec.name, hint: rec.reps[r].name + ' - ' + rec.reps[r].vehicles[v] });
+        }
+      }
+
+      /* company vehicles with no named representative */
+      for (v = 0; v < rec.vehicles.length; v++) {
+        add({ company: rec.name, rep: '', vehicle: rec.vehicles[v],
+              label: rec.name, hint: rec.vehicles[v] });
+      }
+    }
+
+    /* anything logged today that is not yet a saved record */
+    for (var i = this.visitors.length - 1; i >= 0; i--) {
+      var vis = this.visitors[i];
+      if (!vis.company) continue;
+      add({ company: vis.company, rep: vis.rep || '', vehicle: vis.vehicle || '',
+            label: vis.company,
+            hint: [vis.rep, vis.vehicle].filter(function (x) { return !!x; }).join(' - ') });
+    }
 
     return pool;
+  },
+
+  companyHint: function (rec) {
+    var bits = [];
+    if (rec.reps.length) bits.push(rec.reps.length + (rec.reps.length === 1 ? ' rep' : ' reps'));
+    var count = rec.vehicles.length;
+    for (var r = 0; r < rec.reps.length; r++) count += rec.reps[r].vehicles.length;
+    if (count) bits.push(count + (count === 1 ? ' vehicle' : ' vehicles'));
+    return bits.join(', ');
   },
 
   showSuggestions: function () {
@@ -625,9 +816,13 @@ var app = {
     list.innerHTML = '';
 
     var pool = this.suggestionPool();
-    var matches = [];
-    for (var i = 0; i < pool.length && matches.length < 8; i++) {
-      if (!q || pool[i].name.toLowerCase().indexOf(q) !== -1) matches.push(pool[i]);
+    var matches = [], i;
+    for (i = 0; i < pool.length && matches.length < 10; i++) {
+      if (!q ||
+          pool[i].company.toLowerCase().indexOf(q) !== -1 ||
+          (pool[i].rep && pool[i].rep.toLowerCase().indexOf(q) !== -1)) {
+        matches.push(pool[i]);
+      }
     }
 
     if (!matches.length) { list.classList.remove('active'); return; }
@@ -636,15 +831,22 @@ var app = {
     var build = function (entry) {
       var item = document.createElement('div');
       item.className = 'autocomplete-item';
-      item.innerHTML = self.esc(entry.name) + (entry.vehicle ? ' <span class="ac-reg">' + self.esc(entry.vehicle) + '</span>' : '');
+      item.innerHTML = self.esc(entry.label) +
+        (entry.hint ? ' <span class="ac-reg">' + self.esc(entry.hint) + '</span>' : '');
       item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
       item.addEventListener('click', function () {
-        document.getElementById('companyInput').value = entry.name;
+        document.getElementById('companyInput').value = entry.company;
+        document.getElementById('repInput').value = entry.rep || '';
         if (entry.vehicle) document.getElementById('vehicleInput').value = entry.vehicle;
-        if (entry.reason && !document.getElementById('reasonInput').value) {
-          document.getElementById('reasonInput').value = entry.reason;
-        }
         self.hideSuggestions();
+        self.refreshPickers();
+        if (!document.getElementById('reasonInput').value) {
+          var rec = null, list2 = self.regularVisitors;
+          for (var z = 0; z < list2.length; z++) {
+            if (list2[z].name.toLowerCase() === entry.company.toLowerCase() && list2[z].reason) rec = list2[z];
+          }
+          if (rec) document.getElementById('reasonInput').value = rec.reason;
+        }
         document.getElementById('entryTime').focus();
       });
       list.appendChild(item);
@@ -658,9 +860,165 @@ var app = {
     document.getElementById('companyList').classList.remove('active');
   },
 
+  /* Shows the representative and vehicle dropdowns only when the typed
+     company actually has recorded entries to choose from. */
+  refreshPickers: function () {
+    var rec = this.findCompany(document.getElementById('companyInput').value);
+    var repRow = document.getElementById('repPickRow');
+    var repSel = document.getElementById('repSelect');
+
+    repSel.innerHTML = '';
+    if (rec && rec.reps.length) {
+      var blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = rec.reps.length + ' recorded - choose a representative';
+      repSel.appendChild(blank);
+      for (var r = 0; r < rec.reps.length; r++) {
+        var o = document.createElement('option');
+        o.value = rec.reps[r].name;
+        o.textContent = rec.reps[r].name +
+          (rec.reps[r].vehicles.length ? '  (' + rec.reps[r].vehicles.join(', ') + ')' : '');
+        repSel.appendChild(o);
+      }
+      repSel.value = document.getElementById('repInput').value || '';
+      repRow.style.display = 'block';
+    } else {
+      repRow.style.display = 'none';
+    }
+
+    this.refreshVehiclePicker();
+  },
+
+  refreshVehiclePicker: function () {
+    var rec = this.findCompany(document.getElementById('companyInput').value);
+    var row = document.getElementById('vehiclePickRow');
+    var sel = document.getElementById('vehicleSelect');
+    var repName = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var options = [], i, r;
+
+    function push(v) { if (v && options.indexOf(v) === -1) options.push(v); }
+
+    if (rec) {
+      var matchedRep = null;
+      for (r = 0; r < rec.reps.length; r++) {
+        if (rec.reps[r].name.toLowerCase() === repName) matchedRep = rec.reps[r];
+      }
+      if (matchedRep) {
+        for (i = 0; i < matchedRep.vehicles.length; i++) push(matchedRep.vehicles[i]);
+      } else {
+        for (i = 0; i < rec.vehicles.length; i++) push(rec.vehicles[i]);
+        for (r = 0; r < rec.reps.length; r++) {
+          for (i = 0; i < rec.reps[r].vehicles.length; i++) push(rec.reps[r].vehicles[i]);
+        }
+      }
+    }
+
+    sel.innerHTML = '';
+
+    if (options.length > 1) {
+      var blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = options.length + ' recorded - choose a vehicle';
+      sel.appendChild(blank);
+      for (i = 0; i < options.length; i++) {
+        var o = document.createElement('option');
+        o.value = options[i];
+        o.textContent = options[i];
+        sel.appendChild(o);
+      }
+      sel.value = document.getElementById('vehicleInput').value || '';
+      row.style.display = 'block';
+    } else {
+      row.style.display = 'none';
+      /* exactly one on record - fill it in rather than making them pick */
+      if (options.length === 1 && !document.getElementById('vehicleInput').value) {
+        document.getElementById('vehicleInput').value = options[0];
+      }
+    }
+  },
+
+  /* ---- representative editor rows ---- */
+
+  addRepRow: function (containerId, name, vehicles) {
+    var box = document.getElementById(containerId);
+    var empty = box.querySelector('.rep-empty');
+    if (empty) box.removeChild(empty);
+
+    var row = document.createElement('div');
+    row.className = 'rep-row';
+
+    var nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'rep-name';
+    nameInput.placeholder = 'Representative name';
+    nameInput.value = name || '';
+
+    var vehInput = document.createElement('input');
+    vehInput.type = 'text';
+    vehInput.className = 'rep-vehicles';
+    vehInput.placeholder = 'Their vehicles, comma separated';
+    vehInput.value = (vehicles || []).join(', ');
+
+    var remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'rep-remove';
+    remove.textContent = 'X';
+    remove.addEventListener('click', function () {
+      box.removeChild(row);
+      if (!box.querySelector('.rep-row')) app.renderRepPlaceholder(containerId);
+    });
+
+    row.appendChild(nameInput);
+    row.appendChild(vehInput);
+    row.appendChild(remove);
+    box.appendChild(row);
+    return row;
+  },
+
+  renderRepPlaceholder: function (containerId) {
+    var box = document.getElementById(containerId);
+    if (box.querySelector('.rep-row')) return;
+    box.innerHTML = '<div class="rep-empty">None added. Vehicles can be recorded per representative.</div>';
+  },
+
+  setRepRows: function (containerId, reps) {
+    var box = document.getElementById(containerId);
+    box.innerHTML = '';
+    for (var i = 0; i < (reps || []).length; i++) {
+      this.addRepRow(containerId, reps[i].name, reps[i].vehicles);
+    }
+    this.renderRepPlaceholder(containerId);
+  },
+
+  readRepRows: function (containerId) {
+    var rows = document.getElementById(containerId).querySelectorAll('.rep-row');
+    var out = [], i, j, name, regs, parts, t;
+    for (i = 0; i < rows.length; i++) {
+      name = rows[i].querySelector('.rep-name').value.replace(/^\s+|\s+$/g, '');
+      parts = rows[i].querySelector('.rep-vehicles').value.split(',');
+      regs = [];
+      for (j = 0; j < parts.length; j++) {
+        t = parts[j].replace(/^\s+|\s+$/g, '');
+        if (t) regs.push(t);
+      }
+      if (name || regs.length) out.push({ name: name, vehicles: regs });
+    }
+    return out;
+  },
+
+  splitList: function (s) {
+    var out = [], parts = String(s || '').split(','), i, t;
+    for (i = 0; i < parts.length; i++) {
+      t = parts[i].replace(/^\s+|\s+$/g, '');
+      if (t) out.push(t);
+    }
+    return out;
+  },
+
   recordVisitor: function (e) {
     e.preventDefault();
     var company = document.getElementById('companyInput').value.replace(/^\s+|\s+$/g, '');
+    var rep = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '');
     var vehicle = document.getElementById('vehicleInput').value.replace(/^\s+|\s+$/g, '');
     var reason = document.getElementById('reasonInput').value.replace(/^\s+|\s+$/g, '');
     var entryTime = document.getElementById('entryTime').value;
@@ -672,9 +1030,10 @@ var app = {
     }
 
     this.visitors.push({
-      id: Date.now(),
+      id: this.nextId(),
       date: this.currentDate,
       company: company,
+      rep: rep,
       vehicle: vehicle,
       reason: reason,
       entryTime: entryTime,
@@ -684,6 +1043,8 @@ var app = {
     this.saveData();
     this.renderLog();
     e.target.reset();
+    document.getElementById('repPickRow').style.display = 'none';
+    document.getElementById('vehiclePickRow').style.display = 'none';
     document.getElementById('companyInput').focus();
     this.toast('Entry recorded');
   },
@@ -720,17 +1081,18 @@ var app = {
         ? this.esc(v.exitTime)
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
       rows += '<tr>' +
-        '<td>' + this.esc(v.company) + '</td>' +
+        '<td>' + this.esc(v.company) +
+          (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') + '</td>' +
         '<td>' + this.esc(v.vehicle || '-') + '</td>' +
         '<td>' + this.esc(v.reason) + '</td>' +
         '<td>' + this.esc(v.entryTime) + '</td>' +
         '<td>' + exitCell + '</td>' +
-        '<td><button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
+        '<td class="row-actions"><button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
         '</tr>';
     }
 
     container.innerHTML = '<table class="data-table"><thead><tr>' +
-      '<th>Company</th><th>Vehicle</th><th>Reason</th><th>In</th><th>Out</th><th></th>' +
+      '<th>Company / rep</th><th>Vehicle</th><th>Reason</th><th>In</th><th>Out</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
 
@@ -744,38 +1106,96 @@ var app = {
     this.toast('Entry removed');
   },
 
+  /* ---------------- contractors ---------------- */
+
   showContractorForm: function () {
+    this.editingContractorId = null;
+    document.getElementById('contractorForm').reset();
+    document.getElementById('contractorFormTitle').textContent = 'New contractor';
+    document.getElementById('contractorSubmit').textContent = 'Save contractor';
+    this.setRepRows('contractorReps', []);
     document.getElementById('contractorForm').style.display = 'block';
     document.getElementById('contractorName').focus();
   },
 
   hideContractorForm: function () {
+    this.editingContractorId = null;
     document.getElementById('contractorForm').style.display = 'none';
     document.getElementById('contractorForm').reset();
+    this.setRepRows('contractorReps', []);
+  },
+
+  editContractor: function (id) {
+    var rec = null;
+    for (var i = 0; i < this.contractors.length && !rec; i++) {
+      if (this.contractors[i].id === id) rec = this.contractors[i];
+    }
+    if (!rec) return;
+
+    this.editingContractorId = id;
+    document.getElementById('contractorName').value = rec.name;
+    document.getElementById('inductionDate').value = rec.inductionDate;
+    this.setRepRows('contractorReps', rec.reps);
+    document.getElementById('contractorFormTitle').textContent = 'Editing ' + rec.name;
+    document.getElementById('contractorSubmit').textContent = 'Update contractor';
+    document.getElementById('contractorForm').style.display = 'block';
+    document.getElementById('contractorName').focus();
   },
 
   addContractor: function (e) {
     e.preventDefault();
     var name = document.getElementById('contractorName').value.replace(/^\s+|\s+$/g, '');
     var date = document.getElementById('inductionDate').value;
+    var reps = this.readRepRows('contractorReps');
     if (!name || !date) { this.toast('Add a company and an expiry date', 'error'); return; }
 
-    for (var i = 0; i < this.contractors.length; i++) {
-      if (this.contractors[i].name.toLowerCase() === name.toLowerCase()) {
-        this.contractors[i].inductionDate = date;
-        this.saveData();
-        this.renderArchive();
-        this.hideContractorForm();
-        this.toast('Induction date updated');
-        return;
-      }
+    var i, existing = null;
+    for (i = 0; i < this.contractors.length; i++) {
+      if (this.contractors[i].name.toLowerCase() === name.toLowerCase() &&
+          this.contractors[i].id !== this.editingContractorId) existing = this.contractors[i];
     }
 
-    this.contractors.push({ id: Date.now(), name: name, inductionDate: date });
+    if (this.editingContractorId !== null) {
+      if (existing) { this.toast('Another contractor already uses that name', 'error'); return; }
+      for (i = 0; i < this.contractors.length; i++) {
+        if (this.contractors[i].id === this.editingContractorId) {
+          this.contractors[i].name = name;
+          this.contractors[i].inductionDate = date;
+          this.contractors[i].reps = reps;
+        }
+      }
+      this.saveData();
+      this.renderArchive();
+      this.hideContractorForm();
+      this.toast('Contractor updated');
+      return;
+    }
+
+    if (existing) {
+      existing.inductionDate = date;
+      existing.reps = reps.length ? reps : existing.reps;
+      this.saveData();
+      this.renderArchive();
+      this.hideContractorForm();
+      this.toast('Induction date updated');
+      return;
+    }
+
+    this.contractors.push({ id: this.nextId(), name: name, inductionDate: date, reps: reps, vehicles: [] });
     this.saveData();
     this.renderArchive();
     this.hideContractorForm();
     this.toast('Contractor added');
+  },
+
+  repSummary: function (rec) {
+    var bits = [], r;
+    for (r = 0; r < (rec.reps || []).length; r++) {
+      bits.push(rec.reps[r].name +
+        (rec.reps[r].vehicles.length ? ' (' + rec.reps[r].vehicles.join(', ') + ')' : ''));
+    }
+    if ((rec.vehicles || []).length) bits.push(rec.vehicles.join(', '));
+    return bits.join('; ');
   },
 
   renderArchive: function () {
@@ -797,14 +1217,18 @@ var app = {
       var c = sorted[i];
       var due = new Date(c.inductionDate);
       var valid = due >= now;
+      var summary = this.repSummary(c);
       rows += '<tr>' +
-        '<td>' + this.esc(c.name) + '</td>' +
+        '<td>' + this.esc(c.name) +
+          (summary ? '<span class="cell-sub">' + this.esc(summary) + '</span>' : '') + '</td>' +
         '<td>' + due.toLocaleDateString('en-GB') + '</td>' +
         '<td><span class="status-badge ' + (valid ? 'status-valid' : 'status-needed') + '">' +
         '<span class="status-dot" style="background:' + (valid ? '#15803d' : '#b91c1c') + '"></span>' +
         (valid ? 'Valid' : 'Induction due') + '</span></td>' +
-        '<td><button type="button" class="delete-btn" onclick="app.deleteContractor(' + c.id + ')">X</button></td>' +
-        '</tr>';
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editContractor(' + c.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteContractor(' + c.id + ')">X</button>' +
+        '</td></tr>';
     }
 
     container.innerHTML = '<table class="data-table"><thead><tr>' +
@@ -817,29 +1241,81 @@ var app = {
     var kept = [];
     for (var i = 0; i < this.contractors.length; i++) if (this.contractors[i].id !== id) kept.push(this.contractors[i]);
     this.contractors = kept;
+    if (this.editingContractorId === id) this.hideContractorForm();
     this.saveData();
     this.renderArchive();
     this.toast('Contractor removed');
   },
 
+  /* ---------------- regular visitors ---------------- */
+
   showVisitorForm: function () {
+    this.editingVisitorId = null;
+    document.getElementById('regularVisitorForm').reset();
+    document.getElementById('visitorFormTitle').textContent = 'New regular visitor';
+    document.getElementById('visitorSubmit').textContent = 'Save visitor';
+    this.setRepRows('visitorReps', []);
     document.getElementById('regularVisitorForm').style.display = 'block';
     document.getElementById('visitorName').focus();
   },
 
   hideVisitorForm: function () {
+    this.editingVisitorId = null;
     document.getElementById('regularVisitorForm').style.display = 'none';
     document.getElementById('regularVisitorForm').reset();
+    this.setRepRows('visitorReps', []);
+  },
+
+  editRegularVisitor: function (id) {
+    var rec = null;
+    for (var i = 0; i < this.regularVisitors.length && !rec; i++) {
+      if (this.regularVisitors[i].id === id) rec = this.regularVisitors[i];
+    }
+    if (!rec) return;
+
+    this.editingVisitorId = id;
+    document.getElementById('visitorName').value = rec.name;
+    document.getElementById('visitorVehicle').value = (rec.vehicles || []).join(', ');
+    document.getElementById('visitorReason').value = rec.reason || '';
+    this.setRepRows('visitorReps', rec.reps);
+    document.getElementById('visitorFormTitle').textContent = 'Editing ' + rec.name;
+    document.getElementById('visitorSubmit').textContent = 'Update visitor';
+    document.getElementById('regularVisitorForm').style.display = 'block';
+    document.getElementById('visitorName').focus();
   },
 
   addRegularVisitor: function (e) {
     e.preventDefault();
     var name = document.getElementById('visitorName').value.replace(/^\s+|\s+$/g, '');
-    var vehicle = document.getElementById('visitorVehicle').value.replace(/^\s+|\s+$/g, '');
+    var vehicles = this.splitList(document.getElementById('visitorVehicle').value);
     var reason = document.getElementById('visitorReason').value.replace(/^\s+|\s+$/g, '');
-    if (!name || !vehicle) { this.toast('Add a name and a registration', 'error'); return; }
+    var reps = this.readRepRows('visitorReps');
 
-    this.regularVisitors.push({ id: Date.now(), name: name, vehicle: vehicle, reason: reason });
+    if (!name) { this.toast('Add a name', 'error'); return; }
+    if (!vehicles.length && !reps.length) {
+      this.toast('Add a vehicle or a representative', 'error');
+      return;
+    }
+
+    if (this.editingVisitorId !== null) {
+      for (var i = 0; i < this.regularVisitors.length; i++) {
+        if (this.regularVisitors[i].id === this.editingVisitorId) {
+          this.regularVisitors[i].name = name;
+          this.regularVisitors[i].vehicles = vehicles;
+          this.regularVisitors[i].reason = reason;
+          this.regularVisitors[i].reps = reps;
+        }
+      }
+      this.saveData();
+      this.renderVisitors();
+      this.hideVisitorForm();
+      this.toast('Regular visitor updated');
+      return;
+    }
+
+    this.regularVisitors.push({
+      id: this.nextId(), name: name, vehicles: vehicles, reps: reps, reason: reason
+    });
     this.saveData();
     this.renderVisitors();
     this.hideVisitorForm();
@@ -856,16 +1332,33 @@ var app = {
     var rows = '';
     for (var i = 0; i < this.regularVisitors.length; i++) {
       var v = this.regularVisitors[i];
+      var repCell;
+      if ((v.reps || []).length) {
+        var parts = [];
+        for (var r = 0; r < v.reps.length; r++) {
+          parts.push(this.esc(v.reps[r].name || 'Unnamed') +
+            (v.reps[r].vehicles.length
+              ? '<span class="cell-sub">' + this.esc(v.reps[r].vehicles.join(', ')) + '</span>'
+              : ''));
+        }
+        repCell = parts.join('<br>');
+      } else {
+        repCell = '-';
+      }
+
       rows += '<tr>' +
         '<td>' + this.esc(v.name) + '</td>' +
-        '<td>' + this.esc(v.vehicle) + '</td>' +
+        '<td>' + repCell + '</td>' +
+        '<td>' + this.esc((v.vehicles || []).join(', ') || '-') + '</td>' +
         '<td>' + this.esc(v.reason || '-') + '</td>' +
-        '<td><button type="button" class="delete-btn" onclick="app.deleteRegularVisitor(' + v.id + ')">X</button></td>' +
-        '</tr>';
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editRegularVisitor(' + v.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteRegularVisitor(' + v.id + ')">X</button>' +
+        '</td></tr>';
     }
 
     container.innerHTML = '<table class="data-table"><thead><tr>' +
-      '<th>Name</th><th>Vehicle</th><th>Usual reason</th><th></th>' +
+      '<th>Company</th><th>Representatives</th><th>Company vehicles</th><th>Usual reason</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
 
@@ -874,6 +1367,7 @@ var app = {
     var kept = [];
     for (var i = 0; i < this.regularVisitors.length; i++) if (this.regularVisitors[i].id !== id) kept.push(this.regularVisitors[i]);
     this.regularVisitors = kept;
+    if (this.editingVisitorId === id) this.hideVisitorForm();
     this.saveData();
     this.renderVisitors();
     this.toast('Regular visitor removed');
@@ -968,14 +1462,15 @@ var app = {
       var vrows = [];
       for (var t = 0; t < todays.length; t++) {
         var v = todays[t];
-        vrows.push([v.company, v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-']);
+        vrows.push([v.company, v.rep || '-', v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-']);
       }
       table([
-        { label: 'Company / visitor', w: 150 },
-        { label: 'Vehicle', w: 85 },
-        { label: 'Reason for visit', w: 160 },
-        { label: 'In', w: 60 },
-        { label: 'Out', w: 60 }
+        { label: 'Company', w: 128 },
+        { label: 'Representative', w: 95 },
+        { label: 'Vehicle', w: 78 },
+        { label: 'Reason for visit', w: 139 },
+        { label: 'In', w: 37 },
+        { label: 'Out', w: 38 }
       ], vrows);
       paragraph(todays.length + (todays.length === 1 ? ' movement recorded.' : ' movements recorded.'));
     } else {
@@ -997,14 +1492,16 @@ var app = {
         if (!ok) due++;
         crows.push([
           sorted[c2].name,
+          this.repSummary(sorted[c2]) || '-',
           d.toLocaleDateString('en-GB'),
           { t: ok ? 'Valid' : 'INDUCTION DUE', c: ok ? GREEN : RED, b: true }
         ]);
       }
       table([
-        { label: 'Company', w: 260 },
-        { label: 'Valid until', w: 130 },
-        { label: 'Status', w: 125 }
+        { label: 'Company', w: 155 },
+        { label: 'Representatives', w: 190 },
+        { label: 'Valid until', w: 80 },
+        { label: 'Status', w: 90 }
       ], crows);
       paragraph(due ? due + ' of ' + sorted.length + ' require a new induction.'
                     : 'All ' + sorted.length + ' inductions are in date.');
@@ -1018,12 +1515,27 @@ var app = {
       var rrows = [];
       for (var r2 = 0; r2 < this.regularVisitors.length; r2++) {
         var rv = this.regularVisitors[r2];
-        rrows.push([rv.name, rv.vehicle, rv.reason || '-']);
+        if ((rv.reps || []).length) {
+          for (var rp = 0; rp < rv.reps.length; rp++) {
+            rrows.push([
+              rp === 0 ? rv.name : '',
+              rv.reps[rp].name || '-',
+              rv.reps[rp].vehicles.join(', ') || '-',
+              rp === 0 ? (rv.reason || '-') : ''
+            ]);
+          }
+          if ((rv.vehicles || []).length) {
+            rrows.push(['', 'Company vehicles', rv.vehicles.join(', '), '']);
+          }
+        } else {
+          rrows.push([rv.name, '-', (rv.vehicles || []).join(', ') || '-', rv.reason || '-']);
+        }
       }
       table([
-        { label: 'Name', w: 180 },
-        { label: 'Vehicle registration', w: 150 },
-        { label: 'Usual reason', w: 185 }
+        { label: 'Company', w: 150 },
+        { label: 'Representative', w: 130 },
+        { label: 'Vehicle', w: 145 },
+        { label: 'Usual reason', w: 90 }
       ], rrows);
     } else {
       paragraph('No regular visitors recorded.');
@@ -1042,7 +1554,7 @@ var app = {
 
     var payload = {
       app: 'security-access-tracker',
-      version: 1,
+      version: 2,
       exported: new Date().toISOString(),
       date: this.currentDate,
       visitors: todays,
@@ -1110,8 +1622,7 @@ var app = {
       for (i = 0; i < d.regularVisitors.length; i++) {
         var rvExists = false;
         for (j = 0; j < this.regularVisitors.length; j++) {
-          if (this.regularVisitors[j].name.toLowerCase() === String(d.regularVisitors[i].name).toLowerCase() &&
-              this.regularVisitors[j].vehicle.toLowerCase() === String(d.regularVisitors[i].vehicle).toLowerCase()) {
+          if (this.regularVisitors[j].name.toLowerCase() === String(d.regularVisitors[i].name).toLowerCase()) {
             rvExists = true;
           }
         }
@@ -1129,6 +1640,8 @@ var app = {
       }
     }
 
+    this.migrate();
+    this.seedIds();
     this.saveData();
     this.renderLog();
     this.renderArchive();
