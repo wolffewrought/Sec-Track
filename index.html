@@ -108,6 +108,14 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 .num-btn{width:2rem;height:2rem;border-radius:.3rem;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
 .num-btn.flagged{border-color:transparent;color:#fff}
 .num-btn.carried{border-style:dashed;border-color:#b45309;opacity:.85}
+.page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem}
+.page-btn{flex:1;padding:.55rem .5rem;border:none;background:transparent;color:#475569;font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
+.page-btn.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.page-btn span{display:block;font-weight:500;font-size:.72rem;color:#64748b;margin-top:.1rem}
+.page-btn.active span{color:#475569}
+.induction-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;padding:.15rem .45rem;border-radius:9999px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
+.induction-tag.ok{background:#f0fdf4;color:#15803d}
+.induction-tag.due{background:#fef2f2;color:#b91c1c}
 .flag-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
 .flag-legend span{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:#475569}
 .flag-legend i{width:.8rem;height:.8rem;border-radius:.2rem;display:inline-block}
@@ -129,7 +137,8 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 
 <div class="tab-nav">
-<button class="tab-button active" data-tab="tracker">Daily Log</button>
+<button class="tab-button active" data-tab="tracker">New Entry</button>
+<button class="tab-button" data-tab="sheet">Day Sheet</button>
 <button class="tab-button" data-tab="archive">Contractor List</button>
 <button class="tab-button" data-tab="visitors">Regular Visitors</button>
 <button class="tab-button" data-tab="staff">Staff</button>
@@ -140,22 +149,9 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 
 <div id="tracker" class="tab-content active">
 <div class="section">
-<h2>Site Access Hours</h2>
-<div class="grid-2">
-<div class="form-group">
-<label for="startTime">Start time</label>
-<input type="time" id="startTime" value="05:00">
-</div>
-<div class="form-group">
-<label for="endTime">End time</label>
-<input type="time" id="endTime" value="13:00">
-</div>
-</div>
-</div>
-
-<div class="section">
 <h2>Record visitor</h2>
 <form id="visitorForm" autocomplete="off">
+<h3 class="form-title" id="visitorEntryTitle" style="display:none"></h3>
 <div class="form-group">
 <label for="companyInput">Company / visitor name</label>
 <div class="autocomplete-wrapper">
@@ -195,29 +191,17 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 </div>
 <div class="action-row">
-<button type="submit" class="button button-primary">Record entry</button>
+<button type="submit" class="button button-primary" id="visitorEntrySubmit">Record entry</button>
 <button type="button" class="button button-secondary" id="setCurrentTime">Use current time</button>
+<button type="button" class="button button-secondary" id="cancelEntryEdit" style="display:none">Cancel</button>
 </div>
 </form>
 </div>
 
 <div class="section">
-<h2>Occurrence sheet</h2>
-<div class="sheet-bar">
-<button type="button" class="button button-secondary" id="prevDay">&#8249; Prev</button>
-<input type="date" id="sheetDate">
-<button type="button" class="button button-secondary" id="nextDay">Next &#8250;</button>
-<button type="button" class="button button-secondary" id="todayBtn">Today</button>
-</div>
-<div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
-<div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
-<div id="flagLegend" class="flag-legend"></div>
-<div id="logContainer"></div>
-</div>
-
-<div class="section">
-<h2>Staff leaving site</h2>
+<h2>Record staff departure</h2>
 <form id="staffMoveForm" autocomplete="off">
+<h3 class="form-title" id="staffMoveTitle" style="display:none"></h3>
 <div class="form-group">
 <label for="staffNameInput">Staff member</label>
 <div class="autocomplete-wrapper">
@@ -256,10 +240,35 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 </div>
 <div class="action-row">
-<button type="submit" class="button button-primary">Record departure</button>
+<button type="submit" class="button button-primary" id="staffMoveSubmit">Record departure</button>
 <button type="button" class="button button-secondary" id="staffNowBtn">Use current time</button>
+<button type="button" class="button button-secondary" id="cancelStaffMoveEdit" style="display:none">Cancel</button>
 </div>
 </form>
+</div>
+</div>
+
+<div id="sheet" class="tab-content">
+<div class="section">
+<h2>Occurrence sheet</h2>
+<div class="sheet-bar">
+<button type="button" class="button button-secondary" id="prevDay">&#8249; Prev</button>
+<input type="date" id="sheetDate">
+<button type="button" class="button button-secondary" id="nextDay">Next &#8250;</button>
+<button type="button" class="button button-secondary" id="todayBtn">Today</button>
+</div>
+<div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
+<div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div class="page-switch" role="tablist">
+<button type="button" id="pageOthers" class="page-btn" role="tab">Daily</button>
+<button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
+</div>
+<div id="flagLegend" class="flag-legend"></div>
+<div id="logContainer"></div>
+</div>
+
+<div class="section">
+<h2>Staff movements</h2>
 <div id="staffSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="staffMoveContainer"></div>
 </div>
@@ -375,6 +384,20 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 
 <div id="settings" class="tab-content">
 <div class="section">
+<h2>Site Access Hours</h2>
+<div class="grid-2">
+<div class="form-group">
+<label for="startTime">Start time</label>
+<input type="time" id="startTime" value="05:00">
+</div>
+<div class="form-group">
+<label for="endTime">End time</label>
+<input type="time" id="endTime" value="13:00">
+</div>
+</div>
+</div>
+
+<div class="section">
 <h2>Export</h2>
 <div class="action-row">
 <button type="button" class="button button-primary" id="exportPdfBtn">Export day sheet as PDF</button>
@@ -433,6 +456,10 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 <button type="button" class="button button-danger" id="clearAllBtn">Clear everything</button>
 </div>
 <p class="text-muted">Everything is stored on this device only. Clearing cannot be undone, so save a backup first.</p>
+<p class="text-muted" id="buildStamp" style="margin-top:.75rem"></p>
+<div class="action-row">
+<button type="button" class="button button-secondary" id="forceUpdateBtn">Check for a new version</button>
+</div>
 </div>
 </div>
 
@@ -820,6 +847,11 @@ var Store = (function () {
   };
 })();
 
+/* Bumped with every release. Shown in Settings so it is always possible to
+   tell which build a device is actually running, rather than guessing at
+   whether an upload landed. */
+var BUILD = 'sat-v18';
+
 var app = {
   visitors: [],
   contractors: [],
@@ -831,8 +863,11 @@ var app = {
   staffMovements: [],
   siteVehicles: [],
   editingStaffId: null,
+  editingEntryId: null,
+  editingMoveId: null,
   flagTarget: null,
   viewDate: '',
+  logPage: 'daily',
   onSiteOnly: false,
   _lastSubmit: 0,
   _lastSig: '',
@@ -863,6 +898,7 @@ var app = {
       self.renderSheetControls();
       self.renderPeriodControls();
       self.renderStorageNote();
+      self.renderBuildStamp();
       self.startDayWatch();
       var wanted = self.tabFromHash();
       if (wanted) self.activateTab(wanted);
@@ -967,12 +1003,23 @@ var app = {
     document.getElementById('nextDay').disabled = (this.viewDate >= this.currentDate);
   },
 
+  /* One canonical order everywhere: time of entry. The screen, the numbers
+     and the printed sheet all follow it, so entry 4 is entry 4 whichever
+     you are looking at. Backdating an earlier time reorders the sheet
+     rather than leaving the numbering scrambled. */
+  byTime: function (list, timeKey) {
+    return list.slice().sort(function (a, b) {
+      var ka = a.date + ' ' + (a[timeKey] || ''), kb = b.date + ' ' + (b[timeKey] || '');
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+  },
+
   entriesFor: function (date) {
     var out = [], i;
     for (i = 0; i < this.visitors.length; i++) {
       if (this.visitors[i].date === date) out.push(this.visitors[i]);
     }
-    return out;
+    return this.byTime(out, 'entryTime');
   },
 
   stillOnSite: function (list) {
@@ -1235,6 +1282,8 @@ var app = {
 
     document.getElementById('visitorForm').addEventListener('submit', function (e) { self.recordVisitor(e); });
     document.getElementById('setCurrentTime').addEventListener('click', function () { self.setCurrentTime(); });
+    document.getElementById('cancelEntryEdit').addEventListener('click', function () { self.cancelEntryEdit(); });
+    document.getElementById('cancelStaffMoveEdit').addEventListener('click', function () { self.cancelStaffMoveEdit(); });
 
     var ci = document.getElementById('companyInput');
     ci.addEventListener('input', function () { self.showSuggestions(); });
@@ -1281,6 +1330,9 @@ var app = {
     document.getElementById('exportJsonBtn').addEventListener('click', function () { self.exportJson(); });
     document.getElementById('importJsonBtn').addEventListener('click', function () { document.getElementById('jsonImportInput').click(); });
     document.getElementById('jsonImportInput').addEventListener('change', function (e) { self.handleImport(e); });
+
+    document.getElementById('pageContractors').addEventListener('click', function () { self.setLogPage('contractors'); });
+    document.getElementById('pageOthers').addEventListener('click', function () { self.setLogPage('daily'); });
 
     document.getElementById('prevDay').addEventListener('click', function () { self.shiftViewDate(-1); });
     document.getElementById('nextDay').addEventListener('click', function () { self.shiftViewDate(1); });
@@ -1330,6 +1382,7 @@ var app = {
     document.getElementById('periodWeek').addEventListener('change', function () { self.renderPeriodSummary(); });
     document.getElementById('exportPeriodBtn').addEventListener('click', function () { self.exportPeriod(); });
 
+    document.getElementById('forceUpdateBtn').addEventListener('click', function () { self.forceUpdate(); });
     document.getElementById('pruneBtn').addEventListener('click', function () { self.pruneOld(); });
     document.getElementById('clearTodayBtn').addEventListener('click', function () { self.clearToday(); });
     document.getElementById('clearAllBtn').addEventListener('click', function () { self.clearAll(); });
@@ -1337,7 +1390,7 @@ var app = {
 
   /* The home screen shortcuts point at #tracker and #archive, so the tab
      named in the address has to actually open. */
-  TABS: ['tracker', 'archive', 'visitors', 'staff', 'settings'],
+  TABS: ['tracker', 'sheet', 'archive', 'visitors', 'staff', 'settings'],
 
   activateTab: function (name) {
     if (this.TABS.indexOf(name) === -1) return;
@@ -1768,6 +1821,24 @@ var app = {
       return;
     }
 
+    if (this.editingEntryId !== null) {
+      for (var ei = 0; ei < this.visitors.length; ei++) {
+        if (this.visitors[ei].id !== this.editingEntryId) continue;
+        this.visitors[ei].company = company;
+        this.visitors[ei].rep = rep;
+        this.visitors[ei].vehicle = vehicle;
+        this.visitors[ei].reason = reason;
+        this.visitors[ei].entryTime = entryTime;
+        this.visitors[ei].exitTime = exitTime;
+        this.logPage = this.isContractorEntry(this.visitors[ei]) ? 'contractors' : 'daily';
+      }
+      this.cancelEntryEdit();
+      this.saveData();
+      this.renderLog();
+      this.toast('Entry updated');
+      return;
+    }
+
     /* A double tap on a phone fires submit twice. Suppress only when the
        very same movement comes through again within a couple of seconds,
        so two different visitors logged quickly are never blocked. */
@@ -1788,6 +1859,9 @@ var app = {
       exitTime: exitTime
     });
 
+    this.logPage = this.isContractorEntry(this.visitors[this.visitors.length - 1])
+      ? 'contractors' : 'daily';
+
     this.saveData();
     this.renderLog();
     e.target.reset();
@@ -1795,7 +1869,50 @@ var app = {
     document.getElementById('vehiclePickRow').style.display = 'none';
     document.getElementById('inductionNote').style.display = 'none';
     document.getElementById('companyInput').focus();
-    this.toast('Entry recorded');
+    this.toast('Entry recorded - ' + this.entriesFor(this.viewDate).length +
+      ' on the Day Sheet');
+  },
+
+  /* Loads a logged movement back into the form. The entry keeps its id,
+     its date and its colour, so editing does not disturb the numbering or
+     lose a flag the way delete-and-retype did. */
+  editEntry: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.visitors.length && !rec; i++) {
+      if (this.visitors[i].id === id) rec = this.visitors[i];
+    }
+    if (!rec) return;
+
+    this.editingEntryId = id;
+    document.getElementById('companyInput').value = rec.company;
+    document.getElementById('repInput').value = rec.rep || '';
+    document.getElementById('vehicleInput').value = rec.vehicle || '';
+    document.getElementById('reasonInput').value = rec.reason;
+    document.getElementById('entryTime').value = rec.entryTime;
+    document.getElementById('exitTime').value = rec.exitTime || '';
+
+    var seq = this.daySequence(this.visitors)[id];
+    var title = document.getElementById('visitorEntryTitle');
+    title.textContent = 'Editing entry ' + seq +
+      (rec.date === this.viewDate ? '' : ' from ' + this.ukDate(rec.date));
+    title.style.display = 'block';
+    document.getElementById('visitorEntrySubmit').textContent = 'Update entry';
+    document.getElementById('cancelEntryEdit').style.display = 'inline-block';
+
+    this.refreshPickers();
+    this.activateTab('tracker');
+    document.getElementById('companyInput').focus();
+  },
+
+  cancelEntryEdit: function () {
+    this.editingEntryId = null;
+    document.getElementById('visitorForm').reset();
+    document.getElementById('visitorEntryTitle').style.display = 'none';
+    document.getElementById('visitorEntrySubmit').textContent = 'Record entry';
+    document.getElementById('cancelEntryEdit').style.display = 'none';
+    document.getElementById('repPickRow').style.display = 'none';
+    document.getElementById('vehiclePickRow').style.display = 'none';
+    document.getElementById('inductionNote').style.display = 'none';
   },
 
   setExit: function (id) {
@@ -1820,8 +1937,27 @@ var app = {
     var openHere = this.stillOnSite(all);
     var carried = openAll.length - openHere.length;
 
+    /* the page split is applied to whichever list is on show, so the
+       on-site filter and the contractor split compose rather than fight */
+    var source = this.onSiteOnly ? openAll : all;
+    var split = this.splitByPage(source);
+    var counts = this.splitByPage(all);
+
+    var cBtn = document.getElementById('pageContractors');
+    var oBtn = document.getElementById('pageOthers');
+    cBtn.innerHTML = 'Contractors<span>' + split.contractors.length +
+      (this.onSiteOnly ? ' on site' : (split.contractors.length === 1 ? ' entry' : ' entries')) + '</span>';
+    oBtn.innerHTML = 'Daily<span>' + split.daily.length +
+      (this.onSiteOnly ? ' on site' : (split.daily.length === 1 ? ' entry' : ' entries')) + '</span>';
+    cBtn.className = 'page-btn' + (this.logPage === 'contractors' ? ' active' : '');
+    oBtn.className = 'page-btn' + (this.logPage === 'daily' ? ' active' : '');
+    cBtn.setAttribute('aria-selected', this.logPage === 'contractors' ? 'true' : 'false');
+    oBtn.setAttribute('aria-selected', this.logPage === 'daily' ? 'true' : 'false');
+
     var label = (this.viewDate === this.currentDate ? 'Today' : this.ukDate(this.viewDate)) + ': ' +
-      all.length + (all.length === 1 ? ' movement' : ' movements');
+      all.length + (all.length === 1 ? ' movement' : ' movements') +
+      (counts.contractors.length ? ' \u00b7 ' + counts.contractors.length + ' contractor' +
+        (counts.contractors.length === 1 ? '' : 's') : '');
 
     var chip;
     if (!openAll.length) {
@@ -1833,33 +1969,48 @@ var app = {
     }
     summary.innerHTML = '<span>' + label + '</span>' + chip;
 
-    var src = this.onSiteOnly ? openAll : all;
+    var onContractors = this.logPage === 'contractors';
+    var src = onContractors ? split.contractors : split.daily;
 
     if (!src.length) {
-      container.innerHTML = '<div class="empty-state">' +
-        (this.onSiteOnly ? 'Nobody is on site' : 'No visitors logged for this day') + '</div>';
+      var elsewhere = onContractors ? split.daily.length : split.contractors.length;
+      var otherName = onContractors ? 'Daily' : 'Contractors';
+      var msg = this.onSiteOnly
+        ? (onContractors ? 'No contractors on site' : 'Nobody else on site')
+        : (onContractors ? 'No contractor movements this day' : 'No other visitors this day');
+      if (elsewhere) {
+        msg += '<br><span class="text-muted">' + elsewhere +
+          (elsewhere === 1 ? ' entry is' : ' entries are') + ' on ' + otherName + '</span>';
+      }
+      container.innerHTML = '<div class="empty-state">' + msg + '</div>';
+      this.renderFlagLegend();
       return;
     }
 
+    /* numbering stays the day's own running order, so a number means the
+       same thing here, on the other page and on the printed sheet */
     var seq = this.daySequence(this.visitors);
     var rows = '';
     for (var j = 0; j < src.length; j++) {
       var v = src[j];
+      var otherDay = v.date !== this.viewDate;
       var exitCell = v.exitTime
         ? this.esc(v.exitTime)
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
-      var otherDay = v.date !== this.viewDate;
       rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
         this.numCell(v, seq[v.id], 'visitor', otherDay) +
         '<td>' + this.esc(v.company) +
           (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
           (otherDay ? '<span class="cell-sub carried">in on ' + this.ukDate(v.date) + '</span>' : '') +
+          (onContractors ? this.inductionTag(v) : '') +
         '</td>' +
         '<td>' + this.esc(v.vehicle || '-') + '</td>' +
         '<td>' + this.esc(v.reason) + '</td>' +
         '<td>' + this.esc(v.entryTime) + '</td>' +
         '<td>' + exitCell + '</td>' +
-        '<td class="row-actions"><button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editEntry(' + v.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
         '</tr>';
     }
 
@@ -1872,6 +2023,7 @@ var app = {
 
   deleteVisitor: function (id) {
     if (!confirm('Remove this entry from the sheet?')) return;
+    if (this.editingEntryId === id) this.cancelEntryEdit();
     var kept = [];
     for (var i = 0; i < this.visitors.length; i++) if (this.visitors[i].id !== id) kept.push(this.visitors[i]);
     this.visitors = kept;
@@ -2558,6 +2710,23 @@ var app = {
     if (backTime && backTime < outTime &&
         !confirm('Back ' + backTime + ' is before out ' + outTime + '. Record it anyway?')) return;
 
+    if (this.editingMoveId !== null) {
+      for (var mi = 0; mi < this.staffMovements.length; mi++) {
+        if (this.staffMovements[mi].id !== this.editingMoveId) continue;
+        this.staffMovements[mi].name = name;
+        this.staffMovements[mi].vehicleType = mode;
+        this.staffMovements[mi].vehicle = vehicle;
+        this.staffMovements[mi].reason = reason;
+        this.staffMovements[mi].outTime = outTime;
+        this.staffMovements[mi].backTime = backTime;
+      }
+      this.cancelStaffMoveEdit();
+      this.saveData();
+      this.renderStaffMovements();
+      this.toast('Departure updated');
+      return;
+    }
+
     var sig = [this.viewDate, name, vehicle, outTime].join('|').toLowerCase();
     var now = Date.now();
     if (sig === this._lastStaffSig && (now - this._lastStaffSubmit) < 2000) return;
@@ -2582,7 +2751,46 @@ var app = {
     document.getElementById('staffVehiclePickRow').style.display = 'none';
     document.getElementById('staffVehicleRow').style.display = 'block';
     document.getElementById('staffNameInput').focus();
-    this.toast('Departure recorded');
+    this.toast('Departure recorded - ' + this.staffMovesFor(this.viewDate).length +
+      ' on the Day Sheet');
+  },
+
+  editStaffMove: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.staffMovements.length && !rec; i++) {
+      if (this.staffMovements[i].id === id) rec = this.staffMovements[i];
+    }
+    if (!rec) return;
+
+    this.editingMoveId = id;
+    document.getElementById('staffNameInput').value = rec.name;
+    document.getElementById('staffVehicleType').value = rec.vehicleType || 'company';
+    document.getElementById('staffVehicleInput').value = rec.vehicle || '';
+    document.getElementById('staffReasonInput').value = rec.reason;
+    document.getElementById('staffOutTime').value = rec.outTime;
+    document.getElementById('staffBackTime').value = rec.backTime || '';
+
+    var seq = this.daySequence(this.staffMovements, 'outTime')[id];
+    var title = document.getElementById('staffMoveTitle');
+    title.textContent = 'Editing departure ' + seq +
+      (rec.date === this.viewDate ? '' : ' from ' + this.ukDate(rec.date));
+    title.style.display = 'block';
+    document.getElementById('staffMoveSubmit').textContent = 'Update departure';
+    document.getElementById('cancelStaffMoveEdit').style.display = 'inline-block';
+
+    this.refreshStaffVehiclePicker();
+    this.activateTab('tracker');
+    document.getElementById('staffNameInput').focus();
+  },
+
+  cancelStaffMoveEdit: function () {
+    this.editingMoveId = null;
+    document.getElementById('staffMoveForm').reset();
+    document.getElementById('staffMoveTitle').style.display = 'none';
+    document.getElementById('staffMoveSubmit').textContent = 'Record departure';
+    document.getElementById('cancelStaffMoveEdit').style.display = 'none';
+    document.getElementById('staffVehiclePickRow').style.display = 'none';
+    document.getElementById('staffVehicleRow').style.display = 'block';
   },
 
   setStaffBack: function (id) {
@@ -2603,7 +2811,7 @@ var app = {
     for (i = 0; i < this.staffMovements.length; i++) {
       if (this.staffMovements[i].date === date) out.push(this.staffMovements[i]);
     }
-    return out;
+    return this.byTime(out, 'outTime');
   },
 
   staffOffSite: function () {
@@ -2628,7 +2836,7 @@ var app = {
 
     var list = this.staffMovesFor(this.viewDate);
     var away = this.staffOffSite();
-    var seq = this.daySequence(this.staffMovements);
+    var seq = this.daySequence(this.staffMovements, 'outTime');
 
     /* Someone who signed out at 23:10 is still off site at 00:30. Tying the
        table to the calendar day would hide them and leave no way to mark
@@ -2668,7 +2876,9 @@ var app = {
         '<td>' + this.esc(m.reason) + '</td>' +
         '<td>' + this.esc(m.outTime) + '</td>' +
         '<td>' + backCell + '</td>' +
-        '<td class="row-actions"><button type="button" class="delete-btn" onclick="app.deleteStaffMove(' + m.id + ')">X</button></td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editStaffMove(' + m.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteStaffMove(' + m.id + ')">X</button></td>' +
         '</tr>';
     }
 
@@ -2681,6 +2891,7 @@ var app = {
 
   deleteStaffMove: function (id) {
     if (!confirm('Remove this staff movement?')) return;
+    if (this.editingMoveId === id) this.cancelStaffMoveEdit();
     var kept = [], i;
     for (i = 0; i < this.staffMovements.length; i++) if (this.staffMovements[i].id !== id) kept.push(this.staffMovements[i]);
     this.staffMovements = kept;
@@ -2689,14 +2900,67 @@ var app = {
     this.toast('Movement removed');
   },
 
+  /* An entry belongs to the contractor page when its company is on the
+     induction list. Adding a company to that list later moves its past
+     entries across, which is the behaviour you want. */
+  isContractorEntry: function (v) {
+    return !!this.findContractor(v.company);
+  },
+
+  splitByPage: function (list) {
+    var out = { contractors: [], daily: [] }, i;
+    for (i = 0; i < list.length; i++) {
+      if (this.isContractorEntry(list[i])) out.contractors.push(list[i]);
+      else out.daily.push(list[i]);
+    }
+    return out;
+  },
+
+  /* Induction standing for the person named on a movement, or for the
+     company as a whole when no representative was recorded. */
+  entryInduction: function (v) {
+    var c = this.findContractor(v.company);
+    if (!c) return null;
+    var entries = this.inductionEntries(c), i, due = 0;
+
+    if (v.rep) {
+      for (i = 0; i < entries.length; i++) {
+        if (entries[i].name.toLowerCase() === String(v.rep).toLowerCase()) {
+          return { valid: entries[i].valid, missing: entries[i].missing,
+                   text: entries[i].valid ? 'Induction valid'
+                        : (entries[i].missing ? 'No induction date' : 'Induction due') };
+        }
+      }
+      return { valid: false, unknown: true, text: 'Not on the induction list' };
+    }
+
+    for (i = 0; i < entries.length; i++) if (!entries[i].valid) due++;
+    return { valid: due === 0,
+             text: due ? due + ' of ' + entries.length + ' inductions due' : 'Inductions in date' };
+  },
+
+  inductionTag: function (v) {
+    var s = this.entryInduction(v);
+    if (!s) return '';
+    return '<span class="induction-tag ' + (s.valid ? 'ok' : 'due') + '">' +
+      this.esc(s.text) + '</span>';
+  },
+
+  setLogPage: function (page) {
+    if (page !== 'contractors' && page !== 'daily') return;
+    this.logPage = page;
+    this.renderLog();
+  },
+
   /* ---------------- row colour flags ---------------- */
 
   /* Numbers run in the order entries were logged that day, so the number
      beside a row stays meaningful even when the list is filtered. */
-  daySequence: function (list) {
+  daySequence: function (list, timeKey) {
     var map = {}, byDate = {}, i, v;
-    for (i = 0; i < list.length; i++) {
-      v = list[i];
+    var ordered = this.byTime(list, timeKey || 'entryTime');
+    for (i = 0; i < ordered.length; i++) {
+      v = ordered[i];
       if (!byDate[v.date]) byDate[v.date] = 0;
       byDate[v.date]++;
       map[v.id] = byDate[v.date];
@@ -3105,7 +3369,7 @@ var app = {
     ];
 
     var visitorSeq = this.daySequence(this.visitors);
-    var staffSeq = this.daySequence(this.staffMovements);
+    var staffSeq = this.daySequence(this.staffMovements, 'outTime');
 
     function movementRows(list) {
       var out = [], t, v;
@@ -3121,13 +3385,61 @@ var app = {
     }
 
     if (!isRange) {
-      heading('Visitor movements');
-      if (todays.length) {
-        table(MOVE_COLS, movementRows(todays));
-        paragraph(todays.length + (todays.length === 1 ? ' movement recorded' : ' movements recorded') +
-          (onSiteAtExport ? ', ' + onSiteAtExport + ' with no exit time logged.' : '.'));
+      /* the printed sheet is split the same way the day log is, so the
+         contractor movements and their induction standing sit together */
+      var pages = this.splitByPage(todays);
+
+      var CON_COLS = [
+        { label: '#', w: 24 },
+        { label: 'Company', w: 104 },
+        { label: 'Representative', w: 84 },
+        { label: 'Vehicle', w: 66 },
+        { label: 'Reason', w: 100 },
+        { label: 'In', w: 34 },
+        { label: 'Out', w: 34 },
+        { label: 'Induction', w: 69 }
+      ];
+
+      var self = this;
+      function shortStanding(v) {
+        var s = self.entryInduction(v);
+        if (!s) return { t: '-', c: null };
+        if (s.unknown) return { t: 'Not listed', c: RED, b: true };
+        if (s.missing) return { t: 'No date', c: RED, b: true };
+        return { t: s.valid ? 'Valid' : 'Due', c: s.valid ? GREEN : RED, b: true };
+      }
+
+      heading('Other visitors');
+      if (pages.daily.length) {
+        var oOpen = 0;
+        for (var oi = 0; oi < pages.daily.length; oi++) if (!pages.daily[oi].exitTime) oOpen++;
+        table(MOVE_COLS, movementRows(pages.daily));
+        paragraph(pages.daily.length +
+          (pages.daily.length === 1 ? ' other movement' : ' other movements') +
+          (oOpen ? ', ' + oOpen + ' with no exit time logged.' : '.'));
       } else {
-        paragraph('No visitors logged for this period.');
+        paragraph('No other visitors recorded.');
+      }
+
+      heading('Contractor movements');
+      if (pages.contractors.length) {
+        var crowsMove = [], cOpen = 0;
+        for (var ci2 = 0; ci2 < pages.contractors.length; ci2++) {
+          var cv = pages.contractors[ci2];
+          if (!cv.exitTime) cOpen++;
+          crowsMove.push([
+            { t: String(visitorSeq[cv.id] || ''), fill: cv.flag ? hexToRgb(FLAG_HEX[cv.flag]) : null,
+              c: cv.flag ? [1, 1, 1] : null, b: !!cv.flag },
+            cv.company, cv.rep || '-', cv.vehicle || '-', cv.reason,
+            cv.entryTime, cv.exitTime || '-', shortStanding(cv)
+          ]);
+        }
+        table(CON_COLS, crowsMove);
+        paragraph(pages.contractors.length +
+          (pages.contractors.length === 1 ? ' contractor movement' : ' contractor movements') +
+          (cOpen ? ', ' + cOpen + ' with no exit time logged.' : '.'));
+      } else {
+        paragraph('No contractor movements recorded.');
       }
     } else if (detailed && dayKeys.length) {
       heading('Movements in detail');
@@ -3395,6 +3707,28 @@ var app = {
   /* localStorage gives roughly 5 MB. About forty movements a day fills a
      third of that in a year, so show where it stands and offer a prune
      rather than letting a save quietly start failing. */
+  renderBuildStamp: function () {
+    var el = document.getElementById('buildStamp');
+    if (el) el.textContent = 'Build ' + BUILD + '. If that is not the version you just uploaded, ' +
+      'the old files are still cached.';
+  },
+
+  /* Asks the browser to re-check the worker, then reloads. */
+  forceUpdate: function () {
+    var self = this;
+    this.toast('Checking for a new version...');
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+        navigator.serviceWorker.getRegistration().then(function (reg) {
+          if (reg) reg.update();
+          setTimeout(function () { window.location.reload(true); }, 600);
+        }).catch(function () { window.location.reload(true); });
+        return;
+      }
+    } catch (e) {}
+    setTimeout(function () { window.location.reload(true); }, 300);
+  },
+
   renderStorageNote: function () {
     var note = document.getElementById('storageNote');
     if (!note) return;
@@ -3698,6 +4032,8 @@ var app = {
 
   clearToday: function () {
     if (!confirm('Clear the sheet for ' + this.ukDate(this.viewDate) + '? This cannot be undone.')) return;
+    this.cancelEntryEdit();
+    this.cancelStaffMoveEdit();
     var kept = [];
     for (var i = 0; i < this.visitors.length; i++) if (this.visitors[i].date !== this.viewDate) kept.push(this.visitors[i]);
     this.visitors = kept;
@@ -3721,6 +4057,8 @@ var app = {
     this.hideContractorForm();
     this.hideVisitorForm();
     this.hideStaffForm();
+    this.cancelEntryEdit();
+    this.cancelStaffMoveEdit();
     this.visitors = [];
     this.contractors = [];
     this.regularVisitors = [];

@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION on every deploy to evict old entries.
  */
 
-var CACHE_VERSION = 'sat-v13';
+var CACHE_VERSION = 'sat-v18';
 var CACHE_NAME = 'security-access-tracker-' + CACHE_VERSION;
 
 var PRECACHE = [
@@ -56,8 +56,22 @@ self.addEventListener('fetch', function (event) {
   if (req.method !== 'GET') return;
   if (new URL(req.url).origin !== self.location.origin) return;
 
+  /* A bare fetch() consults the browser's own HTTP cache first, and GitHub
+     Pages serves HTML with a ten minute lifetime. That made this worker
+     network-first in name only: a redeploy could keep serving the old page
+     from the HTTP cache without ever reaching the network. Documents are
+     therefore fetched with cache: 'reload', which bypasses that cache and
+     refreshes it. Icons and the manifest can keep using it. */
+  var isDocument = req.mode === 'navigate' ||
+    /\.html($|\?)/.test(req.url) ||
+    /\/$/.test(new URL(req.url).pathname);
+
+  var networkFetch = isDocument
+    ? fetch(req.url, { cache: 'reload', credentials: 'same-origin' })
+    : fetch(req);
+
   event.respondWith(
-    fetch(req)
+    networkFetch
       .then(function (response) {
         if (response && response.status === 200 && response.type === 'basic') {
           var copy = response.clone();
