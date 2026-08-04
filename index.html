@@ -482,7 +482,7 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <button type="button" class="button button-secondary" id="exportJsonBtn">Save backup file</button>
 <button type="button" class="button button-secondary" id="importJsonBtn">Restore from PDF or backup</button>
 </div>
-<p class="text-muted">The PDF holds the printed sheet plus the same records as hidden recoverable data. Restore accepts either the PDF or a backup file.</p>
+<p class="text-muted">Every export carries the records inside it, so any of these can be restored on another device. <strong>The day sheet holds one day only</strong> &mdash; to carry a whole stint off site use a period report below, or a backup file for everything.</p>
 </div>
 
 <div class="section">
@@ -931,7 +931,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v21';
+var BUILD = 'sat-v22';
 
 var app = {
   visitors: [],
@@ -4366,20 +4366,60 @@ var app = {
 
       if (isContractor && inc.inductionDate) {
         if (!match.inductionDate) { match.inductionDate = inc.inductionDate; report.added++; }
-        else if (match.inductionDate !== inc.inductionDate) report.conflicts++;
+        else if (match.inductionDate !== inc.inductionDate) {
+          report.conflicts++;
+          if (report.pending) {
+            report.pending.push({ rec: match, date: inc.inductionDate,
+              who: target.name + ' - ' + (match.name || 'representative') });
+          }
+        }
       }
     }
 
     if (isContractor && incoming.inductionDate) {
       if (!target.inductionDate) target.inductionDate = incoming.inductionDate;
-      else if (target.inductionDate !== incoming.inductionDate) report.conflicts++;
+      else if (target.inductionDate !== incoming.inductionDate) {
+        report.conflicts++;
+        if (report.pending) {
+          report.pending.push({ rec: target, date: incoming.inductionDate,
+            who: target.name + ' - default date' });
+        }
+      }
     }
 
     if (!target.reason && incoming.reason) target.reason = incoming.reason;
   },
 
+  /* Two devices with no link between them both mint ids from the clock, so
+     the same id can land on genuinely different records. Anything arriving
+     with an id already in use is given a fresh one rather than being taken
+     for a duplicate. */
+  idInUse: function (id) {
+    var lists = [this.visitors, this.contractors, this.regularVisitors,
+                 this.staff, this.staffMovements], l, i;
+    for (l = 0; l < lists.length; l++) {
+      for (i = 0; i < lists[l].length; i++) {
+        if (lists[l][i].id === id) return true;
+      }
+    }
+    return false;
+  },
+
+  adopt: function (rec) {
+    if (rec.id === undefined || rec.id === null || this.idInUse(rec.id)) rec.id = this.nextId();
+    return rec;
+  },
+
+  movementKey: function (v) {
+    return [v.date, v.entryTime, v.company, v.rep || '', v.vehicle || ''].join('|').toLowerCase();
+  },
+
+  departureKey: function (m) {
+    return [m.date, m.outTime, m.name, m.vehicle || ''].join('|').toLowerCase();
+  },
+
   mergeData: function (d) {
-    var report = { added: 0, conflicts: 0, records: 0, movements: 0 };
+    var report = { added: 0, conflicts: 0, records: 0, movements: 0, pending: [], applied: 0 };
     var i, j, inc, match;
 
     if (d.contractors) {
@@ -4390,7 +4430,7 @@ var app = {
           if (this.contractors[j].name.toLowerCase() === String(inc.name).toLowerCase()) match = this.contractors[j];
         }
         if (match) this.mergeRecord(match, inc, true, report);
-        else { this.contractors.push(inc); report.records++; }
+        else { this.contractors.push(this.adopt(inc)); report.records++; }
       }
     }
 
@@ -4402,7 +4442,7 @@ var app = {
           if (this.regularVisitors[j].name.toLowerCase() === String(inc.name).toLowerCase()) match = this.regularVisitors[j];
         }
         if (match) this.mergeRecord(match, inc, false, report);
-        else { this.regularVisitors.push(inc); report.records++; }
+        else { this.regularVisitors.push(this.adopt(inc)); report.records++; }
       }
     }
 
@@ -4425,7 +4465,7 @@ var app = {
         for (j = 0; j < this.staff.length; j++) {
           if (this.staff[j].name.toLowerCase() === String(inc.name).toLowerCase()) match = this.staff[j];
         }
-        if (!match) { this.staff.push(inc); report.records++; continue; }
+        if (!match) { this.staff.push(this.adopt(inc)); report.records++; continue; }
         for (j = 0; j < inc.vehicles.length; j++) {
           var vHas = false;
           for (var w = 0; w < match.vehicles.length; w++) {
@@ -4439,34 +4479,44 @@ var app = {
 
     if (d.staffMovements) {
       for (i = 0; i < d.staffMovements.length; i++) {
-        var sMove = d.staffMovements[i], sDup = false;
+        var sMove = d.staffMovements[i], sKey = this.departureKey(sMove), sDup = false;
         for (j = 0; j < this.staffMovements.length; j++) {
-          var ex = this.staffMovements[j];
-          if (ex.id === sMove.id) { sDup = true; break; }
-          if (ex.date === sMove.date && ex.outTime === sMove.outTime &&
-              String(ex.name).toLowerCase() === String(sMove.name).toLowerCase()) { sDup = true; break; }
+          if (this.departureKey(this.staffMovements[j]) === sKey) { sDup = true; break; }
         }
-        if (!sDup) { this.staffMovements.push(sMove); report.movements++; }
+        if (sDup) continue;
+        this.staffMovements.push(this.adopt(sMove));
+        report.movements++;
       }
     }
 
     if (d.visitors) {
       for (i = 0; i < d.visitors.length; i++) {
         var v = d.visitors[i];
-        /* ids can coincide between devices, so fall back to the shape of
-           the movement itself before deciding it is a duplicate */
-        var dup = false;
+        var vKey = this.movementKey(v), dup = false;
         for (j = 0; j < this.visitors.length; j++) {
-          var e = this.visitors[j];
-          if (e.id === v.id) { dup = true; break; }
-          if (e.date === v.date && e.entryTime === v.entryTime &&
-              String(e.company).toLowerCase() === String(v.company).toLowerCase() &&
-              String(e.rep || '').toLowerCase() === String(v.rep || '').toLowerCase() &&
-              String(e.vehicle || '').toLowerCase() === String(v.vehicle || '').toLowerCase()) {
-            dup = true; break;
-          }
+          if (this.movementKey(this.visitors[j]) === vKey) { dup = true; break; }
         }
-        if (!dup) { this.visitors.push(v); report.movements++; }
+        if (dup) continue;
+        this.visitors.push(this.adopt(v));
+        report.movements++;
+      }
+    }
+
+    /* Movements only ever travel outward from a site, so the incoming copy
+       wins there. Induction dates travel the other way - the office renews
+       them - so guessing a direction gets it wrong half the time. Ask. */
+    if (report.pending.length) {
+      var names = [], p;
+      for (p = 0; p < report.pending.length && p < 6; p++) names.push(report.pending[p].who);
+      if (report.pending.length > 6) names.push('and ' + (report.pending.length - 6) + ' more');
+      if (confirm('This file has different induction dates for ' + report.pending.length +
+                  (report.pending.length === 1 ? ' record' : ' records') + ':\n\n' +
+                  names.join('\n') + '\n\nUse the dates from the file? ' +
+                  'Choose cancel to keep the ones on this device.')) {
+        for (p = 0; p < report.pending.length; p++) {
+          report.pending[p].rec.inductionDate = report.pending[p].date;
+          report.applied++;
+        }
       }
     }
 
@@ -4528,7 +4578,11 @@ var app = {
       var msg = bits.length
         ? 'Restored ' + bits.join(', ') + ' from the ' + found.source
         : 'Nothing new in that ' + found.source;
-      if (r.conflicts) msg += '. ' + r.conflicts + ' already differed - kept this device\u2019s version';
+      if (r.conflicts) {
+        msg += r.applied
+          ? '. Took ' + r.applied + ' updated induction date' + (r.applied === 1 ? '' : 's')
+          : '. Kept ' + r.conflicts + ' induction date' + (r.conflicts === 1 ? '' : 's') + ' from this device';
+      }
       self.toast(msg);
       input.value = '';
     };
