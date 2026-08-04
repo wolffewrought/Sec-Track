@@ -37,6 +37,25 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Brand the launcher icon
+        run: |
+          if ! command -v convert >/dev/null 2>&1 && ! command -v magick >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+          fi
+          CONVERT=$(command -v convert || command -v magick)
+          SRC=icon-maskable-512.png
+          [ -f "$SRC" ] || SRC=icon-512.png
+          echo "using $SRC"
+          RES=android/app/src/main/res
+          rm -rf "$RES"/mipmap-anydpi-v26
+          for PAIR in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            NAME=${PAIR%%:*}; SIZE=${PAIR##*:}
+            mkdir -p "$RES/mipmap-$NAME"
+            "$CONVERT" "$SRC" -resize ${SIZE}x${SIZE} "$RES/mipmap-$NAME/ic_launcher.png"
+            cp "$RES/mipmap-$NAME/ic_launcher.png" "$RES/mipmap-$NAME/ic_launcher_round.png"
+          done
+          ls -la "$RES"/mipmap-xxxhdpi
+
       - name: Set the version
         run: |
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" android/app/build.gradle
@@ -57,21 +76,4 @@ jobs:
             exit 1
           fi
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
-          TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          echo "using $TOOLS"
-          UNSIGNED=android/app/build/outputs/apk/release/app-release-unsigned.apk
-          "$TOOLS/zipalign" -p -f 4 "$UNSIGNED" aligned.apk
-          "$TOOLS/apksigner" sign \
-            --ks keystore.jks \
-            --ks-key-alias access-tracker \
-            --ks-pass env:KS_PASS \
-            --key-pass env:KEY_PASS \
-            --out access-tracker.apk aligned.apk
-          "$TOOLS/apksigner" verify --print-certs access-tracker.apk
-          rm -f keystore.jks aligned.apk
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: access-tracker-apk
-          path: access-tracker.apk
-          if-no-files-found: error
+          TOOLS=$(ls -d "
