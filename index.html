@@ -149,6 +149,8 @@ body.night .status-soon,body.night .induction-tag.soon,body.night .induction-not
 body.night .form-title{color:#60a5fa}
 body.night .edit-btn{color:#60a5fa}
 body.night .rep-empty{color:#94a3b8}
+.auto-tag{display:inline-block;margin-left:.4rem;padding:.1rem .4rem;border-radius:.25rem;background:#eff6ff;color:#1d4ed8;font-size:.68rem;font-weight:700;vertical-align:middle}
+body.night .auto-tag{background:#16243a;color:#93c5fd}
 .check-row{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;font-size:.9rem;color:#334155;cursor:pointer}
 .check-row input{width:1.15rem;height:1.15rem}
 body.night .check-row{color:#cbd5e1}
@@ -457,6 +459,12 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </form>
 <div id="visitorsContainer"></div>
 </div>
+
+<div class="section">
+<h2>Irregular visitors</h2>
+<p class="text-muted" style="margin-top:0">Companies logged at the gate that are on neither list. Promote the ones that will be back.</p>
+<div id="irregularsContainer"></div>
+</div>
 </div>
 
 <div id="staff" class="tab-content">
@@ -513,6 +521,12 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <input type="time" id="endTime" value="13:00">
 </div>
 </div>
+</div>
+
+<div class="section">
+<h2>Unknown companies</h2>
+<label class="check-row"><input type="checkbox" id="learnEnabled" checked> Keep a record of companies that are not on any list</label>
+<p class="field-hint">A company logged that is on neither the contractor nor regular visitor list is held under Irregular visitors, on the Regular Visitors tab. Nothing interrupts the gate; classify them when there is time.</p>
 </div>
 
 <div class="section">
@@ -977,7 +991,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v26';
+var BUILD = 'sat-v27';
 
 var app = {
   visitors: [],
@@ -990,6 +1004,7 @@ var app = {
   staffMovements: [],
   siteVehicles: [],
   shifts: [],
+  irregulars: [],
   editingShiftId: null,
   editingStaffId: null,
   editingEntryId: null,
@@ -1025,6 +1040,7 @@ var app = {
       self.renderStaffRegister();
       self.renderStaffMovements();
       self.renderShifts();
+      self.renderIrregulars();
       self.renderMuster();
       self.renderReasonChips();
       self.renderBackupNote();
@@ -1198,7 +1214,7 @@ var app = {
 
   seedIds: function () {
     var all = this.visitors.concat(this.contractors, this.regularVisitors,
-      this.staff, this.staffMovements, this.shifts), i;
+      this.staff, this.staffMovements, this.shifts, this.irregulars), i;
     for (i = 0; i < all.length; i++) {
       if (typeof all[i].id === 'number' && all[i].id > this._lastId) this._lastId = all[i].id;
     }
@@ -1238,6 +1254,7 @@ var app = {
           self.staffMovements = d.staffMovements || [];
           self.siteVehicles = d.siteVehicles || [];
           self.shifts = d.shifts || [];
+          self.irregulars = d.irregulars || [];
         }
         self.migrate();
         self.seedIds();
@@ -1329,6 +1346,8 @@ var app = {
       if (this.visitors[i].flag === undefined) this.visitors[i].flag = 0;
     }
     if (!this.shifts) this.shifts = [];
+    if (!this.irregulars) this.irregulars = [];
+    for (i = 0; i < this.irregulars.length; i++) this.normaliseRecord(this.irregulars[i], false);
     if (!this.staff) this.staff = [];
     if (!this.staffMovements) this.staffMovements = [];
     if (!this.siteVehicles) this.siteVehicles = [];
@@ -1377,6 +1396,7 @@ var app = {
     }
     for (i = 0; i < this.regularVisitors.length; i++) merge(this.regularVisitors[i]);
     for (i = 0; i < this.contractors.length; i++) merge(this.contractors[i]);
+    for (i = 0; i < this.irregulars.length; i++) merge(this.irregulars[i]);
     return map;
   },
 
@@ -1393,7 +1413,8 @@ var app = {
       staff: this.staff,
       staffMovements: this.staffMovements,
       siteVehicles: this.siteVehicles,
-      shifts: this.shifts
+      shifts: this.shifts,
+      irregulars: this.irregulars
     }, function () {
       self.toast('Could not save - export a backup and clear older movements', 'error');
     });
@@ -1545,6 +1566,13 @@ var app = {
     document.getElementById('periodYear').addEventListener('change', function () { self.renderPeriodSummary(); });
     document.getElementById('periodWeek').addEventListener('change', function () { self.renderPeriodSummary(); });
     document.getElementById('exportPeriodBtn').addEventListener('click', function () { self.exportPeriod(); });
+
+    var learnBox = document.getElementById('learnEnabled');
+    learnBox.checked = self.learnEnabled();
+    learnBox.addEventListener('change', function () {
+      self.setLearnEnabled(learnBox.checked);
+      self.toast(learnBox.checked ? 'New companies will be held for classifying' : 'New companies will not be recorded');
+    });
 
     document.getElementById('nightToggle').addEventListener('click', function () { self.toggleNightMode(); });
     document.getElementById('forceUpdateBtn').addEventListener('click', function () { self.forceUpdate(); });
@@ -2025,19 +2053,23 @@ var app = {
       exitTime: exitTime
     });
 
+    var learned = null;
+    try { learned = this.learnFromEntry(this.visitors[this.visitors.length - 1]); } catch (e) {}
+
     this.logPage = this.isContractorEntry(this.visitors[this.visitors.length - 1])
       ? 'contractors' : 'daily';
 
     this.saveData();
     this.renderLog();
+    if (learned) { this.renderIrregulars(); this.renderVisitors(); this.renderArchive(); }
     e.target.reset();
     document.getElementById('repPickRow').style.display = 'none';
     document.getElementById('vehiclePickRow').style.display = 'none';
     document.getElementById('inductionNote').style.display = 'none';
     document.getElementById('companyInput').focus();
     this.renderReasonChips();
-    this.toast('Entry recorded - ' + this.entriesFor(this.viewDate).length +
-      ' on the Day Sheet');
+    this.toast('Entry recorded - ' + this.entriesFor(this.viewDate).length + ' on the Day Sheet' +
+      (learned && learned.created ? '. ' + learned.name + ' held under Irregular visitors' : ''));
   },
 
   /* Loads a logged movement back into the form. The entry keeps its id,
@@ -3215,6 +3247,170 @@ var app = {
     if (page !== 'contractors' && page !== 'daily') return;
     this.logPage = page;
     this.renderLog();
+  },
+
+  /* ---------------- learning new companies ---------------- */
+
+  learnEnabled: function () {
+    var el = document.getElementById('learnEnabled');
+    if (el) return !!el.checked;
+    try { return localStorage.getItem('sat-learn') !== '0'; } catch (e) { return true; }
+  },
+
+  setLearnEnabled: function (on) {
+    try { localStorage.setItem('sat-learn', on ? '1' : '0'); } catch (e) {}
+  },
+
+  /* Records the company as it is logged, so nobody has to stop and set up a
+     record at the gate. Whatever was entered is captured; the rest can be
+     filled in later. Contractors deliberately get no induction date - an
+     invented one would be worse than an obviously missing one. */
+  learnFromEntry: function (entry) {
+    if (!this.learnEnabled()) return null;
+
+    var name = String(entry.company || '').replace(/^\s+|\s+$/g, '');
+    if (!name) return null;
+
+    var rep = String(entry.rep || '').replace(/^\s+|\s+$/g, '');
+    var veh = String(entry.vehicle || '').replace(/^\s+|\s+$/g, '');
+    var lists = [this.contractors, this.regularVisitors, this.irregulars];
+    var target = null, l, i;
+
+    for (l = 0; l < lists.length && !target; l++) {
+      for (i = 0; i < lists[l].length; i++) {
+        if (String(lists[l][i].name).toLowerCase() === name.toLowerCase()) { target = lists[l][i]; break; }
+      }
+    }
+
+    if (!target) {
+      /* Neither a contractor nor a regular, so it waits here to be
+         classified rather than being guessed at. */
+      var rec = { id: this.nextId(), name: name, vehicles: [], reps: [],
+                  reason: entry.reason || '', firstSeen: entry.date, auto: true };
+      if (rep) rec.reps.push({ name: rep, vehicles: veh ? [veh] : [] });
+      else if (veh) rec.vehicles.push(veh);
+      this.irregulars.push(rec);
+      return { created: true, name: name };
+    }
+
+    /* known company - fill in anything new about it */
+    var added = false;
+
+    function has(list, v) {
+      for (var k = 0; k < list.length; k++) {
+        if (String(list[k]).toLowerCase() === String(v).toLowerCase()) return true;
+      }
+      return false;
+    }
+
+    if (!target.vehicles) target.vehicles = [];
+    if (!target.reps) target.reps = [];
+
+    if (rep) {
+      var match = null;
+      for (i = 0; i < target.reps.length; i++) {
+        if (String(target.reps[i].name).toLowerCase() === rep.toLowerCase()) match = target.reps[i];
+      }
+      if (!match) {
+        target.reps.push({ name: rep, vehicles: veh ? [veh] : [] });
+        added = true;
+      } else if (veh && !has(match.vehicles, veh)) {
+        match.vehicles.push(veh);
+        added = true;
+      }
+    } else if (veh && !has(target.vehicles, veh)) {
+      target.vehicles.push(veh);
+      added = true;
+    }
+
+    return added ? { created: false, name: name } : null;
+  },
+
+  renderIrregulars: function () {
+    var box = document.getElementById('irregularsContainer');
+    if (!box) return;
+
+    if (!this.irregulars.length) {
+      box.innerHTML = '<div class="empty-state">Nothing waiting to be classified</div>';
+      return;
+    }
+
+    var rows = '', i;
+    for (i = 0; i < this.irregulars.length; i++) {
+      var v = this.irregulars[i];
+      var seen = [];
+      for (var r = 0; r < (v.reps || []).length; r++) {
+        seen.push(v.reps[r].name +
+          (v.reps[r].vehicles.length ? ' (' + v.reps[r].vehicles.join(', ') + ')' : ''));
+      }
+      if ((v.vehicles || []).length) seen.push(v.vehicles.join(', '));
+
+      rows += '<tr>' +
+        '<td>' + this.esc(v.name) +
+          (seen.length ? '<span class="cell-sub">' + this.esc(seen.join('; ')) + '</span>' : '') +
+          (v.firstSeen ? '<span class="cell-sub">first seen ' + this.ukDate(v.firstSeen) + '</span>' : '') +
+        '</td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.promoteIrregular(' + v.id + ',\'regular\')">Regular</button>' +
+        '<button type="button" class="edit-btn" onclick="app.promoteIrregular(' + v.id + ',\'contractor\')">Contractor</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteIrregular(' + v.id + ')">X</button>' +
+        '</td></tr>';
+    }
+
+    box.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Company</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  },
+
+  /* Moves a held company onto a proper list, keeping whatever was learned
+     about it at the gate. A contractor arrives with no induction date, which
+     shows as outstanding rather than pretending it is in date. */
+  promoteIrregular: function (id, to) {
+    var rec = null, i;
+    for (i = 0; i < this.irregulars.length && !rec; i++) {
+      if (this.irregulars[i].id === id) rec = this.irregulars[i];
+    }
+    if (!rec) return;
+
+    var target = to === 'contractor' ? this.contractors : this.regularVisitors;
+    var existing = null;
+    for (i = 0; i < target.length; i++) {
+      if (String(target[i].name).toLowerCase() === String(rec.name).toLowerCase()) existing = target[i];
+    }
+
+    if (existing) {
+      this.mergeRecord(existing, rec, to === 'contractor', { added: 0, conflicts: 0, pending: null });
+    } else {
+      delete rec.auto;
+      if (to === 'contractor' && rec.inductionDate === undefined) rec.inductionDate = '';
+      target.push(rec);
+    }
+
+    var kept = [];
+    for (i = 0; i < this.irregulars.length; i++) if (this.irregulars[i].id !== id) kept.push(this.irregulars[i]);
+    this.irregulars = kept;
+
+    this.saveData();
+    this.renderIrregulars();
+    this.renderVisitors();
+    this.renderArchive();
+    this.renderLog();
+
+    if (to === 'contractor') {
+      this.toast(rec.name + ' moved to contractors - set an induction date');
+    } else {
+      this.toast(rec.name + ' moved to regular visitors');
+    }
+  },
+
+  deleteIrregular: function (id) {
+    if (!confirm('Forget this company? Movements already logged are not affected.')) return;
+    var kept = [], i;
+    for (i = 0; i < this.irregulars.length; i++) if (this.irregulars[i].id !== id) kept.push(this.irregulars[i]);
+    this.irregulars = kept;
+    this.saveData();
+    this.renderIrregulars();
+    this.toast('Removed from the holding list');
   },
 
   /* ---------------- shifts ---------------- */
@@ -4716,7 +4912,8 @@ var app = {
       staff: this.staff,
       staffMovements: this.staffMovements,
       siteVehicles: this.siteVehicles,
-      shifts: this.shifts
+      shifts: this.shifts,
+      irregulars: this.irregulars
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -4900,6 +5097,19 @@ var app = {
       }
     }
 
+    if (d.irregulars) {
+      for (i = 0; i < d.irregulars.length; i++) {
+        inc = this.normaliseRecord(d.irregulars[i], false);
+        match = null;
+        var already = this.findCompany(inc.name);
+        for (j = 0; j < this.irregulars.length; j++) {
+          if (this.irregulars[j].name.toLowerCase() === String(inc.name).toLowerCase()) match = this.irregulars[j];
+        }
+        if (match) this.mergeRecord(match, inc, false, report);
+        else if (!already) { this.irregulars.push(this.adopt(inc)); report.records++; }
+      }
+    }
+
     if (d.shifts) {
       for (i = 0; i < d.shifts.length; i++) {
         var sh = d.shifts[i], shKey = [sh.date, sh.start, String(sh.guard).toLowerCase()].join('|');
@@ -4954,6 +5164,7 @@ var app = {
     this.renderStaffRegister();
     this.renderStaffMovements();
     this.renderShifts();
+    this.renderIrregulars();
     this.renderMuster();
     this.renderReasonChips();
     return report;
@@ -5064,6 +5275,7 @@ var app = {
     this.staffMovements = [];
     this.siteVehicles = [];
     this.shifts = [];
+    this.irregulars = [];
     this.cancelShiftEdit();
     this.viewDate = this.currentDate;
     this.onSiteOnly = false;
@@ -5075,6 +5287,7 @@ var app = {
     this.renderStaffRegister();
     this.renderStaffMovements();
     this.renderShifts();
+    this.renderIrregulars();
     this.toast('All data cleared');
   },
 
