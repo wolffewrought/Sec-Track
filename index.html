@@ -149,6 +149,9 @@ body.night .status-soon,body.night .induction-tag.soon,body.night .induction-not
 body.night .form-title{color:#60a5fa}
 body.night .edit-btn{color:#60a5fa}
 body.night .rep-empty{color:#94a3b8}
+.check-row{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;font-size:.9rem;color:#334155;cursor:pointer}
+.check-row input{width:1.15rem;height:1.15rem}
+body.night .check-row{color:#cbd5e1}
 .chip-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem}
 .chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:9999px;padding:.4rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
 .chip:active{background:#2563eb;color:#fff}
@@ -306,7 +309,7 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 
 <div id="sheet" class="tab-content">
 <div class="section">
-<h2>Occurrence sheet</h2>
+<h2>Sheet date</h2>
 <div class="sheet-bar">
 <button type="button" class="button button-secondary" id="prevDay">&#8249; Prev</button>
 <input type="date" id="sheetDate">
@@ -314,6 +317,41 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <button type="button" class="button button-secondary" id="todayBtn">Today</button>
 </div>
 <div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
+</div>
+
+<div class="section">
+<h2>On duty</h2>
+<form id="shiftForm" autocomplete="off">
+<h3 class="form-title" id="shiftFormTitle" style="display:none"></h3>
+<div class="form-group">
+<label for="shiftGuard">Guard on duty</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="shiftGuard" maxlength="60" placeholder="Name of the guard covering this period" autocomplete="off" required>
+<div class="autocomplete-list" id="shiftGuardList"></div>
+</div>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="shiftStart">Shift from</label>
+<input type="time" id="shiftStart" required>
+</div>
+<div class="form-group">
+<label for="shiftEnd">Shift to</label>
+<input type="time" id="shiftEnd" required>
+</div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary" id="shiftSubmit">Add shift</button>
+<button type="button" class="button button-secondary" id="shiftDefaultsBtn">Use site hours</button>
+<button type="button" class="button button-secondary" id="cancelShiftEdit" style="display:none">Cancel</button>
+</div>
+</form>
+<div id="shiftContainer"></div>
+<p class="field-hint">More than one shift can be recorded for a day, so a handover is shown on the sheet and on the printed report.</p>
+</div>
+
+<div class="section">
+<h2>Occurrence sheet</h2>
 <div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <input type="search" id="sheetSearch" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
 <div class="page-switch" role="tablist">
@@ -480,12 +518,17 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div class="section">
 <h2>Export</h2>
 <div id="backupNote" class="induction-note" role="status" aria-live="polite" style="display:none"></div>
+<div class="form-group">
+<label for="exportName">File name</label>
+<input type="text" id="exportName" maxlength="80" placeholder="Leave blank for 04-08-26 0500 to 1300">
+</div>
+<label class="check-row"><input type="checkbox" id="exportWholeDay"> Export the whole day as one sheet</label>
 <div class="action-row">
 <button type="button" class="button button-primary" id="exportPdfBtn">Export day sheet as PDF</button>
 <button type="button" class="button button-secondary" id="exportJsonBtn">Save backup file</button>
 <button type="button" class="button button-secondary" id="importJsonBtn">Restore from PDF or backup</button>
 </div>
-<p class="text-muted">Every export carries the records inside it, so any of these can be restored on another device. <strong>The day sheet holds one day only</strong> &mdash; to carry a whole stint off site use a period report below, or a backup file for everything.</p>
+<p class="text-muted">A day with recorded shifts exports one sheet per shift by default, each covering only that shift's movements. Tick the box above to get a single sheet for the whole day instead. Every export carries the records inside it, so any of these can be restored on another device. <strong>The day sheet holds one day only</strong> &mdash; to carry a whole stint off site use a period report below, or a backup file for everything.</p>
 </div>
 
 <div class="section">
@@ -934,7 +977,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v23';
+var BUILD = 'sat-v26';
 
 var app = {
   visitors: [],
@@ -946,6 +989,8 @@ var app = {
   staff: [],
   staffMovements: [],
   siteVehicles: [],
+  shifts: [],
+  editingShiftId: null,
   editingStaffId: null,
   editingEntryId: null,
   editingMoveId: null,
@@ -979,6 +1024,7 @@ var app = {
       self.renderVisitors();
       self.renderStaffRegister();
       self.renderStaffMovements();
+      self.renderShifts();
       self.renderMuster();
       self.renderReasonChips();
       self.renderBackupNote();
@@ -1055,6 +1101,7 @@ var app = {
     this.renderSheetControls();
     this.renderLog();
     this.renderStaffMovements();
+    this.renderShifts();
     if (wasOnToday) this.toast('New day - now logging to ' + this.ukDate(t));
   },
 
@@ -1066,6 +1113,7 @@ var app = {
     this.renderSheetControls();
     this.renderLog();
     this.renderStaffMovements();
+    this.renderShifts();
   },
 
   shiftViewDate: function (days) {
@@ -1150,7 +1198,7 @@ var app = {
 
   seedIds: function () {
     var all = this.visitors.concat(this.contractors, this.regularVisitors,
-      this.staff, this.staffMovements), i;
+      this.staff, this.staffMovements, this.shifts), i;
     for (i = 0; i < all.length; i++) {
       if (typeof all[i].id === 'number' && all[i].id > this._lastId) this._lastId = all[i].id;
     }
@@ -1189,6 +1237,7 @@ var app = {
           self.staff = d.staff || [];
           self.staffMovements = d.staffMovements || [];
           self.siteVehicles = d.siteVehicles || [];
+          self.shifts = d.shifts || [];
         }
         self.migrate();
         self.seedIds();
@@ -1279,6 +1328,7 @@ var app = {
       if (this.visitors[i].rep === undefined) this.visitors[i].rep = '';
       if (this.visitors[i].flag === undefined) this.visitors[i].flag = 0;
     }
+    if (!this.shifts) this.shifts = [];
     if (!this.staff) this.staff = [];
     if (!this.staffMovements) this.staffMovements = [];
     if (!this.siteVehicles) this.siteVehicles = [];
@@ -1342,7 +1392,8 @@ var app = {
       regularVisitors: this.regularVisitors,
       staff: this.staff,
       staffMovements: this.staffMovements,
-      siteVehicles: this.siteVehicles
+      siteVehicles: this.siteVehicles,
+      shifts: this.shifts
     }, function () {
       self.toast('Could not save - export a backup and clear older movements', 'error');
     });
@@ -1415,7 +1466,7 @@ var app = {
     document.getElementById('regularVisitorForm').addEventListener('submit', function (e) { self.addRegularVisitor(e); });
     document.getElementById('cancelVisitorBtn').addEventListener('click', function () { self.hideVisitorForm(); });
 
-    document.getElementById('exportPdfBtn').addEventListener('click', function () { self.exportPdf(); });
+    document.getElementById('exportPdfBtn').addEventListener('click', function () { self.exportDaySheets(); });
     document.getElementById('exportJsonBtn').addEventListener('click', function () { self.exportJson(); });
     document.getElementById('importJsonBtn').addEventListener('click', function () { document.getElementById('jsonImportInput').click(); });
     document.getElementById('jsonImportInput').addEventListener('change', function (e) { self.handleImport(e); });
@@ -1432,6 +1483,16 @@ var app = {
     });
     document.getElementById('contractorSearch').addEventListener('input', function () {
       self.renderArchive();
+    });
+
+    document.getElementById('shiftForm').addEventListener('submit', function (e) { self.saveShift(e); });
+    document.getElementById('shiftDefaultsBtn').addEventListener('click', function () { self.shiftUseSiteHours(); });
+    document.getElementById('cancelShiftEdit').addEventListener('click', function () { self.cancelShiftEdit(); });
+    var sg = document.getElementById('shiftGuard');
+    sg.addEventListener('input', function () { self.showGuardSuggestions(); });
+    sg.addEventListener('focus', function () { self.showGuardSuggestions(); });
+    sg.addEventListener('blur', function () {
+      setTimeout(function () { document.getElementById('shiftGuardList').classList.remove('active'); }, 200);
     });
 
     document.getElementById('pageContractors').addEventListener('click', function () { self.setLogPage('contractors'); });
@@ -3156,6 +3217,166 @@ var app = {
     this.renderLog();
   },
 
+  /* ---------------- shifts ---------------- */
+
+  shiftsFor: function (date) {
+    var out = [], i;
+    for (i = 0; i < this.shifts.length; i++) {
+      if (this.shifts[i].date === date) out.push(this.shifts[i]);
+    }
+    return out.sort(function (a, b) { return a.start < b.start ? -1 : (a.start > b.start ? 1 : 0); });
+  },
+
+  /* Whoever was on when a given time was logged, so an entry can be traced
+     back to the guard covering it. Handles a shift running past midnight. */
+  guardAt: function (date, time) {
+    var list = this.shiftsFor(date), i, s;
+    for (i = 0; i < list.length; i++) {
+      s = list[i];
+      if (s.end < s.start) {
+        if (time >= s.start || time <= s.end) return s.guard;
+      } else if (time >= s.start && time <= s.end) {
+        return s.guard;
+      }
+    }
+    return '';
+  },
+
+  knownGuards: function () {
+    var seen = {}, out = [], i, n;
+    for (i = this.shifts.length - 1; i >= 0; i--) {
+      n = String(this.shifts[i].guard || '').replace(/^\s+|\s+$/g, '');
+      if (!n || seen[n.toLowerCase()]) continue;
+      seen[n.toLowerCase()] = 1;
+      out.push(n);
+    }
+    return out;
+  },
+
+  showGuardSuggestions: function () {
+    var q = document.getElementById('shiftGuard').value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var list = document.getElementById('shiftGuardList');
+    var names = this.knownGuards(), matches = [], i;
+    list.innerHTML = '';
+    for (i = 0; i < names.length && matches.length < 8; i++) {
+      if (!q || names[i].toLowerCase().indexOf(q) !== -1) matches.push(names[i]);
+    }
+    if (!matches.length) { list.classList.remove('active'); return; }
+    for (i = 0; i < matches.length; i++) {
+      (function (name) {
+        var item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.textContent = name;
+        item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+        item.addEventListener('click', function () {
+          document.getElementById('shiftGuard').value = name;
+          list.classList.remove('active');
+          document.getElementById('shiftStart').focus();
+        });
+        list.appendChild(item);
+      })(matches[i]);
+    }
+    list.classList.add('active');
+  },
+
+  shiftUseSiteHours: function () {
+    document.getElementById('shiftStart').value = document.getElementById('startTime').value || '';
+    document.getElementById('shiftEnd').value = document.getElementById('endTime').value || '';
+  },
+
+  saveShift: function (e) {
+    e.preventDefault();
+    var guard = document.getElementById('shiftGuard').value.replace(/^\s+|\s+$/g, '');
+    var start = document.getElementById('shiftStart').value;
+    var end = document.getElementById('shiftEnd').value;
+    if (!guard || !start || !end) { this.toast('Add a name and both times', 'error'); return; }
+
+    if (this.editingShiftId !== null) {
+      for (var i = 0; i < this.shifts.length; i++) {
+        if (this.shifts[i].id === this.editingShiftId) {
+          this.shifts[i].guard = guard;
+          this.shifts[i].start = start;
+          this.shifts[i].end = end;
+        }
+      }
+      this.cancelShiftEdit();
+      this.saveData();
+      this.renderShifts();
+      this.toast('Shift updated');
+      return;
+    }
+
+    this.shifts.push({ id: this.nextId(), date: this.viewDate, guard: guard, start: start, end: end });
+    this.saveData();
+    this.renderShifts();
+    e.target.reset();
+    document.getElementById('shiftGuard').focus();
+    this.toast('Shift recorded');
+  },
+
+  editShift: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) if (this.shifts[i].id === id) rec = this.shifts[i];
+    if (!rec) return;
+    this.editingShiftId = id;
+    document.getElementById('shiftGuard').value = rec.guard;
+    document.getElementById('shiftStart').value = rec.start;
+    document.getElementById('shiftEnd').value = rec.end;
+    var title = document.getElementById('shiftFormTitle');
+    title.textContent = 'Editing ' + rec.guard + "'s shift";
+    title.style.display = 'block';
+    document.getElementById('shiftSubmit').textContent = 'Update shift';
+    document.getElementById('cancelShiftEdit').style.display = 'inline-block';
+    document.getElementById('shiftGuard').focus();
+  },
+
+  cancelShiftEdit: function () {
+    this.editingShiftId = null;
+    document.getElementById('shiftForm').reset();
+    document.getElementById('shiftFormTitle').style.display = 'none';
+    document.getElementById('shiftSubmit').textContent = 'Add shift';
+    document.getElementById('cancelShiftEdit').style.display = 'none';
+  },
+
+  deleteShift: function (id) {
+    if (!confirm('Remove this shift?')) return;
+    if (this.editingShiftId === id) this.cancelShiftEdit();
+    var kept = [], i;
+    for (i = 0; i < this.shifts.length; i++) if (this.shifts[i].id !== id) kept.push(this.shifts[i]);
+    this.shifts = kept;
+    this.saveData();
+    this.renderShifts();
+    this.toast('Shift removed');
+  },
+
+  renderShifts: function () {
+    var box = document.getElementById('shiftContainer');
+    if (!box) return;
+    var list = this.shiftsFor(this.viewDate);
+
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-state">No shift recorded for this day</div>';
+      return;
+    }
+
+    var rows = '', i;
+    for (i = 0; i < list.length; i++) {
+      var s = list[i];
+      rows += '<tr><td>' + this.esc(s.guard) + '</td>' +
+        '<td>' + this.esc(s.start) + '</td>' +
+        '<td>' + this.esc(s.end) +
+          (s.end < s.start ? '<span class="cell-sub carried">next day</span>' : '') + '</td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editShift(' + s.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteShift(' + s.id + ')">X</button>' +
+        '</td></tr>';
+    }
+
+    box.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Guard</th><th>From</th><th>To</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  },
+
   /* ---------------- roll call ---------------- */
 
   renderMuster: function () {
@@ -3163,6 +3384,9 @@ var app = {
     var away = this.staffOffSite();
     var head = document.getElementById('musterHead');
     var i;
+
+    var duty = this.guardAt(this.currentDate,
+      this.pad2(new Date().getHours()) + ':' + this.pad2(new Date().getMinutes()));
 
     head.className = 'muster-head' + (onSite.length ? '' : ' clear');
     head.innerHTML = (onSite.length
@@ -3172,6 +3396,7 @@ var app = {
         ? away.length + (away.length === 1 ? ' staff member off site' : ' staff off site')
         : 'No staff signed out') +
       ' \u00b7 as at ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) +
+      (duty ? ' \u00b7 on duty: ' + this.esc(duty) : '') +
       '</small>';
 
     var box = document.getElementById('musterOnSite');
@@ -3264,11 +3489,16 @@ var app = {
     var stamp = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
       ' at ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
+    /* A roll call should say who took it. */
+    var onDuty = this.guardAt(this.currentDate,
+      this.pad2(now.getHours()) + ':' + this.pad2(now.getMinutes()));
+
     newPage();
     doc.rect(M, y, RIGHT - M, 30, SLATE);
     doc.textCentre('ROLL CALL', PDFKit.PW / 2, y + 20, 14, true, WHITE);
     y += 38;
-    doc.textCentre(stamp, PDFKit.PW / 2, y, 9.5, false, GREY);
+    doc.textCentre(stamp + (onDuty ? '   -   taken by ' + onDuty : ''),
+      PDFKit.PW / 2, y, 9.5, false, GREY);
     y += 10;
 
     room(30);
@@ -3321,16 +3551,10 @@ var app = {
 
   exportMuster: function () {
     try {
-      var bytes = this.buildMusterPdf();
-      var blob = new Blob([bytes], { type: 'application/pdf' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'roll-call-' + this.currentDate + '.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      var now = new Date();
+      this.savePdf(this.buildMusterPdf(),
+        'roll call ' + this.dateStamp(this.currentDate) + ' ' +
+        this.pad2(now.getHours()) + this.pad2(now.getMinutes()) + '.pdf');
       this.toast('Roll call saved');
     } catch (err) {
       this.toast('Could not build the roll call', 'error');
@@ -3456,6 +3680,55 @@ var app = {
         box.appendChild(row);
       })(i);
     }
+  },
+
+  /* ---------------- sheet naming and shift windows ---------------- */
+
+  /* DD-MM-YY, so a folder of sheets reads at a glance on a thumb drive. */
+  dateStamp: function (dateKey) {
+    var d = this.parseLocalDate(dateKey) || new Date();
+    return this.pad2(d.getDate()) + '-' + this.pad2(d.getMonth() + 1) + '-' +
+      this.pad2(d.getFullYear() % 100);
+  },
+
+  /* DD-MM-YY HHMM to HHMM */
+  sheetFileName: function (dateKey, start, end, custom) {
+    var name = String(custom || '').replace(/^\s+|\s+$/g, '');
+    if (name) {
+      name = name.replace(/[\\/:*?"<>|]/g, '-');
+      return /\.pdf$/i.test(name) ? name : name + '.pdf';
+    }
+    var stamp = this.dateStamp(dateKey);
+    var a = String(start || '').replace(':', '');
+    var b = String(end || '').replace(':', '');
+    return (a && b) ? stamp + ' ' + a + ' to ' + b + '.pdf' : stamp + '.pdf';
+  },
+
+  customExportName: function () {
+    var el = document.getElementById('exportName');
+    return el ? el.value : '';
+  },
+
+  /* A single shift, expressed as a range the sheet builder understands. */
+  shiftRange: function (sh) {
+    return {
+      type: 'shift',
+      from: sh.date,
+      to: sh.date,
+      startTime: sh.start,
+      endTime: sh.end,
+      shiftId: sh.id,
+      guard: sh.guard,
+      label: this.ukDate(sh.date) + ' \u00b7 ' + sh.start + ' to ' + sh.end,
+      slug: null
+    };
+  },
+
+  /* True when a logged time falls inside a shift, midnight crossings and all. */
+  withinWindow: function (time, start, end) {
+    if (!start || !end) return true;
+    if (end < start) return time >= start || time <= end;
+    return time >= start && time <= end;
   },
 
   /* ---------------- reporting periods ---------------- */
@@ -3623,13 +3896,25 @@ var app = {
     var isRange = !!range;
     var fromKey = isRange ? range.from : this.viewDate;
     var toKey = isRange ? range.to : this.viewDate;
+    var winStart = (range && range.startTime) ? range.startTime : null;
+    var winEnd = (range && range.endTime) ? range.endTime : null;
+    var self0 = this;
+    function inWindow(t) { return self0.withinWindow(t, winStart, winEnd); }
+
     var todays = this.entriesBetween(fromKey, toKey);
+    if (winStart) {
+      var windowed = [], wi;
+      for (wi = 0; wi < todays.length; wi++) if (inWindow(todays[wi].entryTime)) windowed.push(todays[wi]);
+      todays = windowed;
+    }
     var sheetDay = this.parseLocalDate(fromKey) || new Date();
     var dateLabel = isRange ? range.label : sheetDay.toLocaleDateString('en-GB', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     var onSiteAtExport = this.stillOnSite(todays).length;
-    var hours = document.getElementById('startTime').value + ' to ' + document.getElementById('endTime').value;
+    var hours = winStart
+      ? winStart + ' to ' + winEnd + ((range && range.guard) ? '  \u00b7  ' + range.guard : '')
+      : document.getElementById('startTime').value + ' to ' + document.getElementById('endTime').value;
 
     /* group by day, keeping only days that saw movement */
     var byDay = {}, dayKeys = [], di;
@@ -3650,8 +3935,41 @@ var app = {
     doc.textCentre(isRange ? 'SITE OCCURRENCE REPORT' : 'SITE OCCURRENCE SHEET',
       PDFKit.PW / 2, y + 20, 14, true, WHITE);
     y += 38;
-    doc.textCentre(dateLabel + '   -   Access hours ' + hours, PDFKit.PW / 2, y, 9.5, false, GREY);
+    doc.textCentre(dateLabel + '   -   ' + (winStart ? 'Shift ' : 'Access hours ') + hours,
+      PDFKit.PW / 2, y, 9.5, false, GREY);
     y += 8;
+
+    /* Who held the gate, printed before anything else and with room to
+       sign - that is what turns this from a printout into a record. */
+    var shiftList = [], sIdx;
+    for (sIdx = 0; sIdx < this.shifts.length; sIdx++) {
+      var shCand = this.shifts[sIdx];
+      if (shCand.date < fromKey || shCand.date > toKey) continue;
+      if (range && range.shiftId && shCand.id !== range.shiftId) continue;
+      shiftList.push(shCand);
+    }
+    shiftList.sort(function (a, b) {
+      var ka = a.date + ' ' + a.start, kb = b.date + ' ' + b.start;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+
+    heading('On duty');
+    if (shiftList.length) {
+      var shRows = [];
+      for (sIdx = 0; sIdx < shiftList.length; sIdx++) {
+        var sh = shiftList[sIdx];
+        shRows.push(isRange
+          ? [this.ukDate(sh.date), sh.guard, sh.start, sh.end + (sh.end < sh.start ? ' +1' : ''), '']
+          : [sh.guard, sh.start, sh.end + (sh.end < sh.start ? ' (next day)' : ''), '']);
+      }
+      table(isRange
+        ? [{ label: 'Date', w: 80 }, { label: 'Guard on duty', w: 165 },
+           { label: 'From', w: 60 }, { label: 'To', w: 70 }, { label: 'Signature', w: 140 }]
+        : [{ label: 'Guard on duty', w: 190 }, { label: 'From', w: 70 },
+           { label: 'To', w: 95 }, { label: 'Signature', w: 160 }], shRows);
+    } else {
+      paragraph('No shift recorded.');
+    }
 
     if (isRange) {
       heading('Summary');
@@ -3667,7 +3985,8 @@ var app = {
         ['Total movements', String(todays.length)],
         ['Days with activity', String(dayKeys.length)],
         ['Busiest day', busiestN ? busiest + ' (' + busiestN + ')' : '-'],
-        ['No exit time logged', String(onSiteAtExport)]
+        ['No exit time logged', String(onSiteAtExport)],
+        ['Shifts recorded', String(shiftList.length)]
       ];
       var staffInRange = 0, staffOut = 0, sp;
       for (sp = 0; sp < this.staffMovements.length; sp++) {
@@ -3849,7 +4168,8 @@ var app = {
     /* ---- staff leaving site ---- */
     var staffList = [];
     for (var sm = 0; sm < this.staffMovements.length; sm++) {
-      if (this.staffMovements[sm].date >= fromKey && this.staffMovements[sm].date <= toKey) {
+      if (this.staffMovements[sm].date >= fromKey && this.staffMovements[sm].date <= toKey &&
+          inWindow(this.staffMovements[sm].outTime)) {
         staffList.push(this.staffMovements[sm]);
       }
     }
@@ -4062,7 +4382,8 @@ var app = {
       regularVisitors: this.regularVisitors,
       staff: this.staff,
       staffMovements: staffList,
-      siteVehicles: this.siteVehicles
+      siteVehicles: this.siteVehicles,
+      shifts: shiftList
     };
 
     return doc.build(PDFKit.b64enc(PDFKit.toUtf8(JSON.stringify(payload))));
@@ -4077,20 +4398,77 @@ var app = {
     this.exportPdf(range);
   },
 
+  savePdf: function (bytes, filename) {
+    var blob = new Blob([bytes], { type: 'application/pdf' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  },
+
+  /* A day with shifts on it exports one sheet per shift, because that is
+     the unit a guard hands over. Anything logged outside every recorded
+     shift still gets a sheet of its own rather than being quietly dropped. */
+  daySheetJobs: function () {
+    var custom = this.customExportName();
+    var whole = document.getElementById('exportWholeDay');
+    var wholeDay = !!(whole && whole.checked);
+    var shifts = this.shiftsFor(this.viewDate);
+    var jobs = [], i;
+
+    if (wholeDay || !shifts.length) {
+      jobs.push({
+        range: null,
+        name: this.sheetFileName(this.viewDate,
+          document.getElementById('startTime').value,
+          document.getElementById('endTime').value, custom)
+      });
+      return jobs;
+    }
+
+    for (i = 0; i < shifts.length; i++) {
+      jobs.push({
+        range: this.shiftRange(shifts[i]),
+        name: this.sheetFileName(this.viewDate, shifts[i].start, shifts[i].end,
+          custom ? custom + ' ' + shifts[i].start.replace(':', '') : '')
+      });
+    }
+
+    /* whatever no shift covers */
+    var all = this.entriesFor(this.viewDate).concat(this.staffMovesFor(this.viewDate));
+    var loose = 0;
+    for (i = 0; i < all.length; i++) {
+      var t = all[i].entryTime || all[i].outTime;
+      var covered = false;
+      for (var s = 0; s < shifts.length; s++) {
+        if (this.withinWindow(t, shifts[s].start, shifts[s].end)) { covered = true; break; }
+      }
+      if (!covered) loose++;
+    }
+    if (loose) {
+      jobs.push({
+        range: null,
+        name: this.sheetFileName(this.viewDate, null, null,
+          custom ? custom + ' full day' : ''),
+        note: loose + ' entries fell outside every shift, so the whole day is included as well'
+      });
+    }
+
+    return jobs;
+  },
+
   exportPdf: function (range) {
     try {
       var bytes = this.buildPdf(range && range.from ? range : null);
-      var blob = new Blob([bytes], { type: 'application/pdf' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = (range && range.slug)
+      this.savePdf(bytes, (range && range.slug)
         ? 'occurrence-report-' + range.slug + '.pdf'
-        : 'occurrence-sheet-' + this.viewDate + '.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        : this.sheetFileName(this.viewDate,
+            document.getElementById('startTime').value,
+            document.getElementById('endTime').value, this.customExportName()));
       this.markBackup();
       this.toast(range && range.slug ? 'Report saved' : 'PDF saved');
     } catch (err) {
@@ -4098,9 +4476,34 @@ var app = {
     }
   },
 
-  /* localStorage gives roughly 5 MB. About forty movements a day fills a
-     third of that in a year, so show where it stands and offer a prune
-     rather than letting a save quietly start failing. */
+  exportDaySheets: function () {
+    var jobs;
+    try { jobs = this.daySheetJobs(); }
+    catch (err) { this.toast('Could not work out the sheets', 'error'); return; }
+
+    var self = this;
+    var note = '';
+    for (var n = 0; n < jobs.length; n++) if (jobs[n].note) note = jobs[n].note;
+
+    /* staggered, because a browser will block a burst of downloads */
+    function run(i) {
+      if (i >= jobs.length) {
+        self.markBackup();
+        self.toast(jobs.length === 1
+          ? 'Sheet saved as ' + jobs[0].name
+          : jobs.length + ' sheets saved, one per shift' + (note ? '. ' + note : ''));
+        return;
+      }
+      try {
+        self.savePdf(self.buildPdf(jobs[i].range), jobs[i].name);
+      } catch (err) {
+        self.toast('Could not build ' + jobs[i].name, 'error');
+      }
+      setTimeout(function () { run(i + 1); }, 600);
+    }
+    run(0);
+  },
+
   applyNightMode: function () {
     var on = false;
     try { on = localStorage.getItem('sat-night') === '1'; } catch (e) {}
@@ -4141,7 +4544,7 @@ var app = {
 
   hasRecords: function () {
     return (this.visitors.length + this.contractors.length + this.regularVisitors.length +
-            this.staff.length + this.staffMovements.length) > 0;
+            this.staff.length + this.staffMovements.length + this.shifts.length) > 0;
   },
 
   renderBackupNote: function () {
@@ -4165,7 +4568,6 @@ var app = {
     note.style.display = 'block';
   },
 
-  /* A single quiet nudge at start-up rather than a permanent banner. */
   backupNudge: function () {
     if (!this.hasRecords()) return;
     var age = this.backupAgeDays();
@@ -4224,7 +4626,6 @@ var app = {
       'the old files are still cached.';
   },
 
-  /* Asks the browser to re-check the worker, then reloads. */
   forceUpdate: function () {
     var self = this;
     this.toast('Checking for a new version...');
@@ -4245,7 +4646,6 @@ var app = {
     if (!note) return;
 
     var movements = this.visitors.length;
-    /* about 186 bytes a movement, measured, plus the record lists */
     var approx = movements * 186 +
       (this.contractors.length + this.regularVisitors.length) * 300;
     var held = movements + (movements === 1 ? ' movement' : ' movements') +
@@ -4276,7 +4676,6 @@ var app = {
 
     var kept = [], removed = 0, i;
     for (i = 0; i < this.visitors.length; i++) {
-      /* never drop somebody who has not been signed out */
       if (this.visitors[i].date < key && this.visitors[i].exitTime) removed++;
       else kept.push(this.visitors[i]);
     }
@@ -4287,17 +4686,25 @@ var app = {
       else keptMoves.push(this.staffMovements[i]);
     }
 
+    var keptShifts = [];
+    for (i = 0; i < this.shifts.length; i++) {
+      if (this.shifts[i].date < key) removed++;
+      else keptShifts.push(this.shifts[i]);
+    }
+
     if (!removed) { this.toast('Nothing older than ' + this.ukDate(key) + ' to clear'); return; }
-    if (!confirm('Remove ' + removed + ' movements recorded before ' + this.ukDate(key) +
+    if (!confirm('Remove ' + removed + ' records from before ' + this.ukDate(key) +
                  '? Contractors and regular visitors are not affected. Save a backup first.')) return;
 
     this.visitors = kept;
     this.staffMovements = keptMoves;
+    this.shifts = keptShifts;
     this.saveData();
     this.renderLog();
     this.renderStaffMovements();
+    this.renderShifts();
     this.renderStorageNote();
-    this.toast('Cleared ' + removed + ' older movements');
+    this.toast('Cleared ' + removed + ' older records');
   },
 
   exportJson: function () {
@@ -4308,7 +4715,8 @@ var app = {
       regularVisitors: this.regularVisitors,
       staff: this.staff,
       staffMovements: this.staffMovements,
-      siteVehicles: this.siteVehicles
+      siteVehicles: this.siteVehicles,
+      shifts: this.shifts
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -4492,6 +4900,20 @@ var app = {
       }
     }
 
+    if (d.shifts) {
+      for (i = 0; i < d.shifts.length; i++) {
+        var sh = d.shifts[i], shKey = [sh.date, sh.start, String(sh.guard).toLowerCase()].join('|');
+        var shDup = false;
+        for (j = 0; j < this.shifts.length; j++) {
+          var ex2 = this.shifts[j];
+          if ([ex2.date, ex2.start, String(ex2.guard).toLowerCase()].join('|') === shKey) { shDup = true; break; }
+        }
+        if (shDup) continue;
+        this.shifts.push(this.adopt(sh));
+        report.records++;
+      }
+    }
+
     if (d.visitors) {
       for (i = 0; i < d.visitors.length; i++) {
         var v = d.visitors[i];
@@ -4531,6 +4953,7 @@ var app = {
     this.renderVisitors();
     this.renderStaffRegister();
     this.renderStaffMovements();
+    this.renderShifts();
     this.renderMuster();
     this.renderReasonChips();
     return report;
@@ -4612,10 +5035,17 @@ var app = {
     }
     this.staffMovements = keptMoves;
 
+    var keptShifts = [];
+    for (i = 0; i < this.shifts.length; i++) {
+      if (this.shifts[i].date !== this.viewDate) keptShifts.push(this.shifts[i]);
+    }
+    this.shifts = keptShifts;
+
     this.onSiteOnly = false;
     this.saveData();
     this.renderLog();
     this.renderStaffMovements();
+    this.renderShifts();
     this.toast('Sheet cleared');
   },
 
@@ -4633,6 +5063,8 @@ var app = {
     this.staff = [];
     this.staffMovements = [];
     this.siteVehicles = [];
+    this.shifts = [];
+    this.cancelShiftEdit();
     this.viewDate = this.currentDate;
     this.onSiteOnly = false;
     this.saveData();
@@ -4642,6 +5074,7 @@ var app = {
     this.renderVisitors();
     this.renderStaffRegister();
     this.renderStaffMovements();
+    this.renderShifts();
     this.toast('All data cleared');
   },
 
