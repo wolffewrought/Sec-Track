@@ -307,6 +307,51 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 </form>
 </div>
+
+<div class="section">
+<h2>Record incident</h2>
+<form id="incidentForm" autocomplete="off">
+<h3 class="form-title" id="incidentTitle" style="display:none"></h3>
+<div class="form-group">
+<label for="incidentType">What happened</label>
+<select id="incidentType">
+<option value="Patrol">Patrol</option>
+<option value="Alarm activation">Alarm activation</option>
+<option value="Power failure">Power failure</option>
+<option value="Fire or smoke">Fire or smoke</option>
+<option value="Accident or injury">Accident or injury</option>
+<option value="Suspicious activity">Suspicious activity</option>
+<option value="Trespass">Trespass</option>
+<option value="Damage or vandalism">Damage or vandalism</option>
+<option value="Weather">Weather</option>
+<option value="Delivery issue">Delivery issue</option>
+<option value="Gate or barrier fault">Gate or barrier fault</option>
+<option value="Handover note">Handover note</option>
+<option value="Other">Other</option>
+</select>
+</div>
+<div class="form-group">
+<label for="incidentDetail">Details</label>
+<input type="text" id="incidentDetail" maxlength="300" placeholder="What happened, where, who was involved, what was done" required>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="incidentTime">Time</label>
+<input type="time" id="incidentTime" required>
+</div>
+<div class="form-group">
+<label for="incidentEnd">Ended (optional)</label>
+<input type="time" id="incidentEnd">
+</div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary" id="incidentSubmit">Record incident</button>
+<button type="button" class="button button-secondary" id="incidentNowBtn">Use current time</button>
+<button type="button" class="button button-secondary" id="cancelIncidentEdit" style="display:none">Cancel</button>
+</div>
+</form>
+</div>
+
 </div>
 
 <div id="sheet" class="tab-content">
@@ -368,6 +413,12 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <h2>Staff movements</h2>
 <div id="staffSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="staffMoveContainer"></div>
+</div>
+
+<div class="section">
+<h2>Incidents and occurrences</h2>
+<div id="incidentSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="incidentContainer"></div>
 </div>
 </div>
 
@@ -991,7 +1042,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v27';
+var BUILD = 'sat-v29';
 
 var app = {
   visitors: [],
@@ -1005,6 +1056,8 @@ var app = {
   siteVehicles: [],
   shifts: [],
   irregulars: [],
+  incidents: [],
+  editingIncidentId: null,
   editingShiftId: null,
   editingStaffId: null,
   editingEntryId: null,
@@ -1041,6 +1094,7 @@ var app = {
       self.renderStaffMovements();
       self.renderShifts();
       self.renderIrregulars();
+      self.renderIncidents();
       self.renderMuster();
       self.renderReasonChips();
       self.renderBackupNote();
@@ -1118,6 +1172,7 @@ var app = {
     this.renderLog();
     this.renderStaffMovements();
     this.renderShifts();
+    this.renderIncidents();
     if (wasOnToday) this.toast('New day - now logging to ' + this.ukDate(t));
   },
 
@@ -1130,6 +1185,7 @@ var app = {
     this.renderLog();
     this.renderStaffMovements();
     this.renderShifts();
+    this.renderIncidents();
   },
 
   shiftViewDate: function (days) {
@@ -1214,7 +1270,7 @@ var app = {
 
   seedIds: function () {
     var all = this.visitors.concat(this.contractors, this.regularVisitors,
-      this.staff, this.staffMovements, this.shifts, this.irregulars), i;
+      this.staff, this.staffMovements, this.shifts, this.irregulars, this.incidents), i;
     for (i = 0; i < all.length; i++) {
       if (typeof all[i].id === 'number' && all[i].id > this._lastId) this._lastId = all[i].id;
     }
@@ -1255,6 +1311,7 @@ var app = {
           self.siteVehicles = d.siteVehicles || [];
           self.shifts = d.shifts || [];
           self.irregulars = d.irregulars || [];
+          self.incidents = d.incidents || [];
         }
         self.migrate();
         self.seedIds();
@@ -1347,6 +1404,10 @@ var app = {
     }
     if (!this.shifts) this.shifts = [];
     if (!this.irregulars) this.irregulars = [];
+    if (!this.incidents) this.incidents = [];
+    for (i = 0; i < this.incidents.length; i++) {
+      if (this.incidents[i].flag === undefined) this.incidents[i].flag = 0;
+    }
     for (i = 0; i < this.irregulars.length; i++) this.normaliseRecord(this.irregulars[i], false);
     if (!this.staff) this.staff = [];
     if (!this.staffMovements) this.staffMovements = [];
@@ -1414,7 +1475,8 @@ var app = {
       staffMovements: this.staffMovements,
       siteVehicles: this.siteVehicles,
       shifts: this.shifts,
-      irregulars: this.irregulars
+      irregulars: this.irregulars,
+      incidents: this.incidents
     }, function () {
       self.toast('Could not save - export a backup and clear older movements', 'error');
     });
@@ -1501,10 +1563,18 @@ var app = {
     document.getElementById('sheetSearch').addEventListener('input', function () {
       self.renderLog();
       self.renderStaffMovements();
+      self.renderIncidents();
     });
     document.getElementById('contractorSearch').addEventListener('input', function () {
       self.renderArchive();
     });
+
+    document.getElementById('incidentForm').addEventListener('submit', function (e) { self.recordIncident(e); });
+    document.getElementById('incidentNowBtn').addEventListener('click', function () {
+      var d = new Date();
+      document.getElementById('incidentTime').value = self.pad2(d.getHours()) + ':' + self.pad2(d.getMinutes());
+    });
+    document.getElementById('cancelIncidentEdit').addEventListener('click', function () { self.cancelIncidentEdit(); });
 
     document.getElementById('shiftForm').addEventListener('submit', function (e) { self.saveShift(e); });
     document.getElementById('shiftDefaultsBtn').addEventListener('click', function () { self.shiftUseSiteHours(); });
@@ -2026,10 +2096,21 @@ var app = {
         this.visitors[ei].exitTime = exitTime;
         this.logPage = this.isContractorEntry(this.visitors[ei]) ? 'contractors' : 'daily';
       }
+      var relearned = null;
+      try {
+        for (var ej = 0; ej < this.visitors.length; ej++) {
+          if (this.visitors[ej].id === this.editingEntryId) {
+            relearned = this.learnFromEntry(this.visitors[ej]);
+          }
+        }
+      } catch (e) {}
+
       this.cancelEntryEdit();
       this.saveData();
       this.renderLog();
-      this.toast('Entry updated');
+      if (relearned) { this.renderIrregulars(); this.renderVisitors(); this.renderArchive(); }
+      this.toast('Entry updated' +
+        (relearned && relearned.created ? '. ' + relearned.name + ' held under Irregular visitors' : ''));
       return;
     }
 
@@ -3249,6 +3330,145 @@ var app = {
     this.renderLog();
   },
 
+  /* ---------------- incidents ---------------- */
+
+  incidentsFor: function (date) {
+    var out = [], i;
+    for (i = 0; i < this.incidents.length; i++) {
+      if (this.incidents[i].date === date) out.push(this.incidents[i]);
+    }
+    return this.byTime(out, 'time');
+  },
+
+  recordIncident: function (e) {
+    e.preventDefault();
+    var type = document.getElementById('incidentType').value;
+    var detail = document.getElementById('incidentDetail').value.replace(/^\s+|\s+$/g, '');
+    var time = document.getElementById('incidentTime').value;
+    var ended = document.getElementById('incidentEnd').value;
+
+    if (!type || !detail || !time) { this.toast('Add what happened, the detail and a time', 'error'); return; }
+
+    if (this.editingIncidentId !== null) {
+      for (var k = 0; k < this.incidents.length; k++) {
+        if (this.incidents[k].id !== this.editingIncidentId) continue;
+        this.incidents[k].type = type;
+        this.incidents[k].detail = detail;
+        this.incidents[k].time = time;
+        this.incidents[k].ended = ended;
+      }
+      this.cancelIncidentEdit();
+      this.saveData();
+      this.renderIncidents();
+      this.toast('Incident updated');
+      return;
+    }
+
+    this.incidents.push({
+      id: this.nextId(),
+      date: this.viewDate,
+      type: type,
+      detail: detail,
+      time: time,
+      ended: ended,
+      flag: 0
+    });
+
+    this.saveData();
+    this.renderIncidents();
+    e.target.reset();
+    document.getElementById('incidentDetail').focus();
+    this.toast('Incident recorded - ' + this.incidentsFor(this.viewDate).length + ' on the Day Sheet');
+  },
+
+  editIncident: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.incidents.length && !rec; i++) if (this.incidents[i].id === id) rec = this.incidents[i];
+    if (!rec) return;
+
+    this.editingIncidentId = id;
+    document.getElementById('incidentType').value = rec.type;
+    document.getElementById('incidentDetail').value = rec.detail;
+    document.getElementById('incidentTime').value = rec.time;
+    document.getElementById('incidentEnd').value = rec.ended || '';
+
+    var seq = this.daySequence(this.incidents, 'time')[id];
+    var title = document.getElementById('incidentTitle');
+    title.textContent = 'Editing incident ' + seq +
+      (rec.date === this.viewDate ? '' : ' from ' + this.ukDate(rec.date));
+    title.style.display = 'block';
+    document.getElementById('incidentSubmit').textContent = 'Update incident';
+    document.getElementById('cancelIncidentEdit').style.display = 'inline-block';
+    this.activateTab('tracker');
+    document.getElementById('incidentDetail').focus();
+  },
+
+  cancelIncidentEdit: function () {
+    this.editingIncidentId = null;
+    document.getElementById('incidentForm').reset();
+    document.getElementById('incidentTitle').style.display = 'none';
+    document.getElementById('incidentSubmit').textContent = 'Record incident';
+    document.getElementById('cancelIncidentEdit').style.display = 'none';
+  },
+
+  deleteIncident: function (id) {
+    if (!confirm('Remove this incident from the sheet?')) return;
+    if (this.editingIncidentId === id) this.cancelIncidentEdit();
+    var kept = [], i;
+    for (i = 0; i < this.incidents.length; i++) if (this.incidents[i].id !== id) kept.push(this.incidents[i]);
+    this.incidents = kept;
+    this.saveData();
+    this.renderIncidents();
+    this.toast('Incident removed');
+  },
+
+  renderIncidents: function () {
+    var box = document.getElementById('incidentContainer');
+    var summary = document.getElementById('incidentSummary');
+    if (!box) return;
+
+    var list = this.incidentsFor(this.viewDate);
+    var needle = this.sheetFilter();
+    if (needle) {
+      var kept = [], f;
+      for (f = 0; f < list.length; f++) {
+        if (this.matches(needle, [list[f].type, list[f].detail, list[f].time])) kept.push(list[f]);
+      }
+      list = kept;
+    }
+
+    var total = this.incidentsFor(this.viewDate).length;
+    summary.innerHTML = '<span>' + total + (total === 1 ? ' entry' : ' entries') + '</span>';
+
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-state">' +
+        (needle ? 'No incidents match that filter' : 'Nothing logged for this day') + '</div>';
+      return;
+    }
+
+    var seq = this.daySequence(this.incidents, 'time');
+    var rows = '', i;
+    for (i = 0; i < list.length; i++) {
+      var n = list[i];
+      rows += '<tr>' +
+        this.numCell(n, seq[n.id], 'incident', false) +
+        '<td>' + this.esc(n.time) +
+          (n.ended ? '<span class="cell-sub">to ' + this.esc(n.ended) + '</span>' : '') + '</td>' +
+        '<td>' + this.esc(n.type) + '</td>' +
+        '<td>' + this.esc(n.detail) + '</td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editIncident(' + n.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteIncident(' + n.id + ')">X</button>' +
+        '</td></tr>';
+    }
+
+    box.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th class="num">#</th><th>Time</th><th>Type</th><th>Details</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+
+    this.renderFlagLegend();
+  },
+
   /* ---------------- learning new companies ---------------- */
 
   learnEnabled: function () {
@@ -3435,6 +3655,20 @@ var app = {
         return s.guard;
       }
     }
+
+    /* A night shift is filed under the day it began, so the small hours of
+       the following morning are still covered by yesterday's entry. */
+    var prev = this.parseLocalDate(date);
+    if (prev) {
+      prev.setDate(prev.getDate() - 1);
+      var key = prev.getFullYear() + '-' + this.pad2(prev.getMonth() + 1) + '-' + this.pad2(prev.getDate());
+      var before = this.shiftsFor(key);
+      for (i = 0; i < before.length; i++) {
+        s = before[i];
+        if (s.end < s.start && time <= s.end) return s.guard;
+      }
+    }
+
     return '';
   },
 
@@ -3819,7 +4053,8 @@ var app = {
 
   applyFlag: function (value) {
     if (!this.flagTarget) return;
-    var list = this.flagTarget.kind === 'staff' ? this.staffMovements : this.visitors;
+    var list = this.flagTarget.kind === 'staff' ? this.staffMovements
+             : (this.flagTarget.kind === 'incident' ? this.incidents : this.visitors);
     for (var i = 0; i < list.length; i++) {
       if (list[i].id === this.flagTarget.id) { list[i].flag = value; break; }
     }
@@ -3827,6 +4062,7 @@ var app = {
     this.saveData();
     this.renderLog();
     this.renderStaffMovements();
+    this.renderIncidents();
   },
 
   renderFlagLegend: function () {
@@ -3835,6 +4071,7 @@ var app = {
     var used = {}, i;
     for (i = 0; i < this.visitors.length; i++) if (this.visitors[i].flag) used[this.visitors[i].flag] = 1;
     for (i = 0; i < this.staffMovements.length; i++) if (this.staffMovements[i].flag) used[this.staffMovements[i].flag] = 1;
+    for (i = 0; i < this.incidents.length; i++) if (this.incidents[i].flag) used[this.incidents[i].flag] = 1;
 
     var html = '';
     for (i = 0; i < this.FLAGS.length; i++) {
@@ -3870,6 +4107,7 @@ var app = {
           self.renderFlagLegend();
           self.renderLog();
           self.renderStaffMovements();
+          self.renderIncidents();
         });
         row.appendChild(dot);
         row.appendChild(input);
@@ -4149,6 +4387,17 @@ var app = {
       return ka < kb ? -1 : (ka > kb ? 1 : 0);
     });
 
+    var incList = [], ii;
+    for (ii = 0; ii < this.incidents.length; ii++) {
+      var nRec = this.incidents[ii];
+      if (nRec.date >= fromKey && nRec.date <= toKey && inWindow(nRec.time)) incList.push(nRec);
+    }
+    incList.sort(function (a, b) {
+      var ka = a.date + ' ' + a.time, kb = b.date + ' ' + b.time;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+    var incSeq = this.daySequence(this.incidents, 'time');
+
     heading('On duty');
     if (shiftList.length) {
       var shRows = [];
@@ -4182,7 +4431,8 @@ var app = {
         ['Days with activity', String(dayKeys.length)],
         ['Busiest day', busiestN ? busiest + ' (' + busiestN + ')' : '-'],
         ['No exit time logged', String(onSiteAtExport)],
-        ['Shifts recorded', String(shiftList.length)]
+        ['Shifts recorded', String(shiftList.length)],
+        ['Incidents logged', String(incList.length)]
       ];
       var staffInRange = 0, staffOut = 0, sp;
       for (sp = 0; sp < this.staffMovements.length; sp++) {
@@ -4425,10 +4675,35 @@ var app = {
       paragraph('No staff departures recorded.');
     }
 
+    /* ---- incidents and occurrences ---- */
+    heading('Incidents and occurrences');
+    if (incList.length) {
+      var incRows = [];
+      for (ii = 0; ii < incList.length; ii++) {
+        var n2 = incList[ii];
+        var numCell2 = { t: String(incSeq[n2.id] || ''),
+          fill: n2.flag ? hexToRgb(FLAG_HEX[n2.flag]) : null,
+          c: n2.flag ? [1, 1, 1] : null, b: !!n2.flag };
+        incRows.push(isRange
+          ? [numCell2, this.ukDate(n2.date), n2.time + (n2.ended ? ' - ' + n2.ended : ''),
+             n2.type, n2.detail]
+          : [numCell2, n2.time + (n2.ended ? ' - ' + n2.ended : ''), n2.type, n2.detail]);
+      }
+      table(isRange
+        ? [{ label: '#', w: 24 }, { label: 'Date', w: 70 }, { label: 'Time', w: 78 },
+           { label: 'Type', w: 118 }, { label: 'Details', w: 225 }]
+        : [{ label: '#', w: 24 }, { label: 'Time', w: 82 },
+           { label: 'Type', w: 125 }, { label: 'Details', w: 284 }], incRows);
+      paragraph(incList.length + (incList.length === 1 ? ' entry recorded.' : ' entries recorded.'));
+    } else {
+      paragraph('Nothing recorded.');
+    }
+
     /* ---- colour key, only if colours were actually used ---- */
     var usedFlags = {}, uf;
     for (uf = 0; uf < todays.length; uf++) if (todays[uf].flag) usedFlags[todays[uf].flag] = 1;
     for (uf = 0; uf < staffList.length; uf++) if (staffList[uf].flag) usedFlags[staffList[uf].flag] = 1;
+    for (uf = 0; uf < incList.length; uf++) if (incList[uf].flag) usedFlags[incList[uf].flag] = 1;
     var flagRows = [];
     for (uf = 0; uf < this.FLAGS.length; uf++) {
       if (!usedFlags[this.FLAGS[uf].id]) continue;
@@ -4579,7 +4854,8 @@ var app = {
       staff: this.staff,
       staffMovements: staffList,
       siteVehicles: this.siteVehicles,
-      shifts: shiftList
+      shifts: shiftList,
+      incidents: incList
     };
 
     return doc.build(PDFKit.b64enc(PDFKit.toUtf8(JSON.stringify(payload))));
@@ -4635,10 +4911,11 @@ var app = {
     }
 
     /* whatever no shift covers */
-    var all = this.entriesFor(this.viewDate).concat(this.staffMovesFor(this.viewDate));
+    var all = this.entriesFor(this.viewDate)
+      .concat(this.staffMovesFor(this.viewDate), this.incidentsFor(this.viewDate));
     var loose = 0;
     for (i = 0; i < all.length; i++) {
-      var t = all[i].entryTime || all[i].outTime;
+      var t = all[i].entryTime || all[i].outTime || all[i].time;
       var covered = false;
       for (var s = 0; s < shifts.length; s++) {
         if (this.withinWindow(t, shifts[s].start, shifts[s].end)) { covered = true; break; }
@@ -4740,7 +5017,8 @@ var app = {
 
   hasRecords: function () {
     return (this.visitors.length + this.contractors.length + this.regularVisitors.length +
-            this.staff.length + this.staffMovements.length + this.shifts.length) > 0;
+            this.staff.length + this.staffMovements.length + this.shifts.length +
+            this.incidents.length + this.irregulars.length) > 0;
   },
 
   renderBackupNote: function () {
@@ -4841,10 +5119,14 @@ var app = {
     var note = document.getElementById('storageNote');
     if (!note) return;
 
-    var movements = this.visitors.length;
-    var approx = movements * 186 +
-      (this.contractors.length + this.regularVisitors.length) * 300;
-    var held = movements + (movements === 1 ? ' movement' : ' movements') +
+    /* every kind of record, not just visitor movements - a quiet gate can
+       still fill up on patrols and incidents */
+    var logged = this.visitors.length + this.staffMovements.length +
+      this.incidents.length + this.shifts.length;
+    var listed = this.contractors.length + this.regularVisitors.length +
+      this.staff.length + this.irregulars.length;
+    var approx = logged * 186 + listed * 300;
+    var held = logged + (logged === 1 ? ' record' : ' records') +
       ' held, roughly ' + (approx < 1048576
         ? (approx / 1024).toFixed(0) + ' KB'
         : (approx / 1048576).toFixed(1) + ' MB') + '.';
@@ -4888,6 +5170,12 @@ var app = {
       else keptShifts.push(this.shifts[i]);
     }
 
+    var keptIncidents = [];
+    for (i = 0; i < this.incidents.length; i++) {
+      if (this.incidents[i].date < key) removed++;
+      else keptIncidents.push(this.incidents[i]);
+    }
+
     if (!removed) { this.toast('Nothing older than ' + this.ukDate(key) + ' to clear'); return; }
     if (!confirm('Remove ' + removed + ' records from before ' + this.ukDate(key) +
                  '? Contractors and regular visitors are not affected. Save a backup first.')) return;
@@ -4895,10 +5183,12 @@ var app = {
     this.visitors = kept;
     this.staffMovements = keptMoves;
     this.shifts = keptShifts;
+    this.incidents = keptIncidents;
     this.saveData();
     this.renderLog();
     this.renderStaffMovements();
     this.renderShifts();
+    this.renderIncidents();
     this.renderStorageNote();
     this.toast('Cleared ' + removed + ' older records');
   },
@@ -4913,7 +5203,8 @@ var app = {
       staffMovements: this.staffMovements,
       siteVehicles: this.siteVehicles,
       shifts: this.shifts,
-      irregulars: this.irregulars
+      irregulars: this.irregulars,
+      incidents: this.incidents
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -5110,6 +5401,23 @@ var app = {
       }
     }
 
+    if (d.incidents) {
+      for (i = 0; i < d.incidents.length; i++) {
+        var inc2 = d.incidents[i];
+        var incKey = [inc2.date, inc2.time, String(inc2.type).toLowerCase(),
+                      String(inc2.detail).toLowerCase()].join('|');
+        var incDup = false;
+        for (j = 0; j < this.incidents.length; j++) {
+          var ex3 = this.incidents[j];
+          if ([ex3.date, ex3.time, String(ex3.type).toLowerCase(),
+               String(ex3.detail).toLowerCase()].join('|') === incKey) { incDup = true; break; }
+        }
+        if (incDup) continue;
+        this.incidents.push(this.adopt(inc2));
+        report.movements++;
+      }
+    }
+
     if (d.shifts) {
       for (i = 0; i < d.shifts.length; i++) {
         var sh = d.shifts[i], shKey = [sh.date, sh.start, String(sh.guard).toLowerCase()].join('|');
@@ -5165,6 +5473,7 @@ var app = {
     this.renderStaffMovements();
     this.renderShifts();
     this.renderIrregulars();
+    this.renderIncidents();
     this.renderMuster();
     this.renderReasonChips();
     return report;
@@ -5252,11 +5561,18 @@ var app = {
     }
     this.shifts = keptShifts;
 
+    var keptIncidents = [];
+    for (i = 0; i < this.incidents.length; i++) {
+      if (this.incidents[i].date !== this.viewDate) keptIncidents.push(this.incidents[i]);
+    }
+    this.incidents = keptIncidents;
+
     this.onSiteOnly = false;
     this.saveData();
     this.renderLog();
     this.renderStaffMovements();
     this.renderShifts();
+    this.renderIncidents();
     this.toast('Sheet cleared');
   },
 
@@ -5276,7 +5592,9 @@ var app = {
     this.siteVehicles = [];
     this.shifts = [];
     this.irregulars = [];
+    this.incidents = [];
     this.cancelShiftEdit();
+    this.cancelIncidentEdit();
     this.viewDate = this.currentDate;
     this.onSiteOnly = false;
     this.saveData();
@@ -5288,6 +5606,7 @@ var app = {
     this.renderStaffMovements();
     this.renderShifts();
     this.renderIrregulars();
+    this.renderIncidents();
     this.toast('All data cleared');
   },
 
