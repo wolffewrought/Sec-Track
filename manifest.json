@@ -5,11 +5,18 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "any",
   "background_color": "#f1f5f9",
   "theme_color": "#1e293b",
-  "categories": ["business", "productivity", "utilities"],
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "lang": "en-GB",
   "dir": "ltr",
   "icons": [
@@ -37,13 +44,37 @@
       "name": "Record a visitor",
       "short_name": "New entry",
       "url": "./index.html#tracker",
-      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
-      "name": "Contractor list",
-      "short_name": "Contractors",
-      "url": "./index.html#archive",
-      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "name": "Day sheet",
+      "short_name": "Sheet",
+      "url": "./index.html#sheet",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Roll call",
+      "short_name": "Muster",
+      "url": "./index.html#muster",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

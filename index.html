@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1e293b">
+<meta name="theme-color" content="#1e293b" id="themeColor">
+<meta name="color-scheme" content="light dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -108,6 +109,52 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 .num-btn{width:2rem;height:2rem;border-radius:.3rem;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
 .num-btn.flagged{border-color:transparent;color:#fff}
 .num-btn.carried{border-style:dashed;border-color:#b45309;opacity:.85}
+/* Night mode. Defining our own dark palette also stops Samsung Internet
+   applying its forced-dark inversion, which mangles the status colours. */
+body.night{background:#0b1220;color:#e2e8f0}
+body.night .section{background:#111c2e;box-shadow:none;border:1px solid #1e2d45}
+body.night .section h2{color:#e2e8f0;border-bottom-color:#334155}
+body.night .tab-nav{background:#111c2e;border-bottom-color:#1e2d45}
+body.night .tab-nav button{background:#111c2e;color:#94a3b8}
+body.night .tab-nav button.active{color:#60a5fa;border-bottom-color:#60a5fa;background:#16243a}
+body.night .form-group label{color:#cbd5e1}
+body.night .form-group input,body.night .form-group select,body.night .filter-box,
+body.night .rep-row input,body.night .sheet-bar input[type=date]{background:#0b1220;color:#e2e8f0;border-color:#334155}
+body.night .form-group input::placeholder,body.night .filter-box::placeholder{color:#64748b}
+body.night .data-table{background:#111c2e;box-shadow:none}
+body.night .data-table thead{background:#1e2d45}
+body.night .data-table td{border-bottom-color:#1e2d45;color:#e2e8f0}
+body.night .button-secondary{background:#1e2d45;color:#e2e8f0}
+body.night .autocomplete-list{background:#111c2e;border-color:#334155}
+body.night .autocomplete-item{border-bottom-color:#1e2d45;color:#e2e8f0}
+body.night .empty-state,body.night .text-muted,body.night .field-hint,body.night .cell-sub{color:#94a3b8}
+body.night .page-switch{background:#1e2d45}
+body.night .page-btn{color:#94a3b8}
+body.night .page-btn.active{background:#0b1220;color:#e2e8f0}
+body.night .page-btn span{color:#64748b}
+body.night .num-btn{background:#0b1220;border-color:#334155;color:#cbd5e1}
+body.night .onsite-chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
+body.night .onsite-chip.none{background:#1e2d45;border-color:#334155;color:#94a3b8}
+body.night .sheet-summary{color:#94a3b8}
+body.night .flag-picker-panel{background:#111c2e}
+body.night .flag-picker-title,body.night .swatch{color:#e2e8f0}
+body.night .swatch{border-bottom-color:#1e2d45}
+body.night .muster-head{color:#e2e8f0}
+body.night .status-valid,body.night .induction-tag.ok,body.night .induction-note.good{background:#052e16;color:#4ade80}
+body.night .status-needed,body.night .induction-tag.due,body.night .induction-note.bad{background:#3f1212;color:#fca5a5}
+body.night .status-soon,body.night .induction-tag.soon,body.night .induction-note.soon{background:#3a2a09;color:#fcd34d}
+body.night .form-title{color:#60a5fa}
+body.night .edit-btn{color:#60a5fa}
+body.night .rep-empty{color:#94a3b8}
+.chip-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem}
+.chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:9999px;padding:.4rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
+.chip:active{background:#2563eb;color:#fff}
+body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
+.muster-head{font-size:1.6rem;font-weight:700;color:#1e293b;margin-bottom:.9rem;line-height:1.2}
+.muster-head small{display:block;font-size:.85rem;font-weight:500;color:#64748b;margin-top:.3rem}
+.muster-head.clear{color:#15803d}
+.filter-box{width:100%;padding:.6rem .75rem;margin-bottom:.75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.95rem;background:#fff;color:#0f172a}
+.filter-box:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem}
 .page-btn{flex:1;padding:.55rem .5rem;border:none;background:transparent;color:#475569;font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
 .page-btn.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
@@ -116,6 +163,9 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 .induction-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;padding:.15rem .45rem;border-radius:9999px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
 .induction-tag.ok{background:#f0fdf4;color:#15803d}
 .induction-tag.due{background:#fef2f2;color:#b91c1c}
+.induction-tag.soon{background:#fffbeb;color:#b45309}
+.status-soon{background:#fffbeb;color:#b45309}
+.induction-note.soon{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
 .flag-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
 .flag-legend span{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:#475569}
 .flag-legend i{width:.8rem;height:.8rem;border-radius:.2rem;display:inline-block}
@@ -139,6 +189,7 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 <div class="tab-nav">
 <button class="tab-button active" data-tab="tracker">New Entry</button>
 <button class="tab-button" data-tab="sheet">Day Sheet</button>
+<button class="tab-button" data-tab="muster">Muster</button>
 <button class="tab-button" data-tab="archive">Contractor List</button>
 <button class="tab-button" data-tab="visitors">Regular Visitors</button>
 <button class="tab-button" data-tab="staff">Staff</button>
@@ -179,6 +230,7 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 <div class="form-group">
 <label for="reasonInput">Reason for site visit</label>
 <input type="text" id="reasonInput" maxlength="120" placeholder="Delivery, maintenance, meeting" required>
+<div id="reasonChips" class="chip-row"></div>
 </div>
 <div class="grid-2">
 <div class="form-group">
@@ -228,6 +280,7 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 <div class="form-group">
 <label for="staffReasonInput">Reason or destination</label>
 <input type="text" id="staffReasonInput" maxlength="120" placeholder="Materials run, site visit, home" required>
+<div id="staffReasonChips" class="chip-row"></div>
 </div>
 <div class="grid-2">
 <div class="form-group">
@@ -259,6 +312,7 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 <div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
 <div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<input type="search" id="sheetSearch" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
 <div class="page-switch" role="tablist">
 <button type="button" id="pageOthers" class="page-btn" role="tab">Daily</button>
 <button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
@@ -274,12 +328,35 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 </div>
 </div>
 
+<div id="muster" class="tab-content">
+<div class="section">
+<h2>Roll call</h2>
+<div id="musterHead" class="muster-head" role="status" aria-live="polite"></div>
+<div class="action-row">
+<button type="button" class="button button-primary" id="musterPdfBtn">Print roll call</button>
+<button type="button" class="button button-secondary" id="musterRefreshBtn">Refresh</button>
+</div>
+<p class="field-hint">Everyone signed in without a recorded exit, plus staff currently off site. Use this for an evacuation roll call.</p>
+</div>
+
+<div class="section">
+<h2>On site</h2>
+<div id="musterOnSite"></div>
+</div>
+
+<div class="section">
+<h2>Staff off site</h2>
+<div id="musterAway"></div>
+</div>
+</div>
+
 <div id="archive" class="tab-content">
 <div class="section">
 <h2>Contractor inductions</h2>
 <div class="action-row">
 <button type="button" class="button button-primary" id="addContractorBtn">Add contractor</button>
 </div>
+<input type="search" id="contractorSearch" class="filter-box" maxlength="40" placeholder="Filter by company or representative">
 <form id="contractorForm" style="display:none" autocomplete="off">
 <h3 class="form-title" id="contractorFormTitle">New contractor</h3>
 <div class="form-group">
@@ -399,6 +476,7 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 
 <div class="section">
 <h2>Export</h2>
+<div id="backupNote" class="induction-note" role="status" aria-live="polite" style="display:none"></div>
 <div class="action-row">
 <button type="button" class="button button-primary" id="exportPdfBtn">Export day sheet as PDF</button>
 <button type="button" class="button button-secondary" id="exportJsonBtn">Save backup file</button>
@@ -456,6 +534,9 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 <button type="button" class="button button-danger" id="clearAllBtn">Clear everything</button>
 </div>
 <p class="text-muted">Everything is stored on this device only. Clearing cannot be undone, so save a backup first.</p>
+<div class="action-row">
+<button type="button" class="button button-secondary" id="nightToggle">Night mode</button>
+</div>
 <p class="text-muted" id="buildStamp" style="margin-top:.75rem"></p>
 <div class="action-row">
 <button type="button" class="button button-secondary" id="forceUpdateBtn">Check for a new version</button>
@@ -850,7 +931,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v18';
+var BUILD = 'sat-v21';
 
 var app = {
   visitors: [],
@@ -877,6 +958,7 @@ var app = {
 
   init: function () {
     var self = this;
+    this.applyNightMode();
     this.currentDate = this.todayKey();
     this.viewDate = this.currentDate;
     this.updateHeaderDate();
@@ -894,6 +976,9 @@ var app = {
       self.renderVisitors();
       self.renderStaffRegister();
       self.renderStaffMovements();
+      self.renderMuster();
+      self.renderReasonChips();
+      self.renderBackupNote();
       self.renderFlagEditor();
       self.renderSheetControls();
       self.renderPeriodControls();
@@ -902,6 +987,7 @@ var app = {
       self.startDayWatch();
       var wanted = self.tabFromHash();
       if (wanted) self.activateTab(wanted);
+      self.backupNudge();
       if (note === 'migrated') {
         self.toast('Records moved to larger storage on this device');
       }
@@ -1331,6 +1417,20 @@ var app = {
     document.getElementById('importJsonBtn').addEventListener('click', function () { document.getElementById('jsonImportInput').click(); });
     document.getElementById('jsonImportInput').addEventListener('change', function (e) { self.handleImport(e); });
 
+    document.getElementById('musterPdfBtn').addEventListener('click', function () { self.exportMuster(); });
+    document.getElementById('musterRefreshBtn').addEventListener('click', function () {
+      self.renderMuster();
+      self.toast('Roll call refreshed');
+    });
+
+    document.getElementById('sheetSearch').addEventListener('input', function () {
+      self.renderLog();
+      self.renderStaffMovements();
+    });
+    document.getElementById('contractorSearch').addEventListener('input', function () {
+      self.renderArchive();
+    });
+
     document.getElementById('pageContractors').addEventListener('click', function () { self.setLogPage('contractors'); });
     document.getElementById('pageOthers').addEventListener('click', function () { self.setLogPage('daily'); });
 
@@ -1382,6 +1482,7 @@ var app = {
     document.getElementById('periodWeek').addEventListener('change', function () { self.renderPeriodSummary(); });
     document.getElementById('exportPeriodBtn').addEventListener('click', function () { self.exportPeriod(); });
 
+    document.getElementById('nightToggle').addEventListener('click', function () { self.toggleNightMode(); });
     document.getElementById('forceUpdateBtn').addEventListener('click', function () { self.forceUpdate(); });
     document.getElementById('pruneBtn').addEventListener('click', function () { self.pruneOld(); });
     document.getElementById('clearTodayBtn').addEventListener('click', function () { self.clearToday(); });
@@ -1390,7 +1491,7 @@ var app = {
 
   /* The home screen shortcuts point at #tracker and #archive, so the tab
      named in the address has to actually open. */
-  TABS: ['tracker', 'sheet', 'archive', 'visitors', 'staff', 'settings'],
+  TABS: ['tracker', 'sheet', 'muster', 'archive', 'visitors', 'staff', 'settings'],
 
   activateTab: function (name) {
     if (this.TABS.indexOf(name) === -1) return;
@@ -1407,7 +1508,8 @@ var app = {
     }
     target.classList.add('active');
     window.scrollTo(0, 0);
-    if (name === 'settings') this.renderStorageNote();
+    if (name === 'settings') { this.renderStorageNote(); this.renderBackupNote(); }
+    if (name === 'muster') this.renderMuster();
   },
 
   tabFromHash: function () {
@@ -1869,6 +1971,7 @@ var app = {
     document.getElementById('vehiclePickRow').style.display = 'none';
     document.getElementById('inductionNote').style.display = 'none';
     document.getElementById('companyInput').focus();
+    this.renderReasonChips();
     this.toast('Entry recorded - ' + this.entriesFor(this.viewDate).length +
       ' on the Day Sheet');
   },
@@ -1922,6 +2025,7 @@ var app = {
         this.visitors[i].exitTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
         this.saveData();
         this.renderLog();
+        this.renderMuster();
         this.toast('Exit logged for ' + this.visitors[i].company +
           (this.visitors[i].date !== this.viewDate ? ' (' + this.ukDate(this.visitors[i].date) + ')' : ''));
         return;
@@ -1971,6 +2075,24 @@ var app = {
 
     var onContractors = this.logPage === 'contractors';
     var src = onContractors ? split.contractors : split.daily;
+
+    var needle = this.sheetFilter();
+    if (needle) {
+      var kept = [], fi;
+      for (fi = 0; fi < src.length; fi++) {
+        if (this.matches(needle, [src[fi].company, src[fi].rep, src[fi].vehicle, src[fi].reason])) {
+          kept.push(src[fi]);
+        }
+      }
+      src = kept;
+    }
+
+    if (!src.length && needle) {
+      container.innerHTML = '<div class="empty-state">Nothing matches &ldquo;' +
+        this.esc(needle) + '&rdquo; on this page</div>';
+      this.renderFlagLegend();
+      return;
+    }
 
     if (!src.length) {
       var elsewhere = onContractors ? split.daily.length : split.contractors.length;
@@ -2134,17 +2256,26 @@ var app = {
 
   /* One entry per inducted individual. A contractor with nobody listed
      yet falls back to a single company-wide entry so nothing is hidden. */
+  /* How far ahead an induction starts warning. Long enough to get a
+     renewal booked before anyone is turned away at the gate. */
+  EXPIRY_WARN_DAYS: 30,
+
   inductionEntries: function (c) {
     var out = [], i, d, today = new Date();
     today.setHours(0, 0, 0, 0);
 
     var self = this;
     function status(dateStr) {
-      if (!dateStr) return { date: '', valid: false, missing: true };
+      if (!dateStr) return { date: '', valid: false, missing: true, soon: false, days: null };
       var dt = self.parseLocalDate(dateStr);
-      if (!dt) return { date: dateStr, valid: false, missing: true };
+      if (!dt) return { date: dateStr, valid: false, missing: true, soon: false, days: null };
       dt.setHours(0, 0, 0, 0);
-      return { date: dateStr, valid: dt >= today, missing: false };
+      var days = Math.round((dt.getTime() - today.getTime()) / 86400000);
+      return {
+        date: dateStr, missing: false, days: days,
+        valid: days >= 0,
+        soon: days >= 0 && days <= self.EXPIRY_WARN_DAYS
+      };
     }
 
     if ((c.reps || []).length) {
@@ -2155,6 +2286,7 @@ var app = {
           name: c.reps[i].name || 'Unnamed',
           vehicles: c.reps[i].vehicles || [],
           date: s.date, valid: s.valid, missing: s.missing,
+          soon: s.soon, days: s.days,
           inherited: !c.reps[i].inductionDate && !!c.inductionDate
         });
       }
@@ -2163,6 +2295,7 @@ var app = {
       out.push({
         name: 'Company-wide', vehicles: c.vehicles || [],
         date: cs.date, valid: cs.valid, missing: cs.missing,
+        soon: cs.soon, days: cs.days,
         inherited: false, companyWide: true
       });
     }
@@ -2200,11 +2333,31 @@ var app = {
     }
 
     var self = this;
-    var sorted = this.contractors.slice().sort(function (a, b) {
+    var needle = document.getElementById('contractorSearch');
+    needle = needle ? needle.value : '';
+
+    var pool = this.contractors;
+    if (needle) {
+      var keptC = [], ci;
+      for (ci = 0; ci < pool.length; ci++) {
+        var repNames = [], rr;
+        for (rr = 0; rr < (pool[ci].reps || []).length; rr++) repNames.push(pool[ci].reps[rr].name);
+        if (this.matches(needle, [pool[ci].name].concat(repNames))) keptC.push(pool[ci]);
+      }
+      pool = keptC;
+    }
+
+    if (!pool.length) {
+      container.innerHTML = '<div class="empty-state">Nothing matches &ldquo;' +
+        this.esc(needle) + '&rdquo;</div>';
+      return;
+    }
+
+    var sorted = pool.slice().sort(function (a, b) {
       return self.earliestInduction(a) - self.earliestInduction(b);
     });
 
-    var rows = '', totalDue = 0, totalPeople = 0;
+    var rows = '', totalDue = 0, totalSoon = 0, totalPeople = 0;
 
     for (var i = 0; i < sorted.length; i++) {
       var c = sorted[i];
@@ -2214,12 +2367,16 @@ var app = {
         var ent = entries[e];
         totalPeople++;
         if (!ent.valid) totalDue++;
+        else if (ent.soon) totalSoon++;
 
-        var label;
-        if (ent.missing) label = 'No date set';
-        else label = ent.valid ? 'Valid' : 'Induction due';
-        var cls = ent.valid ? 'status-valid' : 'status-needed';
-        var dot = ent.valid ? '#15803d' : '#b91c1c';
+        var label, cls, dot;
+        if (ent.missing) { label = 'No date set'; cls = 'status-needed'; dot = '#b91c1c'; }
+        else if (!ent.valid) { label = 'Induction due'; cls = 'status-needed'; dot = '#b91c1c'; }
+        else if (ent.soon) {
+          label = ent.days === 0 ? 'Expires today'
+                : 'Expires in ' + ent.days + (ent.days === 1 ? ' day' : ' days');
+          cls = 'status-soon'; dot = '#b45309';
+        } else { label = 'Valid'; cls = 'status-valid'; dot = '#15803d'; }
 
         rows += '<tr' + (e === 0 && i > 0 ? ' class="group-start"' : '') + '>' +
           '<td>' + (e === 0 ? this.esc(c.name) : '') + '</td>' +
@@ -2239,11 +2396,19 @@ var app = {
       }
     }
 
-    var banner = totalDue
-      ? '<div class="induction-note bad" style="margin-bottom:.75rem">' + totalDue + ' of ' + totalPeople +
-        ' inductions need renewing</div>'
-      : '<div class="induction-note good" style="margin-bottom:.75rem">All ' + totalPeople +
+    var banner;
+    if (totalDue) {
+      banner = '<div class="induction-note bad" style="margin-bottom:.75rem">' + totalDue + ' of ' +
+        totalPeople + ' inductions need renewing' +
+        (totalSoon ? ', ' + totalSoon + ' more due within ' + this.EXPIRY_WARN_DAYS + ' days' : '') +
+        '</div>';
+    } else if (totalSoon) {
+      banner = '<div class="induction-note soon" style="margin-bottom:.75rem">' + totalSoon + ' of ' +
+        totalPeople + ' inductions expire within ' + this.EXPIRY_WARN_DAYS + ' days</div>';
+    } else {
+      banner = '<div class="induction-note good" style="margin-bottom:.75rem">All ' + totalPeople +
         ' inductions are in date</div>';
+    }
 
     container.innerHTML = banner + '<table class="data-table"><thead><tr>' +
       '<th>Company</th><th>Representative</th><th>Valid until</th><th>Status</th><th></th>' +
@@ -2751,6 +2916,7 @@ var app = {
     document.getElementById('staffVehiclePickRow').style.display = 'none';
     document.getElementById('staffVehicleRow').style.display = 'block';
     document.getElementById('staffNameInput').focus();
+    this.renderReasonChips();
     this.toast('Departure recorded - ' + this.staffMovesFor(this.viewDate).length +
       ' on the Day Sheet');
   },
@@ -2800,6 +2966,7 @@ var app = {
         this.staffMovements[i].backTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
         this.saveData();
         this.renderStaffMovements();
+        this.renderMuster();
         this.toast(this.staffMovements[i].name + ' back on site');
         return;
       }
@@ -2847,6 +3014,18 @@ var app = {
     }
     var display = carried.concat(list);
 
+    var sNeedle = this.sheetFilter();
+    if (sNeedle) {
+      var sKept = [], sf;
+      for (sf = 0; sf < display.length; sf++) {
+        if (this.matches(sNeedle, [display[sf].name, display[sf].vehicle,
+            display[sf].reason, this.vehicleLabel(display[sf])])) {
+          sKept.push(display[sf]);
+        }
+      }
+      display = sKept;
+    }
+
     summary.innerHTML = '<span>' + list.length +
       (list.length === 1 ? ' departure' : ' departures') + '</span>' +
       (away.length
@@ -2855,7 +3034,9 @@ var app = {
         : '<span class="onsite-chip none">Everyone back</span>');
 
     if (!display.length) {
-      box.innerHTML = '<div class="empty-state">No staff departures logged for this day</div>';
+      box.innerHTML = '<div class="empty-state">' +
+        (sNeedle ? 'No staff departures match that filter' : 'No staff departures logged for this day') +
+        '</div>';
       this.renderFlagLegend();
       return;
     }
@@ -2903,6 +3084,22 @@ var app = {
   /* An entry belongs to the contractor page when its company is on the
      induction list. Adding a company to that list later moves its past
      entries across, which is the behaviour you want. */
+  /* One matcher for both lists: any of the fields, case insensitive. */
+  matches: function (needle, fields) {
+    if (!needle) return true;
+    var q = String(needle).replace(/^\s+|\s+$/g, '').toLowerCase();
+    if (!q) return true;
+    for (var i = 0; i < fields.length; i++) {
+      if (fields[i] && String(fields[i]).toLowerCase().indexOf(q) !== -1) return true;
+    }
+    return false;
+  },
+
+  sheetFilter: function () {
+    var el = document.getElementById('sheetSearch');
+    return el ? el.value : '';
+  },
+
   isContractorEntry: function (v) {
     return !!this.findContractor(v.company);
   },
@@ -2926,9 +3123,13 @@ var app = {
     if (v.rep) {
       for (i = 0; i < entries.length; i++) {
         if (entries[i].name.toLowerCase() === String(v.rep).toLowerCase()) {
-          return { valid: entries[i].valid, missing: entries[i].missing,
-                   text: entries[i].valid ? 'Induction valid'
-                        : (entries[i].missing ? 'No induction date' : 'Induction due') };
+          var e = entries[i];
+          if (e.missing) return { valid: false, missing: true, text: 'No induction date' };
+          if (!e.valid) return { valid: false, text: 'Induction due' };
+          if (e.soon) return { valid: true, soon: true,
+            text: e.days === 0 ? 'Induction expires today'
+                : 'Induction expires in ' + e.days + (e.days === 1 ? ' day' : ' days') };
+          return { valid: true, text: 'Induction valid' };
         }
       }
       return { valid: false, unknown: true, text: 'Not on the induction list' };
@@ -2942,7 +3143,7 @@ var app = {
   inductionTag: function (v) {
     var s = this.entryInduction(v);
     if (!s) return '';
-    return '<span class="induction-tag ' + (s.valid ? 'ok' : 'due') + '">' +
+    return '<span class="induction-tag ' + (s.valid ? (s.soon ? 'soon' : 'ok') : 'due') + '">' +
       this.esc(s.text) + '</span>';
   },
 
@@ -2950,6 +3151,187 @@ var app = {
     if (page !== 'contractors' && page !== 'daily') return;
     this.logPage = page;
     this.renderLog();
+  },
+
+  /* ---------------- roll call ---------------- */
+
+  renderMuster: function () {
+    var onSite = this.openEntries();
+    var away = this.staffOffSite();
+    var head = document.getElementById('musterHead');
+    var i;
+
+    head.className = 'muster-head' + (onSite.length ? '' : ' clear');
+    head.innerHTML = (onSite.length
+        ? onSite.length + (onSite.length === 1 ? ' person on site' : ' people on site')
+        : 'Nobody on site') +
+      '<small>' + (away.length
+        ? away.length + (away.length === 1 ? ' staff member off site' : ' staff off site')
+        : 'No staff signed out') +
+      ' \u00b7 as at ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) +
+      '</small>';
+
+    var box = document.getElementById('musterOnSite');
+    if (!onSite.length) {
+      box.innerHTML = '<div class="empty-state">Nobody is signed in</div>';
+    } else {
+      var rows = '';
+      for (i = 0; i < onSite.length; i++) {
+        var v = onSite[i];
+        rows += '<tr><td>' + this.esc(v.company) +
+          (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
+          (v.date !== this.currentDate
+            ? '<span class="cell-sub carried">in on ' + this.ukDate(v.date) + '</span>' : '') +
+          '</td><td>' + this.esc(v.vehicle || '-') + '</td>' +
+          '<td>' + this.esc(v.entryTime) + '</td>' +
+          '<td><button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Sign out</button></td></tr>';
+      }
+      box.innerHTML = '<table class="data-table"><thead><tr>' +
+        '<th>Company / rep</th><th>Vehicle</th><th>In</th><th></th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    var awayBox = document.getElementById('musterAway');
+    if (!away.length) {
+      awayBox.innerHTML = '<div class="empty-state">All staff are on site</div>';
+      return;
+    }
+    var arows = '';
+    for (i = 0; i < away.length; i++) {
+      var m = away[i];
+      arows += '<tr><td>' + this.esc(m.name) +
+        (m.date !== this.currentDate
+          ? '<span class="cell-sub carried">out on ' + this.ukDate(m.date) + '</span>' : '') +
+        '</td><td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
+        '<td>' + this.esc(m.outTime) + '</td>' +
+        '<td>' + this.esc(m.reason) + '</td>' +
+        '<td><button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button></td></tr>';
+    }
+    awayBox.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Name</th><th>Vehicle</th><th>Out</th><th>Reason</th><th></th>' +
+      '</tr></thead><tbody>' + arows + '</tbody></table>';
+  },
+
+  /* A deliberately plain one page sheet - it exists to be read aloud at a
+     muster point, so it carries names and times and nothing else. */
+  buildMusterPdf: function () {
+    var SLATE = [0.118, 0.161, 0.231], WHITE = [1, 1, 1], GREY = [0.45, 0.49, 0.55];
+    var LINE = [0.80, 0.84, 0.88], INK = [0.06, 0.09, 0.15], RED = [0.73, 0.11, 0.11];
+    var M = 40, RIGHT = PDFKit.PW - 40, FLOOR = 792;
+    var doc = new PDFKit.Doc();
+    var y = 0, i;
+    var self = this;
+
+    function newPage() { doc.addPage(); y = 52; }
+    function room(hh) { if (y + hh > FLOOR) { newPage(); return true; } return false; }
+    function heading(t) {
+      room(40); y += 14;
+      doc.text(t, M, y, 11.5, true, SLATE);
+      y += 4; doc.line(M, y, RIGHT, y, LINE, 0.8); y += 13;
+    }
+    function table(cols, rows) {
+      var HDR = 16, ROW = 15, k;
+      function head() {
+        doc.rect(M, y, RIGHT - M, HDR, SLATE);
+        var x = M + 5;
+        for (k = 0; k < cols.length; k++) {
+          doc.text(PDFKit.fit(cols[k].label, cols[k].w - 10, 8, true), x, y + 11, 8, true, WHITE);
+          x += cols[k].w;
+        }
+        y += HDR;
+      }
+      room(HDR + ROW); head();
+      for (var r = 0; r < rows.length; r++) {
+        if (y + ROW > FLOOR) { newPage(); head(); }
+        var x = M + 5;
+        for (k = 0; k < cols.length; k++) {
+          doc.text(PDFKit.fit(PDFKit.normalize(rows[r][k]), cols[k].w - 10, 9, false),
+            x, y + 10.5, 9, false, INK);
+          x += cols[k].w;
+        }
+        y += ROW;
+        doc.line(M, y, RIGHT, y, LINE, 0.4);
+      }
+      y += 4;
+    }
+
+    var onSite = this.openEntries();
+    var away = this.staffOffSite();
+    var now = new Date();
+    var stamp = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
+      ' at ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+    newPage();
+    doc.rect(M, y, RIGHT - M, 30, SLATE);
+    doc.textCentre('ROLL CALL', PDFKit.PW / 2, y + 20, 14, true, WHITE);
+    y += 38;
+    doc.textCentre(stamp, PDFKit.PW / 2, y, 9.5, false, GREY);
+    y += 10;
+
+    room(30);
+    doc.text(onSite.length + (onSite.length === 1 ? ' person on site' : ' people on site'),
+      M, y + 14, 15, true, onSite.length ? RED : SLATE);
+    y += 24;
+
+    heading('On site');
+    if (onSite.length) {
+      var rows = [];
+      for (i = 0; i < onSite.length; i++) {
+        rows.push([onSite[i].company, onSite[i].rep || '-', onSite[i].vehicle || '-',
+          onSite[i].entryTime, self.ukDate(onSite[i].date), '']);
+      }
+      table([{ label: 'Company / visitor', w: 145 }, { label: 'Representative', w: 105 },
+             { label: 'Vehicle', w: 85 }, { label: 'In', w: 40 },
+             { label: 'Date in', w: 70 }, { label: 'Accounted for', w: 70 }], rows);
+    } else {
+      room(20);
+      doc.text('Nobody signed in.', M, y + 10, 9.5, false, GREY);
+      y += 18;
+    }
+
+    heading('Staff off site');
+    if (away.length) {
+      var arows = [];
+      for (i = 0; i < away.length; i++) {
+        arows.push([away[i].name, self.vehicleLabel(away[i]), away[i].reason,
+          away[i].outTime, self.ukDate(away[i].date), '']);
+      }
+      table([{ label: 'Name', w: 120 }, { label: 'Vehicle', w: 110 },
+             { label: 'Reason', w: 125 }, { label: 'Out', w: 40 },
+             { label: 'Date out', w: 70 }, { label: 'Contacted', w: 50 }], arows);
+    } else {
+      room(20);
+      doc.text('All staff on site.', M, y + 10, 9.5, false, GREY);
+      y += 18;
+    }
+
+    var total = doc.pages.length;
+    for (var p = 0; p < total; p++) {
+      doc.select(p);
+      doc.line(M, 806, RIGHT, 806, LINE, 0.5);
+      doc.text('Roll call taken ' + stamp, M, 816, 7.5, false, GREY);
+      doc.textRight('Page ' + (p + 1) + ' of ' + total, RIGHT, 816, 7.5, false, GREY);
+    }
+
+    return doc.build('');
+  },
+
+  exportMuster: function () {
+    try {
+      var bytes = this.buildMusterPdf();
+      var blob = new Blob([bytes], { type: 'application/pdf' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'roll-call-' + this.currentDate + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      this.toast('Roll call saved');
+    } catch (err) {
+      this.toast('Could not build the roll call', 'error');
+    }
   },
 
   /* ---------------- row colour flags ---------------- */
@@ -3173,6 +3555,7 @@ var app = {
     var GREY  = [0.45, 0.49, 0.55];
     var LINE  = [0.80, 0.84, 0.88];
     var GREEN = [0.08, 0.50, 0.24];
+    var AMBER = [0.71, 0.33, 0.04];
     var RED   = [0.73, 0.11, 0.11];
     var INK   = [0.06, 0.09, 0.15];
 
@@ -3406,7 +3789,8 @@ var app = {
         if (!s) return { t: '-', c: null };
         if (s.unknown) return { t: 'Not listed', c: RED, b: true };
         if (s.missing) return { t: 'No date', c: RED, b: true };
-        return { t: s.valid ? 'Valid' : 'Due', c: s.valid ? GREEN : RED, b: true };
+        if (!s.valid) return { t: 'Due', c: RED, b: true };
+        return s.soon ? { t: 'Soon', c: AMBER, b: true } : { t: 'Valid', c: GREEN, b: true };
       }
 
       heading('Other visitors');
@@ -3547,19 +3931,24 @@ var app = {
       var sorted = this.contractors.slice().sort(function (a, b) {
         return new Date(a.inductionDate) - new Date(b.inductionDate);
       });
-      var crows = [], due = 0, people = 0;
+      var crows = [], due = 0, soonCount = 0, people = 0;
       for (var c2 = 0; c2 < sorted.length; c2++) {
         var entries = this.inductionEntries(sorted[c2]);
         for (var ei = 0; ei < entries.length; ei++) {
           var ent = entries[ei];
           people++;
           if (!ent.valid) due++;
+          else if (ent.soon) soonCount++;
+          var stTxt, stCol;
+          if (!ent.valid) { stTxt = 'INDUCTION DUE'; stCol = RED; }
+          else if (ent.soon) { stTxt = 'Expires in ' + ent.days + 'd'; stCol = AMBER; }
+          else { stTxt = 'Valid'; stCol = GREEN; }
           crows.push([
             ei === 0 ? sorted[c2].name : '',
             ent.name,
             ent.vehicles.join(', ') || '-',
             this.ukDate(ent.date),
-            { t: ent.valid ? 'Valid' : 'INDUCTION DUE', c: ent.valid ? GREEN : RED, b: true }
+            { t: stTxt, c: stCol, b: true }
           ]);
         }
       }
@@ -3570,8 +3959,9 @@ var app = {
         { label: 'Valid until', w: 82 },
         { label: 'Status', w: 108 }
       ], crows);
-      paragraph(due ? due + ' of ' + people + ' individual inductions require renewal.'
-                    : 'All ' + people + ' individual inductions are in date.');
+      paragraph((due ? due + ' of ' + people + ' individual inductions require renewal.'
+                     : 'All ' + people + ' individual inductions are in date.') +
+        (soonCount ? ' ' + soonCount + ' expire within ' + this.EXPIRY_WARN_DAYS + ' days.' : ''));
     } else {
       paragraph('No contractors recorded.');
     }
@@ -3698,6 +4088,7 @@ var app = {
       a.click();
       document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      this.markBackup();
       this.toast(range && range.slug ? 'Report saved' : 'PDF saved');
     } catch (err) {
       this.toast('Could not build the PDF', 'error');
@@ -3707,6 +4098,123 @@ var app = {
   /* localStorage gives roughly 5 MB. About forty movements a day fills a
      third of that in a year, so show where it stands and offer a prune
      rather than letting a save quietly start failing. */
+  applyNightMode: function () {
+    var on = false;
+    try { on = localStorage.getItem('sat-night') === '1'; } catch (e) {}
+    if (on) document.body.classList.add('night');
+    else document.body.classList.remove('night');
+    var btn = document.getElementById('nightToggle');
+    if (btn) btn.textContent = on ? 'Switch to day mode' : 'Switch to night mode';
+    var meta = document.getElementById('themeColor');
+    if (meta) meta.setAttribute('content', on ? '#0b1220' : '#1e293b');
+    return on;
+  },
+
+  toggleNightMode: function () {
+    var on = false;
+    try { on = localStorage.getItem('sat-night') === '1'; } catch (e) {}
+    try { localStorage.setItem('sat-night', on ? '0' : '1'); } catch (e) {}
+    this.applyNightMode();
+    this.toast(on ? 'Day mode' : 'Night mode');
+  },
+
+  /* ---------------- backup reminder ---------------- */
+
+  BACKUP_NAG_DAYS: 7,
+
+  markBackup: function () {
+    try { localStorage.setItem('sat-last-backup', new Date().toISOString()); } catch (e) {}
+    this.renderBackupNote();
+  },
+
+  backupAgeDays: function () {
+    var raw = null;
+    try { raw = localStorage.getItem('sat-last-backup'); } catch (e) {}
+    if (!raw) return null;
+    var d = new Date(raw);
+    if (isNaN(d.getTime())) return null;
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  },
+
+  hasRecords: function () {
+    return (this.visitors.length + this.contractors.length + this.regularVisitors.length +
+            this.staff.length + this.staffMovements.length) > 0;
+  },
+
+  renderBackupNote: function () {
+    var note = document.getElementById('backupNote');
+    if (!note) return;
+    var age = this.backupAgeDays();
+
+    if (!this.hasRecords()) { note.style.display = 'none'; return; }
+
+    if (age === null) {
+      note.className = 'induction-note bad';
+      note.textContent = 'No backup saved yet. Everything is on this device only.';
+    } else if (age >= this.BACKUP_NAG_DAYS) {
+      note.className = 'induction-note soon';
+      note.textContent = 'Last backup was ' + age + ' days ago.';
+    } else {
+      note.className = 'induction-note good';
+      note.textContent = age === 0 ? 'Backed up today.'
+        : 'Last backup ' + age + (age === 1 ? ' day ago.' : ' days ago.');
+    }
+    note.style.display = 'block';
+  },
+
+  /* A single quiet nudge at start-up rather than a permanent banner. */
+  backupNudge: function () {
+    if (!this.hasRecords()) return;
+    var age = this.backupAgeDays();
+    if (age === null) {
+      this.toast('No backup yet - save one from Settings', 'error');
+    } else if (age >= this.BACKUP_NAG_DAYS) {
+      this.toast('Last backup was ' + age + ' days ago', 'error');
+    }
+  },
+
+  /* ---------------- reason shortcuts ---------------- */
+
+  commonReasons: function (list, field, limit) {
+    var seen = {}, order = [], i, raw, key;
+    for (i = list.length - 1; i >= 0; i--) {
+      raw = String(list[i][field] || '').replace(/^\s+|\s+$/g, '');
+      if (!raw) continue;
+      key = raw.toLowerCase();
+      if (!seen[key]) { seen[key] = { text: raw, n: 0 }; order.push(key); }
+      seen[key].n++;
+    }
+    order.sort(function (a, b) { return seen[b].n - seen[a].n; });
+    var out = [];
+    for (i = 0; i < order.length && out.length < (limit || 6); i++) out.push(seen[order[i]].text);
+    return out;
+  },
+
+  renderReasonChips: function () {
+    var self = this;
+
+    function fill(boxId, inputId, reasons) {
+      var box = document.getElementById(boxId);
+      if (!box) return;
+      box.innerHTML = '';
+      for (var i = 0; i < reasons.length; i++) {
+        (function (text) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'chip';
+          b.textContent = text;
+          b.addEventListener('click', function () {
+            document.getElementById(inputId).value = text;
+          });
+          box.appendChild(b);
+        })(reasons[i]);
+      }
+    }
+
+    fill('reasonChips', 'reasonInput', this.commonReasons(this.visitors, 'reason', 6));
+    fill('staffReasonChips', 'staffReasonInput', this.commonReasons(this.staffMovements, 'reason', 6));
+  },
+
   renderBuildStamp: function () {
     var el = document.getElementById('buildStamp');
     if (el) el.textContent = 'Build ' + BUILD + '. If that is not the version you just uploaded, ' +
@@ -3808,6 +4316,7 @@ var app = {
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    this.markBackup();
     this.toast('Backup saved');
   },
 
@@ -3969,6 +4478,8 @@ var app = {
     this.renderVisitors();
     this.renderStaffRegister();
     this.renderStaffMovements();
+    this.renderMuster();
+    this.renderReasonChips();
     return report;
   },
 
@@ -4099,7 +4610,10 @@ if (document.readyState === 'loading') {
 /* Service worker registration.
  * reg.update() runs on every load because Samsung Internet otherwise clings
  * to a stale worker and serves an old build after a redeploy. */
-if ('serviceWorker' in navigator) {
+/* Only meaningful when served over the web. Inside a packaged APK or a
+   desktop build the files are already local, and registering against a
+   capacitor:// or tauri:// origin just throws. */
+if ('serviceWorker' in navigator && /^https?:$/.test(window.location.protocol)) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('./sw.js', { scope: './' })
       .then(function (reg) {
