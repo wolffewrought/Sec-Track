@@ -1,0 +1,11 @@
+{
+  "appId": "shop.wolffewrought.accesstracker",
+  "appName": "Access Tracker",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

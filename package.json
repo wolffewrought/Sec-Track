@@ -1,0 +1,13 @@
+{
+  "name": "security-access-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline packaging for the Security Access Tracker",
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  }
+}
