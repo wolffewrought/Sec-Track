@@ -39,23 +39,17 @@ jobs:
 
       - name: Brand the launcher icon
         run: |
-          if ! command -v convert >/dev/null 2>&1 && ! command -v magick >/dev/null 2>&1; then
-            sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
-          fi
-          CONVERT=$(command -v convert || command -v magick)
+          RES=android/app/src/main/res
           SRC=icon-maskable-512.png
           [ -f "$SRC" ] || SRC=icon-512.png
-          echo "using $SRC"
-          RES=android/app/src/main/res
+          [ -f "$SRC" ] || { echo "no icon found at repo root"; ls -la; exit 1; }
           rm -rf "$RES"/mipmap-anydpi-v26
-          for PAIR in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            NAME=${PAIR%%:*}; SIZE=${PAIR##*:}
+          for NAME in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             mkdir -p "$RES/mipmap-$NAME"
-            "$CONVERT" "$SRC" -resize ${SIZE}x${SIZE} "$RES/mipmap-$NAME/ic_launcher.png"
-            cp "$RES/mipmap-$NAME/ic_launcher.png" "$RES/mipmap-$NAME/ic_launcher_round.png"
+            cp "$SRC" "$RES/mipmap-$NAME/ic_launcher.png"
+            cp "$SRC" "$RES/mipmap-$NAME/ic_launcher_round.png"
           done
-          ls -la "$RES"/mipmap-xxxhdpi
-
+          find "$RES" -name 'ic_launcher*' | sort
       - name: Set the version
         run: |
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" android/app/build.gradle
