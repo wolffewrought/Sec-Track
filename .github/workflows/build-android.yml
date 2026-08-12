@@ -1,5 +1,6 @@
 name: Build Android APK
 
+# Run it by hand from the Actions tab - nothing happens on a push.
 on:
   workflow_dispatch:
 
@@ -18,9 +19,10 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # The app files live at the repo root so GitHub Pages keeps working.
+      # Capacitor wants them together in one folder, so gather them here.
       - name: Gather the app files
         run: |
-          set -e
           mkdir -p www
           cp index.html www/
           cp manifest.json www/ 2>/dev/null || true
@@ -38,6 +40,11 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      # Capacitor scaffolds its own placeholder launcher icon, so replace it
+      # with the app's. The maskable artwork is used because Android crops
+      # launcher icons to the device's shape.
+      # Copies the app icon into the Android launcher slots. No image
+      # tooling needed - Android scales the one file for each density.
       - name: Brand the launcher icon
         run: |
           set -e
@@ -54,6 +61,43 @@ jobs:
           done
           find "$RES" -name "ic_launcher*" | sort
 
+      # Android refuses an update whose version has not gone up, so tie it
+      # to the run number - that only ever increases.
+      # Android backs app data up to the user's Google Drive by default.
+      # For a log meant never to leave the site, that is an exfiltration
+      # path nobody asked for. FLAG_SECURE also keeps the records out of
+      # screenshots and out of the app switcher preview.
+      - name: Close the leaks
+        run: |
+          set -e
+          MAN=android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:allowBackup="true"/android:allowBackup="false"/' "$MAN"
+          grep -q 'android:allowBackup' "$MAN" || sed -i 's/<application /<application android:allowBackup="false" /' "$MAN"
+          sed -i 's/ android:fullBackupContent="[^"]*"//' "$MAN"
+          sed -i 's/ android:dataExtractionRules="[^"]*"//' "$MAN"
+          echo "backup setting now:"
+          grep -o 'android:allowBackup="[a-z]*"' "$MAN"
+
+          DIR=android/app/src/main/java/shop/wolffewrought/accesstracker
+          mkdir -p "$DIR"
+          printf '%s\n' \
+            'package shop.wolffewrought.accesstracker;' \
+            '' \
+            'import android.os.Bundle;' \
+            'import android.view.WindowManager;' \
+            'import com.getcapacitor.BridgeActivity;' \
+            '' \
+            'public class MainActivity extends BridgeActivity {' \
+            '    @Override' \
+            '    public void onCreate(Bundle savedInstanceState) {' \
+            '        super.onCreate(savedInstanceState);' \
+            '        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,' \
+            '                             WindowManager.LayoutParams.FLAG_SECURE);' \
+            '    }' \
+            '}' \
+            > "$DIR/MainActivity.java"
+          cat "$DIR/MainActivity.java"
+
       - name: Set the version
         run: |
           set -e
@@ -65,6 +109,9 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
+      # The secrets come in as environment variables rather than being
+      # pasted into the script, and every command sits on one line, so
+      # there are no continuations to lose.
       - name: Sign it
         env:
           KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
