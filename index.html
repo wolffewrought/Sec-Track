@@ -22,7 +22,47 @@ body{background:#f1f5f9;padding-bottom:calc(3rem + env(safe-area-inset-bottom,0p
 /* On Android 15 and newer the web view fills the whole screen, so the
    header would sit under the status bar and camera cutout. These insets
    are zero in a normal browser tab, so the hosted version is unchanged. */
-.header{background:#1e293b;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:calc(1rem + env(safe-area-inset-top,0px)) calc(1rem + env(safe-area-inset-right,0px)) 1rem calc(1rem + env(safe-area-inset-left,0px))}
+.header-text{flex:1;min-width:0}
+.cog{background:rgba(255,255,255,.12);border:none;color:#fff;width:2.6rem;height:2.6rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0}
+.cog.active{background:#2563eb}
+.cog svg{pointer-events:none;display:block}
+.cog:active{background:#2563eb}
+.subtab-nav{display:flex;gap:.35rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem;margin-bottom:1rem}
+.subtab{flex:1;min-width:0;padding:.6rem .4rem;border:none;background:transparent;color:#475569;font-family:inherit;font-weight:600;font-size:.85rem;border-radius:.375rem;cursor:pointer}
+.subtab.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.subpane{display:none}
+.subpane.active{display:block}
+body.night .subtab-nav{background:#1e2d45}
+body.night .subtab{color:#94a3b8}
+body.night .subtab.active{background:#0b1220;color:#e2e8f0}
+body.night .cog{background:rgba(255,255,255,.1)}
+.len-row{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+.len-now{font-weight:700;color:#1e293b;min-width:3.6rem;font-size:.9rem}
+body.night .len-now{color:#e2e8f0}
+.len-btn{padding:.45rem .7rem;font-size:.8rem;flex:0 0 auto}
+.len-input{width:5.5rem;flex:0 0 auto;padding:.5rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.95rem;background:#fff;color:#0f172a}
+body.night .len-input{background:#0b1220;border-color:#334155;color:#e2e8f0}
+.time-row{display:flex;gap:.4rem;align-items:stretch}
+.time-row input{flex:1;min-width:0}
+.now-btn{flex:0 0 auto;padding:.5rem .7rem;font-size:.8rem}
+.roster-month{flex:1;text-align:center;font-weight:700;color:#1e293b;font-size:.95rem}
+body.night .roster-month{color:#e2e8f0}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:.2rem}
+.cal-head{text-align:center;font-size:.7rem;font-weight:700;color:#64748b;padding:.2rem 0}
+.cal-day{min-height:3.1rem;border:1px solid #e2e8f0;border-radius:.3rem;padding:.2rem;background:#fff;cursor:pointer;font-size:.72rem;text-align:left;font-family:inherit;color:#0f172a;overflow:hidden}
+.cal-day.blank{background:transparent;border-color:transparent;cursor:default}
+.cal-day.today{border-color:#2563eb;border-width:2px}
+.cal-day.chosen{background:#eff6ff;border-color:#2563eb}
+.cal-day b{display:block;font-size:.8rem;margin-bottom:.1rem}
+.cal-day i{display:block;font-style:normal;color:#1d4ed8;font-weight:600;line-height:1.25}
+body.night .cal-day{background:#111c2e;border-color:#1e2d45;color:#e2e8f0}
+body.night .cal-day.chosen{background:#16243a}
+body.night .cal-day i{color:#93c5fd}
+.day-picker{display:flex;flex-wrap:wrap;gap:.3rem}
+.day-pick{padding:.45rem .6rem;border:1px solid #cbd5e1;background:#fff;border-radius:.35rem;font-family:inherit;font-size:.8rem;font-weight:600;color:#475569;cursor:pointer}
+.day-pick.on{background:#2563eb;border-color:#2563eb;color:#fff}
+body.night .day-pick{background:#0b1220;border-color:#334155;color:#cbd5e1}
+.header{background:#1e293b;color:#fff;position:sticky;display:flex;align-items:center;gap:.75rem;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:calc(1rem + env(safe-area-inset-top,0px)) calc(1rem + env(safe-area-inset-right,0px)) 1rem calc(1rem + env(safe-area-inset-left,0px))}
 .header h1{font-size:1.25rem;font-weight:600;margin-bottom:.25rem}
 .header-date{font-size:.875rem;opacity:.9}
 .tab-nav{display:flex;background:#fff;border-bottom:1px solid #cbd5e1;overflow-x:auto;position:sticky;top:calc(4.4rem + env(safe-area-inset-top,0px));z-index:50}
@@ -92,7 +132,8 @@ body{background:#f1f5f9;padding-bottom:calc(3rem + env(safe-area-inset-bottom,0p
 .rep-empty{color:#64748b;font-size:.85rem;margin-bottom:.5rem}
 .cell-sub{display:block;color:#64748b;font-size:.78rem;margin-top:.1rem}
 .cell-sub.carried{color:#b45309;font-weight:600}
-.row-actions{white-space:nowrap;text-align:right}
+.row-actions{text-align:right;white-space:normal}
+.row-actions .edit-btn,.row-actions .delete-btn{white-space:nowrap;margin:.1rem 0 .1rem .25rem}
 .edit-btn{background:none;border:none;color:#2563eb;cursor:pointer;font-size:.8rem;font-weight:600;padding:.25rem .4rem}
 .field-hint{color:#64748b;font-size:.78rem;margin-top:.35rem}
 .induction-note{margin-top:.5rem;padding:.55rem .7rem;border-radius:.375rem;font-size:.82rem;font-weight:600}
@@ -149,6 +190,27 @@ body.night .status-soon,body.night .induction-tag.soon,body.night .induction-not
 body.night .form-title{color:#60a5fa}
 body.night .edit-btn{color:#60a5fa}
 body.night .rep-empty{color:#94a3b8}
+.guard-card{border:1px solid #e2e8f0;border-radius:.45rem;padding:.65rem .75rem;margin-bottom:.6rem;background:#fff}
+.guard-dot{display:inline-block;width:.6rem;height:.6rem;border-radius:.15rem;margin-right:.35rem;vertical-align:baseline;flex:0 0 auto}
+.colour-input{width:3.4rem;height:2.4rem;padding:.15rem;border:1px solid #cbd5e1;border-radius:.375rem;background:#fff;flex:0 0 auto}
+body.night .colour-input{background:#0b1220;border-color:#334155}
+.guard-swatch{width:1.5rem;height:1.5rem;border-radius:.3rem;border:1px solid rgba(0,0,0,.15);padding:0;cursor:pointer;flex:0 0 auto}
+.guard-card h4{display:flex;align-items:center;gap:.45rem;font-size:.95rem;font-weight:700;color:#1e293b;margin-bottom:.35rem}
+.guard-tot{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
+.guard-tot span{padding:.2rem .5rem;border-radius:9999px;font-size:.74rem;font-weight:700}
+.tot-done{background:#f0fdf4;color:#15803d}
+.tot-all{background:#eff6ff;color:#1d4ed8}
+.tot-none{background:#f1f5f9;color:#64748b}
+.week-row{display:flex;justify-content:space-between;font-size:.78rem;color:#475569;padding:.15rem 0;border-top:1px solid #f1f5f9}
+.week-row b{font-weight:600;color:#0f172a}
+body.night .guard-card{background:#111c2e;border-color:#1e2d45}
+body.night .guard-card h4{color:#e2e8f0}
+body.night .week-row{color:#94a3b8;border-top-color:#1e2d45}
+body.night .week-row b{color:#e2e8f0}
+.seen-count{display:inline-block;margin-left:.4rem;padding:.1rem .45rem;border-radius:9999px;background:#e2e8f0;color:#475569;font-size:.68rem;font-weight:700}
+.seen-count.often{background:#eff6ff;color:#1d4ed8}
+body.night .seen-count{background:#1e2d45;color:#94a3b8}
+body.night .seen-count.often{background:#16243a;color:#93c5fd}
 .auto-tag{display:inline-block;margin-left:.4rem;padding:.1rem .4rem;border-radius:.25rem;background:#eff6ff;color:#1d4ed8;font-size:.68rem;font-weight:700;vertical-align:middle}
 body.night .auto-tag{background:#16243a;color:#93c5fd}
 .check-row{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;font-size:.9rem;color:#334155;cursor:pointer}
@@ -161,12 +223,24 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 .muster-head{font-size:1.6rem;font-weight:700;color:#1e293b;margin-bottom:.9rem;line-height:1.2}
 .muster-head small{display:block;font-size:.85rem;font-weight:500;color:#64748b;margin-top:.3rem}
 .muster-head.clear{color:#15803d}
+#vehicleInput,#staffVehicleInput,#visitorVehicle,#staffOwnVehicles,#siteVehicles,.rep-vehicles{text-transform:uppercase}
 .filter-box{width:100%;padding:.6rem .75rem;margin-bottom:.75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.95rem;background:#fff;color:#0f172a}
 .filter-box:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem}
-.page-btn{flex:1;padding:.55rem .5rem;border:none;background:transparent;color:#475569;font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
+.page-btn{flex:1;min-width:0;padding:.55rem .35rem;border:none;background:transparent;color:#475569;font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
 .page-btn.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.page-btn span{display:block;font-weight:500;font-size:.72rem;color:#64748b;margin-top:.1rem}
+.page-btn span{display:block;font-weight:500;font-size:.7rem;color:#64748b;margin-top:.1rem}
+.data-table td.band,.data-table th.band{width:.9rem;padding:.4rem .15rem}
+.kind-band{display:block;width:.55rem;height:1.15rem;border-radius:.15rem}
+.kind-visitor{background:#1d4ed8}
+.kind-staff{background:#0d9488}
+.kind-incident{background:#ea580c}
+.kind-key{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:.5rem;font-size:.75rem;color:#64748b}
+.kind-key span{display:inline-flex;align-items:center;gap:.35rem}
+.kind-key i{height:.75rem}
+body.night .kind-key{color:#94a3b8}
+.act-kind{display:inline-block;min-width:4.6rem;font-size:.72rem;font-weight:700;letter-spacing:.02em;color:#64748b;text-transform:uppercase}
+body.night .act-kind{color:#94a3b8}
 .page-btn.active span{color:#475569}
 .induction-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;padding:.15rem .45rem;border-radius:9999px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
 .induction-tag.ok{background:#f0fdf4;color:#15803d}
@@ -189,24 +263,32 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </head>
 <body>
 
-<div class="header">
+<div class="header" id="appHeader">
+<div class="header-text">
 <h1>Security Access Tracker</h1>
 <div class="header-date" id="headerDate"></div>
 </div>
+<button type="button" id="settingsBtn" class="cog" aria-label="Settings" title="Settings">
+<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M22.85 10.19A11 11 0 0 1 22.85 13.81L19.79 13.3A7.9 7.9 0 0 1 18.43 16.59L20.95 18.4A11 11 0 0 1 18.4 20.95L16.59 18.43A7.9 7.9 0 0 1 13.3 19.79L13.81 22.85A11 11 0 0 1 10.19 22.85L10.7 19.79A7.9 7.9 0 0 1 7.41 18.43L5.6 20.95A11 11 0 0 1 3.05 18.4L5.57 16.59A7.9 7.9 0 0 1 4.21 13.3L1.15 13.81A11 11 0 0 1 1.15 10.19L4.21 10.7A7.9 7.9 0 0 1 5.57 7.41L3.05 5.6A11 11 0 0 1 5.6 3.05L7.41 5.57A7.9 7.9 0 0 1 10.7 4.21L10.19 1.15A11 11 0 0 1 13.81 1.15L13.3 4.21A7.9 7.9 0 0 1 16.59 5.57L18.4 3.05A11 11 0 0 1 20.95 5.6L18.43 7.41A7.9 7.9 0 0 1 19.79 10.7L22.85 10.19ZM16.7 12A4.7 4.7 0 0 0 7.3 12A4.7 4.7 0 0 0 16.7 12Z"/></svg>
+</button>
+</div>
 
-<div class="tab-nav">
+<div class="tab-nav" id="tabNav">
 <button class="tab-button active" data-tab="tracker">New Entry</button>
 <button class="tab-button" data-tab="sheet">Day Sheet</button>
-<button class="tab-button" data-tab="muster">Muster</button>
-<button class="tab-button" data-tab="archive">Contractor List</button>
-<button class="tab-button" data-tab="visitors">Regular Visitors</button>
-<button class="tab-button" data-tab="staff">Staff</button>
-<button class="tab-button" data-tab="settings">Settings</button>
+<button class="tab-button" data-tab="roster">Roster</button>
+<button class="tab-button" data-tab="database">Database</button>
 </div>
 
 <div class="container">
 
 <div id="tracker" class="tab-content active">
+<div class="subtab-nav" role="tablist">
+<button type="button" id="btnSubVisitor" class="subtab active" role="tab" aria-selected="true">Visitor</button>
+<button type="button" id="btnSubStaffOut" class="subtab" role="tab" aria-selected="false">Staff</button>
+<button type="button" id="btnSubIncident" class="subtab" role="tab" aria-selected="false">Incident</button>
+</div>
+<div id="subVisitor" class="subpane active">
 <div class="section">
 <h2>Record visitor</h2>
 <form id="visitorForm" autocomplete="off">
@@ -243,11 +325,11 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div class="grid-2">
 <div class="form-group">
 <label for="entryTime">Entry time</label>
-<input type="time" id="entryTime" required>
+<div class="time-row"><input type="time" id="entryTime" required><button type="button" id="now_entryTime" class="button button-secondary now-btn">Now</button></div>
 </div>
 <div class="form-group">
 <label for="exitTime">Exit time</label>
-<input type="time" id="exitTime">
+<div class="time-row"><input type="time" id="exitTime"><button type="button" id="now_exitTime" class="button button-secondary now-btn">Now</button></div>
 </div>
 </div>
 <div class="action-row">
@@ -257,7 +339,8 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 </form>
 </div>
-
+</div>
+<div id="subStaffOut" class="subpane">
 <div class="section">
 <h2>Record staff departure</h2>
 <form id="staffMoveForm" autocomplete="off">
@@ -293,11 +376,11 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div class="grid-2">
 <div class="form-group">
 <label for="staffOutTime">Out</label>
-<input type="time" id="staffOutTime" required>
+<div class="time-row"><input type="time" id="staffOutTime" required><button type="button" id="now_staffOutTime" class="button button-secondary now-btn">Now</button></div>
 </div>
 <div class="form-group">
 <label for="staffBackTime">Back</label>
-<input type="time" id="staffBackTime">
+<div class="time-row"><input type="time" id="staffBackTime"><button type="button" id="now_staffBackTime" class="button button-secondary now-btn">Now</button></div>
 </div>
 </div>
 <div class="action-row">
@@ -307,7 +390,8 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 </form>
 </div>
-
+</div>
+<div id="subIncident" class="subpane">
 <div class="section">
 <h2>Record incident</h2>
 <form id="incidentForm" autocomplete="off">
@@ -315,18 +399,38 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div class="form-group">
 <label for="incidentType">What happened</label>
 <select id="incidentType">
+<optgroup label="Routine">
 <option value="Patrol">Patrol</option>
+<option value="Check call">Check call</option>
+<option value="Phone call">Phone call</option>
+<option value="Radio call">Radio call</option>
+<option value="Welfare check">Welfare check</option>
+<option value="Handover note">Handover note</option>
+</optgroup>
+<optgroup label="Access control">
+<option value="Refused entry">Refused entry</option>
+<option value="Escort">Escort</option>
+<option value="Key issued">Key issued</option>
+<option value="Key returned">Key returned</option>
+<option value="Paperwork or permit issue">Paperwork or permit issue</option>
+<option value="Delivery issue">Delivery issue</option>
+</optgroup>
+<optgroup label="Incidents">
 <option value="Alarm activation">Alarm activation</option>
-<option value="Power failure">Power failure</option>
 <option value="Fire or smoke">Fire or smoke</option>
 <option value="Accident or injury">Accident or injury</option>
 <option value="Suspicious activity">Suspicious activity</option>
 <option value="Trespass">Trespass</option>
+<option value="Theft">Theft</option>
 <option value="Damage or vandalism">Damage or vandalism</option>
+</optgroup>
+<optgroup label="Site and services">
+<option value="Power failure">Power failure</option>
 <option value="Weather">Weather</option>
-<option value="Delivery issue">Delivery issue</option>
 <option value="Gate or barrier fault">Gate or barrier fault</option>
-<option value="Handover note">Handover note</option>
+<option value="Equipment fault">Equipment fault</option>
+<option value="Lost property">Lost property</option>
+</optgroup>
 <option value="Other">Other</option>
 </select>
 </div>
@@ -337,11 +441,11 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div class="grid-2">
 <div class="form-group">
 <label for="incidentTime">Time</label>
-<input type="time" id="incidentTime" required>
+<div class="time-row"><input type="time" id="incidentTime" required><button type="button" id="now_incidentTime" class="button button-secondary now-btn">Now</button></div>
 </div>
 <div class="form-group">
 <label for="incidentEnd">Ended (optional)</label>
-<input type="time" id="incidentEnd">
+<div class="time-row"><input type="time" id="incidentEnd"><button type="button" id="now_incidentEnd" class="button button-secondary now-btn">Now</button></div>
 </div>
 </div>
 <div class="action-row">
@@ -351,10 +455,11 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 </form>
 </div>
-
+</div>
 </div>
 
 <div id="sheet" class="tab-content">
+<div id="sheetDateBar">
 <div class="section">
 <h2>Sheet date</h2>
 <div class="sheet-bar">
@@ -365,9 +470,42 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 <div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
 </div>
+</div>
+<div class="subtab-nav" role="tablist">
+<button type="button" id="btnSubSheet" class="subtab active" role="tab" aria-selected="true">Sheet</button>
+<button type="button" id="btnSubDuty" class="subtab" role="tab" aria-selected="false">Duty</button>
+<button type="button" id="btnSubMuster" class="subtab" role="tab" aria-selected="false">Muster</button>
+</div>
+<div id="subSheet" class="subpane active">
+
 
 <div class="section">
+<h2>Occurrence sheet</h2>
+<div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<input type="search" id="sheetSearch" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
+<div class="page-switch" role="tablist">
+<button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
+<button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
+<button type="button" id="pageActivity" class="page-btn" role="tab">Activity</button>
+</div>
+<div id="flagLegend" class="flag-legend"></div>
+<div id="logContainer"></div>
+</div>
+<div class="section">
+<h2>Staff movements</h2>
+<div id="staffSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="staffMoveContainer"></div>
+</div>
+<div class="section">
+<h2>Incidents and occurrences</h2>
+<div id="incidentSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="incidentContainer"></div>
+</div>
+</div>
+<div id="subDuty" class="subpane">
+<div class="section">
 <h2>On duty</h2>
+<div id="dutyDayLabel" class="sheet-summary" role="status" aria-live="polite"></div>
 <form id="shiftForm" autocomplete="off">
 <h3 class="form-title" id="shiftFormTitle" style="display:none"></h3>
 <div class="form-group">
@@ -380,12 +518,21 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div class="grid-2">
 <div class="form-group">
 <label for="shiftStart">Shift from</label>
-<input type="time" id="shiftStart" required>
+<div class="time-row"><input type="time" id="shiftStart" required><button type="button" id="now_shiftStart" class="button button-secondary now-btn">Now</button></div>
 </div>
 <div class="form-group">
 <label for="shiftEnd">Shift to</label>
-<input type="time" id="shiftEnd" required>
+<div class="time-row"><input type="time" id="shiftEnd" required><button type="button" id="now_shiftEnd" class="button button-secondary now-btn">Now</button></div>
 </div>
+</div>
+<div class="form-group">
+<label for="lenInput_shift">Shift length in hours</label>
+<div class="len-row">
+<input type="number" id="lenInput_shift" class="len-input" min="0.25" max="48" step="0.25" inputmode="decimal" placeholder="8">
+<button type="button" class="button button-secondary len-btn" id="lenSet_shift">Set end time</button>
+<span class="len-now" id="len_shift">&mdash;</span>
+</div>
+<p class="field-hint">Any length &mdash; 12, 13, 5.5 &mdash; then set the end time.</p>
 </div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="shiftSubmit">Add shift</button>
@@ -394,35 +541,31 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 </form>
 <div id="shiftContainer"></div>
+
+<form id="changeForm" style="display:none">
+<h3 class="form-title" id="changeTitle"></h3>
+<div class="form-group">
+<label for="changeGuard" id="changeGuardLabel">Covered by</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="changeGuard" maxlength="60" autocomplete="off" required>
+<div class="autocomplete-list" id="changeGuardList"></div>
+</div>
+</div>
+<div class="form-group" id="changeTimeRow">
+<label for="changeTime">Handing over at</label>
+<div class="time-row"><input type="time" id="changeTime"><button type="button" id="now_changeTime" class="button button-secondary now-btn">Now</button></div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary" id="changeSubmit">Save</button>
+<button type="button" class="button button-secondary" id="changeCancel">Cancel</button>
+</div>
+<p class="field-hint" id="changeHint"></p>
+</form>
+
 <p class="field-hint">More than one shift can be recorded for a day, so a handover is shown on the sheet and on the printed report.</p>
 </div>
-
-<div class="section">
-<h2>Occurrence sheet</h2>
-<div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
-<input type="search" id="sheetSearch" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
-<div class="page-switch" role="tablist">
-<button type="button" id="pageOthers" class="page-btn" role="tab">Daily</button>
-<button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
 </div>
-<div id="flagLegend" class="flag-legend"></div>
-<div id="logContainer"></div>
-</div>
-
-<div class="section">
-<h2>Staff movements</h2>
-<div id="staffSummary" class="sheet-summary" role="status" aria-live="polite"></div>
-<div id="staffMoveContainer"></div>
-</div>
-
-<div class="section">
-<h2>Incidents and occurrences</h2>
-<div id="incidentSummary" class="sheet-summary" role="status" aria-live="polite"></div>
-<div id="incidentContainer"></div>
-</div>
-</div>
-
-<div id="muster" class="tab-content">
+<div id="subMuster" class="subpane">
 <div class="section">
 <h2>Roll call</h2>
 <div id="musterHead" class="muster-head" role="status" aria-live="polite"></div>
@@ -432,19 +575,169 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 <p class="field-hint">Everyone signed in without a recorded exit, plus staff currently off site. Use this for an evacuation roll call.</p>
 </div>
-
 <div class="section">
 <h2>On site</h2>
 <div id="musterOnSite"></div>
 </div>
-
 <div class="section">
 <h2>Staff off site</h2>
 <div id="musterAway"></div>
 </div>
 </div>
+</div>
 
-<div id="archive" class="tab-content">
+<div id="roster" class="tab-content">
+<div class="section">
+<h2>Shift roster</h2>
+<div class="sheet-bar">
+<button type="button" class="button button-secondary" id="rosterPrev">&#8249; Prev</button>
+<div id="rosterMonthLabel" class="roster-month"></div>
+<button type="button" class="button button-secondary" id="rosterNext">Next &#8250;</button>
+<button type="button" class="button button-secondary" id="rosterToday">This month</button>
+</div>
+<div id="rosterGrid"></div>
+</div>
+
+<div class="section">
+<h2>Planned shifts</h2>
+<div id="rosterDayLabel" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="rosterDayList"></div>
+<form id="rosterEditForm" style="display:none">
+<h3 class="form-title" id="rosterEditTitle"></h3>
+<div class="form-group">
+<label for="rosterEditGuard">Guard on this shift</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="rosterEditGuard" maxlength="60" autocomplete="off" required>
+<div class="autocomplete-list" id="rosterEditGuardList"></div>
+</div>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="rosterEditStart">From</label>
+<div class="time-row"><input type="time" id="rosterEditStart" required><button type="button" id="now_rosterEditStart" class="button button-secondary now-btn">Now</button></div>
+</div>
+<div class="form-group">
+<label for="rosterEditEnd">To</label>
+<div class="time-row"><input type="time" id="rosterEditEnd" required><button type="button" id="now_rosterEditEnd" class="button button-secondary now-btn">Now</button></div>
+</div>
+</div>
+<div class="form-group">
+<label for="lenInput_rosterEdit">Shift length in hours</label>
+<div class="len-row">
+<input type="number" id="lenInput_rosterEdit" class="len-input" min="0.25" max="48" step="0.25" inputmode="decimal" placeholder="8">
+<button type="button" class="button button-secondary len-btn" id="lenSet_rosterEdit">Set end time</button>
+<span class="len-now" id="len_rosterEdit">&mdash;</span>
+</div>
+<p class="field-hint">Any length &mdash; 12, 13, 5.5 &mdash; then set the end time.</p>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary">Save shift</button>
+<button type="button" class="button button-secondary" id="rosterEditCancel">Cancel</button>
+</div>
+<p class="field-hint">Changing the hours here is how an eight hour shift becomes a twelve.</p>
+</form>
+</div>
+
+<div class="section">
+<h2>Guard hours</h2>
+<div id="periodLabel" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="guardHours"></div>
+<p class="field-hint">A shift counts wholly in the period and week its <strong>start</strong> falls in, so a night shift beginning on the first day of a period belongs to that period entire.</p>
+</div>
+
+<div class="section">
+<h2>Cover a guard</h2>
+<form id="coverForm" autocomplete="off">
+<div class="form-group">
+<label for="coverFrom">Guard who is off</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="coverFrom" maxlength="60" placeholder="Whose shifts need covering" autocomplete="off" required>
+<div class="autocomplete-list" id="coverFromList"></div>
+</div>
+</div>
+<div class="form-group">
+<label for="coverTo">Covered by</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="coverTo" maxlength="60" placeholder="Who is taking them" autocomplete="off" required>
+<div class="autocomplete-list" id="coverToList"></div>
+</div>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="coverStart">First day</label>
+<input type="date" id="coverStart" required>
+</div>
+<div class="form-group">
+<label for="coverEnd">Last day</label>
+<input type="date" id="coverEnd" required>
+</div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary">Reassign shifts</button>
+</div>
+<p class="field-hint">Hands every shift in that range over to the covering guard. Use it when someone calls in sick for a run of days.</p>
+</form>
+</div>
+
+<div class="section">
+<h2>Add to the roster</h2>
+<form id="rosterForm" autocomplete="off">
+<div class="form-group">
+<label for="rosterGuard">Guard</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="rosterGuard" maxlength="60" placeholder="Name of the guard" autocomplete="off" required>
+<div class="autocomplete-list" id="rosterGuardList"></div>
+</div>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="rosterStart">From</label>
+<div class="time-row"><input type="time" id="rosterStart" required><button type="button" class="button button-secondary now-btn" data-time="rosterStart">Now</button></div>
+</div>
+<div class="form-group">
+<label for="rosterEnd">To</label>
+<div class="time-row"><input type="time" id="rosterEnd" required><button type="button" class="button button-secondary now-btn" data-time="rosterEnd">Now</button></div>
+</div>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="rosterFrom">First day</label>
+<input type="date" id="rosterFrom" required>
+</div>
+<div class="form-group">
+<label for="rosterTo">Last day</label>
+<input type="date" id="rosterTo" required>
+</div>
+</div>
+<div class="form-group">
+<label>Days of the week</label>
+<div class="day-picker" id="rosterDays"></div>
+<p class="field-hint">Leave all unticked to cover every day in the range.</p>
+</div>
+<div class="form-group">
+<label for="lenInput_rosterAdd">Shift length in hours</label>
+<div class="len-row">
+<input type="number" id="lenInput_rosterAdd" class="len-input" min="0.25" max="48" step="0.25" inputmode="decimal" placeholder="8">
+<button type="button" class="button button-secondary len-btn" id="lenSet_rosterAdd">Set end time</button>
+<span class="len-now" id="len_rosterAdd">&mdash;</span>
+</div>
+<p class="field-hint">Any length &mdash; 12, 13, 5.5 &mdash; then set the end time.</p>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary">Add shifts</button>
+<button type="button" class="button button-secondary" id="rosterClearMonth">Clear this month</button>
+</div>
+</form>
+</div>
+</div>
+
+<div id="database" class="tab-content">
+<div class="subtab-nav" role="tablist">
+<button type="button" id="btnSubContractors" class="subtab active" role="tab" aria-selected="true">Contractors</button>
+<button type="button" id="btnSubRegulars" class="subtab" role="tab" aria-selected="false">Visitors</button>
+<button type="button" id="btnSubStaffList" class="subtab" role="tab" aria-selected="false">Staff</button>
+</div>
+<div id="subContractors" class="subpane active">
 <div class="section">
 <h2>Contractor inductions</h2>
 <div class="action-row">
@@ -458,15 +751,10 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <input type="text" id="contractorName" maxlength="80" required>
 </div>
 <div class="form-group">
-<label for="inductionDate">Default induction expiry</label>
-<input type="date" id="inductionDate">
-<p class="field-hint">Used for any representative left without their own date.</p>
-</div>
-<div class="form-group">
 <label>Representatives, vehicles and induction expiry</label>
 <div id="contractorReps"></div>
 <button type="button" class="button button-secondary add-rep" data-target="contractorReps" data-dates="1">Add representative</button>
-<p class="field-hint">Each representative is inducted individually, so each carries their own expiry date.</p>
+<p class="field-hint">Inductions belong to people, not companies. Add everyone who comes on site and give each their own expiry. Anyone without a date shows as outstanding.</p>
 </div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="contractorSubmit">Save contractor</button>
@@ -476,8 +764,7 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div id="archiveContainer"></div>
 </div>
 </div>
-
-<div id="visitors" class="tab-content">
+<div id="subRegulars" class="subpane">
 <div class="section">
 <h2>Regular visitors</h2>
 <div class="action-row">
@@ -510,15 +797,13 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </form>
 <div id="visitorsContainer"></div>
 </div>
-
 <div class="section">
 <h2>Irregular visitors</h2>
 <p class="text-muted" style="margin-top:0">Companies logged at the gate that are on neither list. Promote the ones that will be back.</p>
 <div id="irregularsContainer"></div>
 </div>
 </div>
-
-<div id="staff" class="tab-content">
+<div id="subStaffList" class="subpane">
 <div class="section">
 <h2>Site vehicles</h2>
 <div class="form-group">
@@ -530,7 +815,6 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 <p class="field-hint">Offered whenever a staff member signs out in a site vehicle.</p>
 </div>
-
 <div class="section">
 <h2>Staff register</h2>
 <div class="action-row">
@@ -558,6 +842,7 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <div id="staffRegisterContainer"></div>
 </div>
 </div>
+</div>
 
 <div id="settings" class="tab-content">
 <div class="section">
@@ -575,6 +860,40 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 
 <div class="section">
+<h2>Sheet style</h2>
+<div class="form-group">
+<label for="sheetStyle">How exported sheets are printed</label>
+<select id="sheetStyle">
+<option value="colour">Full colour &mdash; tinted rows throughout</option>
+<option value="simplified">Simplified &mdash; colour only where it carries meaning</option>
+<option value="mono">Mono &mdash; black and white, safe to photocopy</option>
+</select>
+</div>
+<p class="field-hint">Your default. It can be changed for a single export in the Export section below.</p>
+</div>
+
+<div class="section">
+<h2>Hours period</h2>
+<div class="form-group">
+<label for="periodDay">Each period starts on day</label>
+<input type="number" id="periodDay" min="1" max="28" step="1">
+</div>
+<p class="field-hint">Guard hours are totalled from this day of one month to the day before it in the next. Limited to 1&ndash;28 so every month has one.</p>
+</div>
+
+<div class="section">
+<h2>Date format</h2>
+<div class="form-group">
+<label for="dateFormat">How dates are shown</label>
+<select id="dateFormat">
+<option value="dmy">Day / Month / Year</option>
+<option value="mdy">Month / Day / Year</option>
+</select>
+</div>
+<p class="field-hint">Applies on screen, on the printed sheets and to exported file names.</p>
+</div>
+
+<div class="section">
 <h2>Unknown companies</h2>
 <label class="check-row"><input type="checkbox" id="learnEnabled" checked> Keep a record of companies that are not on any list</label>
 <p class="field-hint">A company logged that is on neither the contractor nor regular visitor list is held under Irregular visitors, on the Regular Visitors tab. Nothing interrupts the gate; classify them when there is time.</p>
@@ -587,7 +906,17 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 <label for="exportName">File name</label>
 <input type="text" id="exportName" maxlength="80" placeholder="Leave blank for 04-08-26 0500 to 1300">
 </div>
+<div class="form-group">
+<label for="exportStyle">Style for this export</label>
+<select id="exportStyle">
+<option value="colour">Full colour</option>
+<option value="simplified">Simplified</option>
+<option value="mono">Mono</option>
+</select>
+<p class="field-hint">Returns to your default once the export has run.</p>
+</div>
 <label class="check-row"><input type="checkbox" id="exportWholeDay"> Export the whole day as one sheet</label>
+<label class="check-row"><input type="checkbox" id="exportRunningLog" checked> Also export a running log &mdash; everything in one order, without the inducted contractors</label>
 <div class="action-row">
 <button type="button" class="button button-primary" id="exportPdfBtn">Export day sheet as PDF</button>
 <button type="button" class="button button-secondary" id="exportJsonBtn">Save backup file</button>
@@ -658,6 +987,22 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 </div>
 
 <input type="file" id="jsonImportInput" accept=".json,.pdf,application/json,application/pdf" style="display:none">
+
+<div id="guardPicker" class="flag-picker" role="dialog" aria-modal="true" aria-labelledby="guardPickerTitle" style="display:none">
+<div class="flag-picker-panel">
+<div class="flag-picker-title" id="guardPickerTitle">Colour for this guard</div>
+<div id="guardSwatches"></div>
+<div class="form-group" style="margin-top:.75rem">
+<label for="guardCustom">Any other colour</label>
+<div class="len-row">
+<input type="color" id="guardCustom" class="colour-input">
+<button type="button" class="button button-secondary" id="guardCustomApply">Use this colour</button>
+</div>
+</div>
+<button type="button" class="button button-secondary" id="guardPickerAuto">Back to the automatic colour</button>
+<button type="button" class="button button-secondary" id="guardPickerCancel">Cancel</button>
+</div>
+</div>
 
 <div id="flagPicker" class="flag-picker" role="dialog" aria-modal="true" aria-labelledby="flagPickerTitle" style="display:none">
 <div class="flag-picker-panel">
@@ -1042,7 +1387,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v29';
+var BUILD = 'sat-v77';
 
 var app = {
   visitors: [],
@@ -1051,6 +1396,7 @@ var app = {
   currentDate: '',
   editingContractorId: null,
   editingVisitorId: null,
+  editingIrregularId: null,
   staff: [],
   staffMovements: [],
   siteVehicles: [],
@@ -1080,6 +1426,8 @@ var app = {
     this.updateHeaderDate();
     this.setDefaultTimes();
     this.bindEvents();
+    this.bindUpperCase(['vehicleInput', 'staffVehicleInput', 'visitorVehicle',
+                        'staffOwnVehicles', 'siteVehicles']);
     this.renderRepPlaceholder('contractorReps');
     this.renderRepPlaceholder('visitorReps');
     this.renderSheetControls();
@@ -1104,6 +1452,12 @@ var app = {
       self.renderStorageNote();
       self.renderBuildStamp();
       self.startDayWatch();
+      /* set the opening sub-tab from the one place that defines it, rather
+         than trusting the classes in the markup to stay in step */
+      self.syncStickyOffset();
+      var gs = ['entry', 'day', 'db'], gi;
+      for (gi = 0; gi < gs.length; gi++) self.activateSub(gs[gi], self.subPage[gs[gi]]);
+
       var wanted = self.tabFromHash();
       if (wanted) self.activateTab(wanted);
       self.backupNudge();
@@ -1127,6 +1481,11 @@ var app = {
       self.refreshFromStore();
     });
     window.addEventListener('focus', function () { self.checkDayRollover(); });
+    window.addEventListener('resize', function () { self.syncStickyOffset(); });
+    window.addEventListener('orientationchange', function () {
+      setTimeout(function () { self.syncStickyOffset(); }, 150);
+    });
+
     window.addEventListener('hashchange', function () {
       var t = self.tabFromHash();
       if (t) self.activateTab(t);
@@ -1173,7 +1532,7 @@ var app = {
     this.renderStaffMovements();
     this.renderShifts();
     this.renderIncidents();
-    if (wasOnToday) this.toast('New day - now logging to ' + this.ukDate(t));
+    if (wasOnToday) this.toast('New day - now logging to ' + this.showDate(t));
   },
 
   setViewDate: function (d) {
@@ -1204,7 +1563,7 @@ var app = {
     if (this.viewDate === this.currentDate) {
       note.style.display = 'none';
     } else {
-      note.textContent = 'Viewing ' + this.ukDate(this.viewDate) +
+      note.textContent = 'Viewing ' + this.showDate(this.viewDate) +
         '. Anything recorded now will be filed under that date.';
       note.style.display = 'block';
     }
@@ -1361,7 +1720,7 @@ var app = {
   splitRegs: function (s) {
     var out = [], parts = String(s || '').split(','), j, t;
     for (j = 0; j < parts.length; j++) {
-      t = parts[j].replace(/^\s+|\s+$/g, '');
+      t = parts[j].replace(/^\s+|\s+$/g, '').toUpperCase();
       if (t) out.push(t);
     }
     return out;
@@ -1382,6 +1741,18 @@ var app = {
         rec.reps[r].inductionDate = rec.inductionDate;
       }
     }
+
+    /* Inductions used to sit on the company. They belong to people, so a
+       company date with nobody named becomes a placeholder person rather
+       than being thrown away - rename them and the record is right. */
+    if (isContractor) {
+      if (rec.inductionDate && !rec.reps.length) {
+        rec.reps.push({ name: 'Unnamed representative', vehicles: [],
+                        inductionDate: rec.inductionDate });
+      }
+      delete rec.inductionDate;
+    }
+
     if (!rec.vehicles) rec.vehicles = [];
     if (typeof rec.vehicles === 'string') rec.vehicles = this.splitRegs(rec.vehicles);
     if (rec.vehicle) {
@@ -1403,6 +1774,9 @@ var app = {
       if (this.visitors[i].flag === undefined) this.visitors[i].flag = 0;
     }
     if (!this.shifts) this.shifts = [];
+    for (i = 0; i < this.shifts.length; i++) {
+      if (!this.shifts[i].mins) this.setShiftLength(this.shifts[i], this.shiftLen(this.shifts[i]));
+    }
     if (!this.irregulars) this.irregulars = [];
     if (!this.incidents) this.incidents = [];
     for (i = 0; i < this.incidents.length; i++) {
@@ -1576,6 +1950,15 @@ var app = {
     });
     document.getElementById('cancelIncidentEdit').addEventListener('click', function () { self.cancelIncidentEdit(); });
 
+    document.getElementById('changeForm').addEventListener('submit', function (e) { self.applyShiftChange(e); });
+    document.getElementById('changeCancel').addEventListener('click', function () { self.cancelShiftChange(); });
+    var cg = document.getElementById('changeGuard');
+    cg.addEventListener('input', function () { self.showGuardSuggestions('changeGuard', 'changeGuardList'); });
+    cg.addEventListener('focus', function () { self.showGuardSuggestions('changeGuard', 'changeGuardList'); });
+    cg.addEventListener('blur', function () {
+      setTimeout(function () { document.getElementById('changeGuardList').classList.remove('active'); }, 200);
+    });
+
     document.getElementById('shiftForm').addEventListener('submit', function (e) { self.saveShift(e); });
     document.getElementById('shiftDefaultsBtn').addEventListener('click', function () { self.shiftUseSiteHours(); });
     document.getElementById('cancelShiftEdit').addEventListener('click', function () { self.cancelShiftEdit(); });
@@ -1586,8 +1969,128 @@ var app = {
       setTimeout(function () { document.getElementById('shiftGuardList').classList.remove('active'); }, 200);
     });
 
+    document.getElementById('settingsBtn').addEventListener('click', function () { self.activateTab('settings'); });
+
+    var groups = ['entry', 'day', 'db'], g, k;
+    for (g = 0; g < groups.length; g++) {
+      (function (group) {
+        var list = self.SUBTABS[group];
+        for (k = 0; k < list.length; k++) {
+          (function (btnId, paneId) {
+            var b = document.getElementById(btnId);
+            if (b) b.addEventListener('click', function () { self.activateSub(group, paneId); });
+          })(list[k][0], list[k][1]);
+        }
+      })(groups[g]);
+    }
+
+    var times = ['entryTime', 'exitTime', 'staffOutTime', 'staffBackTime',
+                 'incidentTime', 'incidentEnd', 'shiftStart', 'shiftEnd',
+                 'rosterStart', 'rosterEnd', 'rosterEditStart', 'rosterEditEnd', 'changeTime'];
+    for (k = 0; k < times.length; k++) {
+      (function (fieldId) {
+        var b = document.getElementById('now_' + fieldId);
+        if (!b) return;
+        b.addEventListener('click', function () {
+          var d = new Date();
+          document.getElementById(fieldId).value = self.pad2(d.getHours()) + ':' + self.pad2(d.getMinutes());
+        });
+      })(times[k]);
+    }
+
+    document.getElementById('rosterForm').addEventListener('submit', function (e) { self.addRosterRun(e); });
+    document.getElementById('rosterPrev').addEventListener('click', function () { self.shiftRoster(-1); });
+    document.getElementById('rosterNext').addEventListener('click', function () { self.shiftRoster(1); });
+    document.getElementById('rosterToday').addEventListener('click', function () {
+      var d = self.parseLocalDate(self.currentDate) || new Date();
+      self.rosterYear = d.getFullYear(); self.rosterMonth = d.getMonth();
+      self.rosterPick = self.currentDate;
+      self.renderRoster();
+    });
+    document.getElementById('rosterClearMonth').addEventListener('click', function () { self.clearRosterMonth(); });
+    for (k = 0; k < self.LENGTH_FORMS.length; k++) {
+      (function (key, startId, endId) {
+        var setBtn = document.getElementById('lenSet_' + key);
+        if (setBtn) setBtn.addEventListener('click', function () { self.applyShiftLength(key); });
+
+        /* the box sits inside a form, so Enter would otherwise save the
+           shift before the length had been applied */
+        var box = document.getElementById('lenInput_' + key);
+        if (box) box.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter') {
+            if (ev.preventDefault) ev.preventDefault();
+            self.applyShiftLength(key);
+          }
+        });
+
+        var refresh = function () { self.showShiftLength(key); };
+        document.getElementById(startId).addEventListener('input', refresh);
+        document.getElementById(endId).addEventListener('input', refresh);
+        document.getElementById(startId).addEventListener('change', refresh);
+        document.getElementById(endId).addEventListener('change', refresh);
+      })(self.LENGTH_FORMS[k][0], self.LENGTH_FORMS[k][1], self.LENGTH_FORMS[k][2]);
+    }
+
+    document.getElementById('rosterEditForm').addEventListener('submit', function (e) { self.saveRosterShift(e); });
+    document.getElementById('rosterEditCancel').addEventListener('click', function () { self.cancelRosterEdit(); });
+    document.getElementById('coverForm').addEventListener('submit', function (e) { self.coverShifts(e); });
+
+    var guardFields = [['rosterEditGuard', 'rosterEditGuardList'],
+                       ['coverFrom', 'coverFromList'],
+                       ['coverTo', 'coverToList']];
+    for (k = 0; k < guardFields.length; k++) {
+      (function (fieldId, listId) {
+        var el = document.getElementById(fieldId);
+        el.addEventListener('input', function () { self.showGuardSuggestions(fieldId, listId); });
+        el.addEventListener('focus', function () { self.showGuardSuggestions(fieldId, listId); });
+        el.addEventListener('blur', function () {
+          setTimeout(function () { document.getElementById(listId).classList.remove('active'); }, 200);
+        });
+      })(guardFields[k][0], guardFields[k][1]);
+    }
+    var rg = document.getElementById('rosterGuard');
+    rg.addEventListener('input', function () { self.showGuardSuggestions('rosterGuard', 'rosterGuardList'); });
+    rg.addEventListener('focus', function () { self.showGuardSuggestions('rosterGuard', 'rosterGuardList'); });
+    rg.addEventListener('blur', function () {
+      setTimeout(function () { document.getElementById('rosterGuardList').classList.remove('active'); }, 200);
+    });
+
+    var pd = document.getElementById('periodDay');
+    pd.value = String(self.periodStartDay());
+    pd.addEventListener('change', function () {
+      if (!self.setPeriodStartDay(pd.value)) {
+        pd.value = String(self.periodStartDay());
+        self.toast('Pick a day between 1 and 28', 'error');
+        return;
+      }
+      self.renderGuardHours();
+      self.toast('Hours now counted from day ' + self.periodStartDay());
+    });
+
+    var ss = document.getElementById('sheetStyle');
+    ss.value = self.sheetStyle();
+    ss.addEventListener('change', function () {
+      self.setSheetStyle(ss.value);
+      self.resetExportStyle();
+      self.toast('Sheets will print ' + (ss.value === 'mono' ? 'in black and white'
+        : (ss.value === 'colour' ? 'in full colour' : 'in the simplified style')));
+    });
+    self.resetExportStyle();
+
+    var df = document.getElementById('dateFormat');
+    df.value = self.dateOrder();
+    df.addEventListener('change', function () {
+      self.setDateOrder(df.value);
+      self.renderLog(); self.renderStaffMovements(); self.renderIncidents();
+      self.renderShifts(); self.renderArchive(); self.renderVisitors();
+      self.renderIrregulars(); self.renderMuster(); self.renderRoster();
+      self.renderSheetControls();
+      self.toast('Dates now ' + (df.value === 'mdy' ? 'month first' : 'day first'));
+    });
+
+    document.getElementById('pageDaily').addEventListener('click', function () { self.setLogPage('daily'); });
     document.getElementById('pageContractors').addEventListener('click', function () { self.setLogPage('contractors'); });
-    document.getElementById('pageOthers').addEventListener('click', function () { self.setLogPage('daily'); });
+    document.getElementById('pageActivity').addEventListener('click', function () { self.setLogPage('activity'); });
 
     document.getElementById('prevDay').addEventListener('click', function () { self.shiftViewDate(-1); });
     document.getElementById('nextDay').addEventListener('click', function () { self.shiftViewDate(1); });
@@ -1621,6 +2124,19 @@ var app = {
     document.getElementById('cancelStaffBtn').addEventListener('click', function () { self.hideStaffForm(); });
     document.getElementById('saveSiteVehiclesBtn').addEventListener('click', function () { self.saveSiteVehicles(); });
 
+    document.getElementById('guardPickerCancel').addEventListener('click', function () { self.closeGuardPicker(); });
+    document.getElementById('guardPickerAuto').addEventListener('click', function () {
+      self.setGuardColour(self.guardPickTarget, null);
+      self.closeGuardPicker();
+      self.afterGuardColour();
+    });
+    document.getElementById('guardCustomApply').addEventListener('click', function () {
+      self.applyGuardColour(document.getElementById('guardCustom').value);
+    });
+    document.getElementById('guardPicker').addEventListener('click', function (ev) {
+      if (ev.target && ev.target.id === 'guardPicker') self.closeGuardPicker();
+    });
+
     document.getElementById('flagCancel').addEventListener('click', function () { self.closeFlagPicker(); });
     document.addEventListener('keydown', function (ev) {
       if (ev.key === 'Escape' && document.getElementById('flagPicker').style.display === 'flex') {
@@ -1653,7 +2169,51 @@ var app = {
 
   /* The home screen shortcuts point at #tracker and #archive, so the tab
      named in the address has to actually open. */
-  TABS: ['tracker', 'sheet', 'muster', 'archive', 'visitors', 'staff', 'settings'],
+  TABS: ['tracker', 'sheet', 'roster', 'database', 'settings'],
+
+  /* Held as a list rather than looked up by selector, so the panes and their
+     buttons can never drift apart. */
+  SUBTABS: {
+    entry: [['btnSubVisitor', 'subVisitor'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubIncident', 'subIncident']],
+    day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubMuster', 'subMuster']],
+    db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubStaffList', 'subStaffList']]
+  },
+
+  subPage: { entry: 'subVisitor', day: 'subSheet', db: 'subContractors' },
+
+  activateSub: function (group, paneId) {
+    var list = this.SUBTABS[group], i, found = false;
+    if (!list) return;
+    for (i = 0; i < list.length; i++) if (list[i][1] === paneId) found = true;
+    if (!found) return;
+
+    for (i = 0; i < list.length; i++) {
+      var on = list[i][1] === paneId;
+      var btn = document.getElementById(list[i][0]);
+      var pane = document.getElementById(list[i][1]);
+      if (btn) {
+        btn.className = 'subtab' + (on ? ' active' : '');
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      }
+      if (pane) {
+        if (on) pane.classList.add('active');
+        else pane.classList.remove('active');
+      }
+    }
+    this.subPage[group] = paneId;
+
+    /* The date bar governs the sheet and who was on duty that day. The roll
+       call is live, so showing a date picker above it would be misleading. */
+    if (group === 'day') {
+      var bar = document.getElementById('sheetDateBar');
+      if (bar) bar.style.display = paneId === 'subMuster' ? 'none' : 'block';
+    }
+
+    if (paneId === 'subMuster') this.renderMuster();
+    if (paneId === 'subDuty') this.renderShifts();
+    window.scrollTo(0, 0);
+  },
+
 
   activateTab: function (name) {
     if (this.TABS.indexOf(name) === -1) return;
@@ -1669,15 +2229,29 @@ var app = {
       if (btns[k].getAttribute('data-tab') === name) btns[k].classList.add('active');
     }
     target.classList.add('active');
+    var cog = document.getElementById('settingsBtn');
+    if (cog) cog.className = 'cog' + (name === 'settings' ? ' active' : '');
     window.scrollTo(0, 0);
     if (name === 'settings') { this.renderStorageNote(); this.renderBackupNote(); }
-    if (name === 'muster') this.renderMuster();
+    if (name === 'roster') this.renderRoster();
   },
 
   tabFromHash: function () {
     var h = '';
     try { h = String(window.location.hash || '').replace('#', ''); } catch (e) {}
     return this.TABS.indexOf(h) === -1 ? '' : h;
+  },
+
+  /* The tab bar sticks below the header, so its offset has to be the
+     header's real height - hardcoding it left the bar tucked under the
+     header edge, and worse on a folding screen where the height changes
+     the moment the device opens. */
+  syncStickyOffset: function () {
+    var hdr = document.getElementById('appHeader');
+    var nav = document.getElementById('tabNav');
+    if (!hdr || !nav) return;
+    var hh = hdr.offsetHeight;
+    if (hh) nav.style.top = hh + 'px';
   },
 
   setCurrentTime: function () {
@@ -1839,6 +2413,15 @@ var app = {
     var repName = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '').toLowerCase();
     var match = null, i, due = 0;
 
+    /* No people on the record means nothing has been inducted, which must
+       never read as everything being in order. */
+    if (!entries.length) {
+      note.textContent = c.name + ': nobody inducted for this company';
+      note.className = 'induction-note bad';
+      note.style.display = 'block';
+      return;
+    }
+
     for (i = 0; i < entries.length; i++) {
       if (repName && entries[i].name.toLowerCase() === repName) match = entries[i];
       if (!entries[i].valid) due++;
@@ -1848,8 +2431,8 @@ var app = {
     if (match) {
       good = match.valid;
       text = match.name + (match.valid
-        ? ' - induction valid to ' + this.ukDate(match.date)
-        : (match.missing ? ' - no induction date recorded' : ' - INDUCTION DUE, expired ' + this.ukDate(match.date)));
+        ? ' - induction valid to ' + this.showDate(match.date)
+        : (match.missing ? ' - no induction date recorded' : ' - INDUCTION DUE, expired ' + this.showDate(match.date)));
     } else if (repName) {
       good = false;
       text = repName + ' is not on the induction list for ' + c.name;
@@ -1981,6 +2564,10 @@ var app = {
     vehInput.className = 'rep-vehicles';
     vehInput.placeholder = 'Their vehicles, comma separated';
     vehInput.maxLength = 200;
+    (function (el, self) {
+      el.addEventListener('input', function () { self.upperCaseField(el); });
+      el.addEventListener('blur', function () { self.upperCaseField(el); });
+    })(vehInput, this);
     vehInput.value = (vehicles || []).join(', ');
 
     var dateInput = null;
@@ -2043,7 +2630,7 @@ var app = {
       parts = rows[i].querySelector('.rep-vehicles').value.split(',');
       regs = [];
       for (j = 0; j < parts.length; j++) {
-        t = parts[j].replace(/^\s+|\s+$/g, '');
+        t = parts[j].replace(/^\s+|\s+$/g, '').toUpperCase();
         if (t) regs.push(t);
       }
       var entry = { name: name, vehicles: regs };
@@ -2054,10 +2641,34 @@ var app = {
     return out;
   },
 
+  /* Registrations are always upper case, however they are typed or pasted.
+     The caret is put back where it was, otherwise it jumps to the end on
+     every keystroke and the field becomes unusable. */
+  upperCaseField: function (el) {
+    if (!el) return;
+    var start = null, end = null;
+    try { start = el.selectionStart; end = el.selectionEnd; } catch (e) {}
+    var up = String(el.value).toUpperCase();
+    if (up === el.value) return;
+    el.value = up;
+    try { if (start !== null && el.setSelectionRange) el.setSelectionRange(start, end); } catch (e) {}
+  },
+
+  bindUpperCase: function (ids) {
+    var self = this, i;
+    for (i = 0; i < ids.length; i++) {
+      (function (el) {
+        if (!el) return;
+        el.addEventListener('input', function () { self.upperCaseField(el); });
+        el.addEventListener('blur', function () { self.upperCaseField(el); });
+      })(document.getElementById(ids[i]));
+    }
+  },
+
   splitList: function (s) {
     var out = [], parts = String(s || '').split(','), i, t;
     for (i = 0; i < parts.length; i++) {
-      t = parts[i].replace(/^\s+|\s+$/g, '');
+      t = parts[i].replace(/^\s+|\s+$/g, '').toUpperCase();
       if (t) out.push(t);
     }
     return out;
@@ -2069,7 +2680,7 @@ var app = {
 
     var company = document.getElementById('companyInput').value.replace(/^\s+|\s+$/g, '');
     var rep = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '');
-    var vehicle = document.getElementById('vehicleInput').value.replace(/^\s+|\s+$/g, '');
+    var vehicle = document.getElementById('vehicleInput').value.replace(/^\s+|\s+$/g, '').toUpperCase();
     var reason = document.getElementById('reasonInput').value.replace(/^\s+|\s+$/g, '');
     var entryTime = document.getElementById('entryTime').value;
     var exitTime = document.getElementById('exitTime').value;
@@ -2171,10 +2782,10 @@ var app = {
     document.getElementById('entryTime').value = rec.entryTime;
     document.getElementById('exitTime').value = rec.exitTime || '';
 
-    var seq = this.daySequence(this.visitors)[id];
+    var seq = this.seqFor('visitor', rec);
     var title = document.getElementById('visitorEntryTitle');
     title.textContent = 'Editing entry ' + seq +
-      (rec.date === this.viewDate ? '' : ' from ' + this.ukDate(rec.date));
+      (rec.date === this.viewDate ? '' : ' from ' + this.showDate(rec.date));
     title.style.display = 'block';
     document.getElementById('visitorEntrySubmit').textContent = 'Update entry';
     document.getElementById('cancelEntryEdit').style.display = 'inline-block';
@@ -2204,7 +2815,7 @@ var app = {
         this.renderLog();
         this.renderMuster();
         this.toast('Exit logged for ' + this.visitors[i].company +
-          (this.visitors[i].date !== this.viewDate ? ' (' + this.ukDate(this.visitors[i].date) + ')' : ''));
+          (this.visitors[i].date !== this.viewDate ? ' (' + this.showDate(this.visitors[i].date) + ')' : ''));
         return;
       }
     }
@@ -2225,17 +2836,25 @@ var app = {
     var counts = this.splitByPage(all);
 
     var cBtn = document.getElementById('pageContractors');
-    var oBtn = document.getElementById('pageOthers');
+    var dBtn = document.getElementById('pageDaily');
+    var aBtn = document.getElementById('pageActivity');
+    var dayCount = this.dayLogFor(this.viewDate).length;
+
     cBtn.innerHTML = 'Contractors<span>' + split.contractors.length +
       (this.onSiteOnly ? ' on site' : (split.contractors.length === 1 ? ' entry' : ' entries')) + '</span>';
-    oBtn.innerHTML = 'Daily<span>' + split.daily.length +
-      (this.onSiteOnly ? ' on site' : (split.daily.length === 1 ? ' entry' : ' entries')) + '</span>';
-    cBtn.className = 'page-btn' + (this.logPage === 'contractors' ? ' active' : '');
-    oBtn.className = 'page-btn' + (this.logPage === 'daily' ? ' active' : '');
-    cBtn.setAttribute('aria-selected', this.logPage === 'contractors' ? 'true' : 'false');
-    oBtn.setAttribute('aria-selected', this.logPage === 'daily' ? 'true' : 'false');
+    dBtn.innerHTML = 'Daily<span>' + dayCount +
+      (dayCount === 1 ? ' entry' : ' entries') + '</span>';
+    aBtn.innerHTML = 'Activity<span>' + split.general.length +
+      (this.onSiteOnly ? ' on site' : (split.general.length === 1 ? ' entry' : ' entries')) + '</span>';
 
-    var label = (this.viewDate === this.currentDate ? 'Today' : this.ukDate(this.viewDate)) + ': ' +
+    cBtn.className = 'page-btn' + (this.logPage === 'contractors' ? ' active' : '');
+    dBtn.className = 'page-btn' + (this.logPage === 'daily' ? ' active' : '');
+    aBtn.className = 'page-btn' + (this.logPage === 'activity' ? ' active' : '');
+    cBtn.setAttribute('aria-selected', this.logPage === 'contractors' ? 'true' : 'false');
+    dBtn.setAttribute('aria-selected', this.logPage === 'daily' ? 'true' : 'false');
+    aBtn.setAttribute('aria-selected', this.logPage === 'activity' ? 'true' : 'false');
+
+    var label = (this.viewDate === this.currentDate ? 'Today' : this.showDate(this.viewDate)) + ': ' +
       all.length + (all.length === 1 ? ' movement' : ' movements') +
       (counts.contractors.length ? ' \u00b7 ' + counts.contractors.length + ' contractor' +
         (counts.contractors.length === 1 ? '' : 's') : '');
@@ -2250,10 +2869,16 @@ var app = {
     }
     summary.innerHTML = '<span>' + label + '</span>' + chip;
 
-    var onContractors = this.logPage === 'contractors';
-    var src = onContractors ? split.contractors : split.daily;
-
     var needle = this.sheetFilter();
+
+    if (this.logPage === 'daily') {
+      this.renderDayLog(container, needle);
+      return;
+    }
+
+    var onContractors = this.logPage === 'contractors';
+    var src = onContractors ? split.contractors : split.general;
+
     if (needle) {
       var kept = [], fi;
       for (fi = 0; fi < src.length; fi++) {
@@ -2272,11 +2897,11 @@ var app = {
     }
 
     if (!src.length) {
-      var elsewhere = onContractors ? split.daily.length : split.contractors.length;
-      var otherName = onContractors ? 'Daily' : 'Contractors';
+      var elsewhere = onContractors ? split.general.length : split.contractors.length;
+      var otherName = onContractors ? 'Activity' : 'Contractors';
       var msg = this.onSiteOnly
         ? (onContractors ? 'No contractors on site' : 'Nobody else on site')
-        : (onContractors ? 'No contractor movements this day' : 'No other visitors this day');
+        : (onContractors ? 'No contractor access this day' : 'No other visitors this day');
       if (elsewhere) {
         msg += '<br><span class="text-muted">' + elsewhere +
           (elsewhere === 1 ? ' entry is' : ' entries are') + ' on ' + otherName + '</span>';
@@ -2288,7 +2913,7 @@ var app = {
 
     /* numbering stays the day's own running order, so a number means the
        same thing here, on the other page and on the printed sheet */
-    var seq = this.daySequence(this.visitors);
+    var vIdx = this.dayIndex(), cIdx = this.contractorIndex();
     var rows = '';
     for (var j = 0; j < src.length; j++) {
       var v = src[j];
@@ -2297,10 +2922,10 @@ var app = {
         ? this.esc(v.exitTime)
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
       rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
-        this.numCell(v, seq[v.id], 'visitor', otherDay) +
+        this.numCell(v, onContractors ? cIdx[v.id] : vIdx['v' + v.id], 'visitor', otherDay) +
         '<td>' + this.esc(v.company) +
           (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
-          (otherDay ? '<span class="cell-sub carried">in on ' + this.ukDate(v.date) + '</span>' : '') +
+          (otherDay ? '<span class="cell-sub carried">in on ' + this.showDate(v.date) + '</span>' : '') +
           (onContractors ? this.inductionTag(v) : '') +
         '</td>' +
         '<td>' + this.esc(v.vehicle || '-') + '</td>' +
@@ -2359,7 +2984,6 @@ var app = {
 
     this.editingContractorId = id;
     document.getElementById('contractorName').value = rec.name;
-    document.getElementById('inductionDate').value = rec.inductionDate;
     this.setRepRows('contractorReps', rec.reps);
     document.getElementById('contractorFormTitle').textContent = 'Editing ' + rec.name;
     document.getElementById('contractorSubmit').textContent = 'Update contractor';
@@ -2370,7 +2994,6 @@ var app = {
   addContractor: function (e) {
     e.preventDefault();
     var name = document.getElementById('contractorName').value.replace(/^\s+|\s+$/g, '');
-    var date = document.getElementById('inductionDate').value;
     var reps = this.readRepRows('contractorReps');
 
     if (!name) { this.toast('Add a company name', 'error'); return; }
@@ -2379,17 +3002,6 @@ var app = {
     if (dupRep) {
       this.toast(dupRep + ' is listed twice - merge the rows or rename one', 'error');
       return;
-    }
-
-    if (!reps.length && !date) {
-      this.toast('Add a representative with an expiry, or set a default date', 'error');
-      return;
-    }
-    for (var q = 0; q < reps.length; q++) {
-      if (!reps[q].inductionDate && !date) {
-        this.toast('Give ' + (reps[q].name || 'each representative') + ' an expiry date, or set a default', 'error');
-        return;
-      }
     }
 
     var i, existing = null;
@@ -2403,7 +3015,6 @@ var app = {
       for (i = 0; i < this.contractors.length; i++) {
         if (this.contractors[i].id === this.editingContractorId) {
           this.contractors[i].name = name;
-          this.contractors[i].inductionDate = date;
           this.contractors[i].reps = reps;
         }
       }
@@ -2415,16 +3026,16 @@ var app = {
     }
 
     if (existing) {
-      existing.inductionDate = date;
-      existing.reps = reps.length ? reps : existing.reps;
+      this.mergeRecord(existing, { vehicles: [], reps: reps }, true,
+        { added: 0, conflicts: 0, pending: null });
       this.saveData();
       this.renderArchive();
       this.hideContractorForm();
-      this.toast('Induction date updated');
+      this.toast('Added to the existing ' + existing.name + ' record');
       return;
     }
 
-    this.contractors.push({ id: this.nextId(), name: name, inductionDate: date, reps: reps, vehicles: [] });
+    this.contractors.push({ id: this.nextId(), name: name, reps: reps, vehicles: [] });
     this.saveData();
     this.renderArchive();
     this.hideContractorForm();
@@ -2455,25 +3066,14 @@ var app = {
       };
     }
 
-    if ((c.reps || []).length) {
-      for (i = 0; i < c.reps.length; i++) {
-        d = c.reps[i].inductionDate || c.inductionDate || '';
-        var s = status(d);
-        out.push({
-          name: c.reps[i].name || 'Unnamed',
-          vehicles: c.reps[i].vehicles || [],
-          date: s.date, valid: s.valid, missing: s.missing,
-          soon: s.soon, days: s.days,
-          inherited: !c.reps[i].inductionDate && !!c.inductionDate
-        });
-      }
-    } else {
-      var cs = status(c.inductionDate || '');
+    for (i = 0; i < (c.reps || []).length; i++) {
+      d = c.reps[i].inductionDate || '';
+      var s = status(d);
       out.push({
-        name: 'Company-wide', vehicles: c.vehicles || [],
-        date: cs.date, valid: cs.valid, missing: cs.missing,
-        soon: cs.soon, days: cs.days,
-        inherited: false, companyWide: true
+        name: c.reps[i].name || 'Unnamed',
+        vehicles: c.reps[i].vehicles || [],
+        date: s.date, valid: s.valid, missing: s.missing,
+        soon: s.soon, days: s.days
       });
     }
     return out;
@@ -2497,9 +3097,48 @@ var app = {
     return null;
   },
 
-  ukDate: function (s) {
+  /* Day-month-year by default; a site running to US convention can switch
+     it in Settings. Everything on screen, on the sheets and in file names
+     follows the one setting. */
+  STYLES: ['mono', 'simplified', 'colour'],
+
+  sheetStyle: function () {
+    var v = null;
+    try { v = localStorage.getItem('sat-style'); } catch (e) {}
+    return this.STYLES.indexOf(v) === -1 ? 'colour' : v;
+  },
+
+  setSheetStyle: function (v) {
+    if (this.STYLES.indexOf(v) === -1) return;
+    try { localStorage.setItem('sat-style', v); } catch (e) {}
+  },
+
+  /* the picker beside the export button, which falls back to the saved
+     default and returns to it once an export has run */
+  activeStyle: function () {
+    var el = document.getElementById('exportStyle');
+    var v = el ? el.value : '';
+    return this.STYLES.indexOf(v) === -1 ? this.sheetStyle() : v;
+  },
+
+  resetExportStyle: function () {
+    var el = document.getElementById('exportStyle');
+    if (el) el.value = this.sheetStyle();
+  },
+
+  dateOrder: function () {
+    try { return localStorage.getItem('sat-datefmt') === 'mdy' ? 'mdy' : 'dmy'; } catch (e) { return 'dmy'; }
+  },
+
+  setDateOrder: function (v) {
+    try { localStorage.setItem('sat-datefmt', v === 'mdy' ? 'mdy' : 'dmy'); } catch (e) {}
+  },
+
+  showDate: function (s) {
     var d = this.parseLocalDate(s);
-    return d ? d.toLocaleDateString('en-GB') : 'Not set';
+    if (!d) return 'Not set';
+    var dd = this.pad2(d.getDate()), mm = this.pad2(d.getMonth() + 1), yy = d.getFullYear();
+    return this.dateOrder() === 'mdy' ? mm + '/' + dd + '/' + yy : dd + '/' + mm + '/' + yy;
   },
 
   renderArchive: function () {
@@ -2540,6 +3179,18 @@ var app = {
       var c = sorted[i];
       var entries = this.inductionEntries(c);
 
+      if (!entries.length) {
+        rows += '<tr' + (i > 0 ? ' class="group-start"' : '') + '>' +
+          '<td>' + this.esc(c.name) + '</td>' +
+          '<td colspan="2"><span class="status-badge status-needed">' +
+          '<span class="status-dot" style="background:#b91c1c"></span>Nobody inducted</span></td>' +
+          '<td class="row-actions">' +
+          '<button type="button" class="edit-btn" onclick="app.editContractor(' + c.id + ')">Edit</button>' +
+          '<button type="button" class="delete-btn" onclick="app.deleteContractor(' + c.id + ')">X</button>' +
+          '</td></tr>';
+        continue;
+      }
+
       for (var e = 0; e < entries.length; e++) {
         var ent = entries[e];
         totalPeople++;
@@ -2560,7 +3211,7 @@ var app = {
           '<td>' + this.esc(ent.name) +
             (ent.vehicles.length ? '<span class="cell-sub">' + this.esc(ent.vehicles.join(', ')) + '</span>' : '') +
           '</td>' +
-          '<td>' + this.ukDate(ent.date) +
+          '<td>' + this.showDate(ent.date) +
             (ent.inherited ? '<span class="cell-sub">default</span>' : '') +
           '</td>' +
           '<td><span class="status-badge ' + cls + '">' +
@@ -2607,6 +3258,7 @@ var app = {
 
   showVisitorForm: function () {
     this.editingVisitorId = null;
+    this.editingIrregularId = null;
     document.getElementById('regularVisitorForm').reset();
     document.getElementById('visitorFormTitle').textContent = 'New regular visitor';
     document.getElementById('visitorSubmit').textContent = 'Save visitor';
@@ -2617,6 +3269,7 @@ var app = {
 
   hideVisitorForm: function () {
     this.editingVisitorId = null;
+    this.editingIrregularId = null;
     document.getElementById('regularVisitorForm').style.display = 'none';
     document.getElementById('regularVisitorForm').reset();
     this.setRepRows('visitorReps', []);
@@ -2654,7 +3307,7 @@ var app = {
       this.toast(dupV + ' is listed twice - merge the rows or rename one', 'error');
       return;
     }
-    if (!vehicles.length && !reps.length) {
+    if (this.editingIrregularId === null && !vehicles.length && !reps.length) {
       this.toast('Add a vehicle or a representative', 'error');
       return;
     }
@@ -2663,6 +3316,21 @@ var app = {
     for (ci = 0; ci < this.regularVisitors.length; ci++) {
       if (this.regularVisitors[ci].name.toLowerCase() === name.toLowerCase() &&
           this.regularVisitors[ci].id !== this.editingVisitorId) clash = this.regularVisitors[ci];
+    }
+
+    if (this.editingIrregularId !== null) {
+      for (var q = 0; q < this.irregulars.length; q++) {
+        if (this.irregulars[q].id !== this.editingIrregularId) continue;
+        this.irregulars[q].name = name;
+        this.irregulars[q].vehicles = vehicles;
+        this.irregulars[q].reason = reason;
+        this.irregulars[q].reps = reps;
+      }
+      this.saveData();
+      this.renderIrregulars();
+      this.hideVisitorForm();
+      this.toast('Held company updated');
+      return;
     }
 
     if (this.editingVisitorId !== null) {
@@ -3038,7 +3706,7 @@ var app = {
     e.preventDefault();
     var name = document.getElementById('staffNameInput').value.replace(/^\s+|\s+$/g, '');
     var mode = document.getElementById('staffVehicleType').value;
-    var vehicle = document.getElementById('staffVehicleInput').value.replace(/^\s+|\s+$/g, '');
+    var vehicle = document.getElementById('staffVehicleInput').value.replace(/^\s+|\s+$/g, '').toUpperCase();
     var reason = document.getElementById('staffReasonInput').value.replace(/^\s+|\s+$/g, '');
     var outTime = document.getElementById('staffOutTime').value;
     var backTime = document.getElementById('staffBackTime').value;
@@ -3089,6 +3757,7 @@ var app = {
 
     this.saveData();
     this.renderStaffMovements();
+    if (this.logPage === 'daily') this.renderLog();
     e.target.reset();
     document.getElementById('staffVehiclePickRow').style.display = 'none';
     document.getElementById('staffVehicleRow').style.display = 'block';
@@ -3113,10 +3782,10 @@ var app = {
     document.getElementById('staffOutTime').value = rec.outTime;
     document.getElementById('staffBackTime').value = rec.backTime || '';
 
-    var seq = this.daySequence(this.staffMovements, 'outTime')[id];
+    var seq = this.seqFor('staff', rec);
     var title = document.getElementById('staffMoveTitle');
     title.textContent = 'Editing departure ' + seq +
-      (rec.date === this.viewDate ? '' : ' from ' + this.ukDate(rec.date));
+      (rec.date === this.viewDate ? '' : ' from ' + this.showDate(rec.date));
     title.style.display = 'block';
     document.getElementById('staffMoveSubmit').textContent = 'Update departure';
     document.getElementById('cancelStaffMoveEdit').style.display = 'inline-block';
@@ -3180,7 +3849,7 @@ var app = {
 
     var list = this.staffMovesFor(this.viewDate);
     var away = this.staffOffSite();
-    var seq = this.daySequence(this.staffMovements, 'outTime');
+    var seq = this.dayIndex();
 
     /* Someone who signed out at 23:10 is still off site at 00:30. Tying the
        table to the calendar day would hide them and leave no way to mark
@@ -3226,9 +3895,9 @@ var app = {
         ? this.esc(m.backTime)
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button>';
       rows += '<tr' + (m.backTime ? '' : ' class="on-site"') + '>' +
-        this.numCell(m, seq[m.id], 'staff', otherDay) +
+        this.numCell(m, seq['s' + m.id], 'staff', otherDay) +
         '<td>' + this.esc(m.name) +
-          (otherDay ? '<span class="cell-sub carried">out on ' + this.ukDate(m.date) + '</span>' : '') +
+          (otherDay ? '<span class="cell-sub carried">out on ' + this.showDate(m.date) + '</span>' : '') +
         '</td>' +
         '<td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
         '<td>' + this.esc(m.reason) + '</td>' +
@@ -3282,10 +3951,10 @@ var app = {
   },
 
   splitByPage: function (list) {
-    var out = { contractors: [], daily: [] }, i;
+    var out = { contractors: [], general: [] }, i;
     for (i = 0; i < list.length; i++) {
       if (this.isContractorEntry(list[i])) out.contractors.push(list[i]);
-      else out.daily.push(list[i]);
+      else out.general.push(list[i]);
     }
     return out;
   },
@@ -3312,6 +3981,7 @@ var app = {
       return { valid: false, unknown: true, text: 'Not on the induction list' };
     }
 
+    if (!entries.length) return { valid: false, text: 'Nobody inducted for this company' };
     for (i = 0; i < entries.length; i++) if (!entries[i].valid) due++;
     return { valid: due === 0,
              text: due ? due + ' of ' + entries.length + ' inductions due' : 'Inductions in date' };
@@ -3324,8 +3994,98 @@ var app = {
       this.esc(s.text) + '</span>';
   },
 
+  /* The Daily page: everything that happened, in one running order -
+     visitors, staff going off site, and incidents. Inducted contractors are
+     left out because the Contractors page tracks them properly, with their
+     induction standing. */
+  dayLogFor: function (date) {
+    var out = [], i, v, m, n, bits;
+
+    var day = this.entriesFor(date);
+    for (i = 0; i < day.length; i++) {
+      v = day[i];
+      if (this.isContractorEntry(v)) continue;
+      bits = [v.company];
+      if (v.rep) bits.push(v.rep);
+      if (v.vehicle) bits.push(v.vehicle);
+      bits.push(v.reason);
+      out.push({ kind: 'visitor', rec: v, time: v.entryTime,
+        until: v.exitTime || '', label: 'Visitor', detail: bits.join(' \u00b7 ') });
+    }
+
+    var moves = this.staffMovesFor(date);
+    for (i = 0; i < moves.length; i++) {
+      m = moves[i];
+      out.push({ kind: 'staff', rec: m, time: m.outTime,
+        until: m.backTime || '', label: 'Staff out',
+        detail: m.name + ' \u00b7 ' + this.vehicleLabel(m) + ' \u00b7 ' + m.reason });
+    }
+
+    var inc = this.incidentsFor(date);
+    for (i = 0; i < inc.length; i++) {
+      n = inc[i];
+      out.push({ kind: 'incident', rec: n, time: n.time,
+        until: n.ended || '', label: n.type, detail: n.detail });
+    }
+
+    return out.sort(function (a, b) {
+      return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0);
+    });
+  },
+
+  renderDayLog: function (container, needle) {
+    var rows = this.dayLogFor(this.viewDate), i;
+
+    if (needle) {
+      var kept = [];
+      for (i = 0; i < rows.length; i++) {
+        if (this.matches(needle, [rows[i].label, rows[i].detail, rows[i].time])) kept.push(rows[i]);
+      }
+      rows = kept;
+    }
+
+    if (!rows.length) {
+      container.innerHTML = '<div class="empty-state">' +
+        (needle ? 'Nothing matches that filter' : 'Nothing logged for this day') + '</div>';
+      this.renderFlagLegend();
+      return;
+    }
+
+    var idx = this.dayIndex();
+    var body = '';
+
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var seq = idx[(r.kind === 'staff' ? 's' : (r.kind === 'incident' ? 'i' : 'v')) + r.rec.id];
+      var open = (r.kind === 'visitor' && !r.rec.exitTime) ||
+                 (r.kind === 'staff' && !r.rec.backTime);
+      body += '<tr' + (open ? ' class="on-site"' : '') + '>' +
+        '<td class="band"><i class="kind-band kind-' + r.kind + '"></i></td>' +
+        this.numCell(r.rec, seq, r.kind, false) +
+        '<td>' + this.esc(r.time) +
+          (r.until ? '<span class="cell-sub">to ' + this.esc(r.until) + '</span>' : '') + '</td>' +
+        '<td><span class="act-kind">' +
+          this.esc(r.kind === 'incident' ? r.label : (r.kind === 'staff' ? 'Staff' : 'Visitor')) +
+          '</span>' +
+          (r.kind === 'incident' ? '' : '<span class="cell-sub">' + this.esc(r.label) + '</span>') +
+        '</td>' +
+        '<td>' + this.esc(r.detail) + '</td>' +
+        '</tr>';
+    }
+
+    container.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th class="band"></th><th class="num">#</th><th>Time</th><th>What</th><th>Details</th>' +
+      '</tr></thead><tbody>' + body + '</tbody></table>' +
+      '<div class="kind-key">' +
+      '<span><i class="kind-band kind-visitor"></i>Visitor</span>' +
+      '<span><i class="kind-band kind-staff"></i>Staff</span>' +
+      '<span><i class="kind-band kind-incident"></i>Incident</span></div>';
+
+    this.renderFlagLegend();
+  },
+
   setLogPage: function (page) {
-    if (page !== 'contractors' && page !== 'daily') return;
+    if (page !== 'contractors' && page !== 'daily' && page !== 'activity') return;
     this.logPage = page;
     this.renderLog();
   },
@@ -3376,6 +4136,7 @@ var app = {
 
     this.saveData();
     this.renderIncidents();
+    if (this.logPage === 'daily') this.renderLog();
     e.target.reset();
     document.getElementById('incidentDetail').focus();
     this.toast('Incident recorded - ' + this.incidentsFor(this.viewDate).length + ' on the Day Sheet');
@@ -3392,10 +4153,10 @@ var app = {
     document.getElementById('incidentTime').value = rec.time;
     document.getElementById('incidentEnd').value = rec.ended || '';
 
-    var seq = this.daySequence(this.incidents, 'time')[id];
+    var seq = this.seqFor('incident', rec);
     var title = document.getElementById('incidentTitle');
     title.textContent = 'Editing incident ' + seq +
-      (rec.date === this.viewDate ? '' : ' from ' + this.ukDate(rec.date));
+      (rec.date === this.viewDate ? '' : ' from ' + this.showDate(rec.date));
     title.style.display = 'block';
     document.getElementById('incidentSubmit').textContent = 'Update incident';
     document.getElementById('cancelIncidentEdit').style.display = 'inline-block';
@@ -3446,12 +4207,12 @@ var app = {
       return;
     }
 
-    var seq = this.daySequence(this.incidents, 'time');
+    var seq = this.dayIndex();
     var rows = '', i;
     for (i = 0; i < list.length; i++) {
       var n = list[i];
       rows += '<tr>' +
-        this.numCell(n, seq[n.id], 'incident', false) +
+        this.numCell(n, seq['i' + n.id], 'incident', false) +
         '<td>' + this.esc(n.time) +
           (n.ended ? '<span class="cell-sub">to ' + this.esc(n.ended) + '</span>' : '') + '</td>' +
         '<td>' + this.esc(n.type) + '</td>' +
@@ -3546,6 +4307,18 @@ var app = {
     return added ? { created: false, name: name } : null;
   },
 
+  /* How often a held company has actually turned up. Off shift, that is
+     the number that decides whether it is worth a proper record. */
+  sightings: function (name) {
+    var key = String(name || '').toLowerCase(), n = 0, last = '', i;
+    for (i = 0; i < this.visitors.length; i++) {
+      if (String(this.visitors[i].company).toLowerCase() !== key) continue;
+      n++;
+      if (this.visitors[i].date > last) last = this.visitors[i].date;
+    }
+    return { count: n, last: last };
+  },
+
   renderIrregulars: function () {
     var box = document.getElementById('irregularsContainer');
     if (!box) return;
@@ -3555,22 +4328,37 @@ var app = {
       return;
     }
 
+    /* the most seen first, so the ones worth setting up are at the top */
+    var self = this;
+    var order = this.irregulars.slice().sort(function (a, b) {
+      var ca = self.sightings(a.name).count, cb = self.sightings(b.name).count;
+      if (cb !== ca) return cb - ca;
+      return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+    });
+
     var rows = '', i;
-    for (i = 0; i < this.irregulars.length; i++) {
-      var v = this.irregulars[i];
-      var seen = [];
+    for (i = 0; i < order.length; i++) {
+      var v = order[i];
+      var seen = this.sightings(v.name);
+      var detail = [];
       for (var r = 0; r < (v.reps || []).length; r++) {
-        seen.push(v.reps[r].name +
+        detail.push(v.reps[r].name +
           (v.reps[r].vehicles.length ? ' (' + v.reps[r].vehicles.join(', ') + ')' : ''));
       }
-      if ((v.vehicles || []).length) seen.push(v.vehicles.join(', '));
+      if ((v.vehicles || []).length) detail.push(v.vehicles.join(', '));
 
       rows += '<tr>' +
         '<td>' + this.esc(v.name) +
-          (seen.length ? '<span class="cell-sub">' + this.esc(seen.join('; ')) + '</span>' : '') +
-          (v.firstSeen ? '<span class="cell-sub">first seen ' + this.ukDate(v.firstSeen) + '</span>' : '') +
+          '<span class="seen-count' + (seen.count > 2 ? ' often' : '') + '">' +
+          (seen.count === 1 ? 'seen once' : 'seen ' + seen.count + ' times') + '</span>' +
+          (detail.length ? '<span class="cell-sub">' + this.esc(detail.join('; ')) + '</span>' : '') +
+          '<span class="cell-sub">' +
+          (v.firstSeen ? 'first ' + this.showDate(v.firstSeen) : '') +
+          (seen.last && seen.last !== v.firstSeen ? ', last ' + this.showDate(seen.last) : '') +
+          '</span>' +
         '</td>' +
         '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editIrregular(' + v.id + ')">Edit</button>' +
         '<button type="button" class="edit-btn" onclick="app.promoteIrregular(' + v.id + ',\'regular\')">Regular</button>' +
         '<button type="button" class="edit-btn" onclick="app.promoteIrregular(' + v.id + ',\'contractor\')">Contractor</button>' +
         '<button type="button" class="delete-btn" onclick="app.deleteIrregular(' + v.id + ')">X</button>' +
@@ -3585,6 +4373,25 @@ var app = {
   /* Moves a held company onto a proper list, keeping whatever was learned
      about it at the gate. A contractor arrives with no induction date, which
      shows as outstanding rather than pretending it is in date. */
+  editIrregular: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.irregulars.length && !rec; i++) {
+      if (this.irregulars[i].id === id) rec = this.irregulars[i];
+    }
+    if (!rec) return;
+
+    this.editingVisitorId = null;
+    this.editingIrregularId = id;
+    document.getElementById('visitorName').value = rec.name;
+    document.getElementById('visitorVehicle').value = (rec.vehicles || []).join(', ');
+    document.getElementById('visitorReason').value = rec.reason || '';
+    this.setRepRows('visitorReps', rec.reps);
+    document.getElementById('visitorFormTitle').textContent = 'Editing held company ' + rec.name;
+    document.getElementById('visitorSubmit').textContent = 'Update held company';
+    document.getElementById('regularVisitorForm').style.display = 'block';
+    document.getElementById('visitorName').focus();
+  },
+
   promoteIrregular: function (id, to) {
     var rec = null, i;
     for (i = 0; i < this.irregulars.length && !rec; i++) {
@@ -3602,9 +4409,10 @@ var app = {
       this.mergeRecord(existing, rec, to === 'contractor', { added: 0, conflicts: 0, pending: null });
     } else {
       delete rec.auto;
-      if (to === 'contractor' && rec.inductionDate === undefined) rec.inductionDate = '';
       target.push(rec);
     }
+
+    if (this.editingIrregularId === id) this.hideVisitorForm();
 
     var kept = [];
     for (i = 0; i < this.irregulars.length; i++) if (this.irregulars[i].id !== id) kept.push(this.irregulars[i]);
@@ -3625,12 +4433,755 @@ var app = {
 
   deleteIrregular: function (id) {
     if (!confirm('Forget this company? Movements already logged are not affected.')) return;
+    if (this.editingIrregularId === id) this.hideVisitorForm();
     var kept = [], i;
     for (i = 0; i < this.irregulars.length; i++) if (this.irregulars[i].id !== id) kept.push(this.irregulars[i]);
     this.irregulars = kept;
     this.saveData();
     this.renderIrregulars();
     this.toast('Removed from the holding list');
+  },
+
+  /* ---------------- roster ---------------- */
+
+  rosterYear: null,
+  rosterMonth: null,
+  rosterPick: '',
+  editingRosterId: null,
+  rosterDays: [],
+
+  DAY_NAMES: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+
+  dateKey: function (d) {
+    return d.getFullYear() + '-' + this.pad2(d.getMonth() + 1) + '-' + this.pad2(d.getDate());
+  },
+
+  /* ---------------- guard colours ---------------- */
+
+  /* Chosen to sit apart from the kind, induction and flag palettes, and
+     only ever shown where a guard is named, so nothing competes. */
+  GUARD_COLOURS: [
+    { hex: '#4338ca', rgb: [0.26, 0.22, 0.79] },
+    { hex: '#0f766e', rgb: [0.06, 0.46, 0.43] },
+    { hex: '#b45309', rgb: [0.71, 0.33, 0.04] },
+    { hex: '#be123c', rgb: [0.75, 0.07, 0.24] },
+    { hex: '#6d28d9', rgb: [0.43, 0.16, 0.85] },
+    { hex: '#0369a1', rgb: [0.01, 0.41, 0.63] },
+    { hex: '#4d7c0f', rgb: [0.30, 0.49, 0.06] },
+    { hex: '#a21caf', rgb: [0.64, 0.11, 0.69] },
+    { hex: '#c2410c', rgb: [0.76, 0.25, 0.05] },
+    { hex: '#155e75', rgb: [0.08, 0.37, 0.46] }
+  ],
+
+  guardOverrides: function () {
+    try { return JSON.parse(localStorage.getItem('sat-guard-colours') || '{}') || {}; }
+    catch (e) { return {}; }
+  },
+
+  /* An override is stored as a colour, not an index, so any colour picked
+     is kept exactly rather than snapped to the nearest preset. */
+  setGuardColour: function (name, hex) {
+    var key = String(name || '').toLowerCase().replace(/^\s+|\s+$/g, '');
+    if (!key) return false;
+    var map = this.guardOverrides();
+    if (hex === null) delete map[key];
+    else {
+      if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return false;
+      map[key] = hex.toLowerCase();
+    }
+    try { localStorage.setItem('sat-guard-colours', JSON.stringify(map)); } catch (e) {}
+    return true;
+  },
+
+  guardColourIndex: function (name) {
+    var key = String(name || '').toLowerCase().replace(/^\s+|\s+$/g, '');
+    var n = 0, i;
+    for (i = 0; i < key.length; i++) n = (n * 31 + key.charCodeAt(i)) % 100000;
+    return n % this.GUARD_COLOURS.length;
+  },
+
+  guardHex: function (name) {
+    var key = String(name || '').toLowerCase().replace(/^\s+|\s+$/g, '');
+    var map = this.guardOverrides();
+    var set = map[key];
+    if (typeof set === 'number') set = (this.GUARD_COLOURS[set] || {}).hex;   /* older data */
+    if (typeof set === 'string' && /^#[0-9a-fA-F]{6}$/.test(set)) return set.toLowerCase();
+    return this.GUARD_COLOURS[this.guardColourIndex(name)].hex;
+  },
+
+  hexRgb: function (hex) {
+    return [parseInt(hex.slice(1, 3), 16) / 255,
+            parseInt(hex.slice(3, 5), 16) / 255,
+            parseInt(hex.slice(5, 7), 16) / 255];
+  },
+
+  /* How light a colour is. A very pale mark disappears on white paper, so
+     it is worth saying so rather than letting it vanish at the printer. */
+  luminance: function (hex) {
+    var c = this.hexRgb(hex);
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  },
+
+  guardColour: function (name) {
+    var hex = this.guardHex(name);
+    return { hex: hex, rgb: this.hexRgb(hex) };
+  },
+
+  guardDot: function (name) {
+    return '<i class="guard-dot" style="background:' + this.guardColour(name).hex + '"></i>';
+  },
+
+  guardPickTarget: '',
+
+  openGuardPicker: function (name) {
+    this.guardPickTarget = name;
+    var panel = document.getElementById('guardSwatches');
+    var self = this;
+    panel.innerHTML = '';
+    document.getElementById('guardPickerTitle').textContent = 'Colour for ' + name;
+
+    for (var i = 0; i < this.GUARD_COLOURS.length; i++) {
+      (function (hex, idx) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'swatch';
+        b.innerHTML = '<b style="background:' + hex + '"></b><span>Colour ' + (idx + 1) + '</span>';
+        b.addEventListener('click', function () { self.applyGuardColour(hex); });
+        panel.appendChild(b);
+      })(this.GUARD_COLOURS[i].hex, i);
+    }
+
+    document.getElementById('guardCustom').value = this.guardHex(name);
+    document.getElementById('guardPicker').style.display = 'flex';
+  },
+
+  applyGuardColour: function (hex) {
+    var who = this.guardPickTarget;
+    if (!this.setGuardColour(who, hex)) { this.toast('That colour could not be read', 'error'); return; }
+    var pale = this.luminance(hex) > 0.72;
+    this.closeGuardPicker();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast(pale
+      ? 'Set, but that is very pale - it may not show on a printed sheet'
+      : who + ' set to that colour', pale ? 'error' : '');
+  },
+
+  closeGuardPicker: function () {
+    document.getElementById('guardPicker').style.display = 'none';
+    this.guardPickTarget = '';
+  },
+
+  afterGuardColour: function () {
+    this.renderRoster();
+    this.renderShifts();
+    this.toast('Colour updated');
+  },
+
+  /* ---------------- guard hours ---------------- */
+
+  periodStartDay: function () {
+    var v = NaN;
+    try { v = parseInt(localStorage.getItem('sat-period-day'), 10); } catch (e) {}
+    return (v >= 1 && v <= 28) ? v : 25;
+  },
+
+  setPeriodStartDay: function (n) {
+    n = parseInt(n, 10);
+    if (!(n >= 1 && n <= 28)) return false;
+    try { localStorage.setItem('sat-period-day', String(n)); } catch (e) {}
+    return true;
+  },
+
+  /* The period containing a given day. Capped at the 28th so every month
+     has the day, rather than silently sliding in February. */
+  periodFor: function (dateKey) {
+    var d = this.parseLocalDate(dateKey) || new Date();
+    var s = this.periodStartDay();
+    var from = new Date(d.getFullYear(), d.getMonth(), s);
+    if (d.getDate() < s) from = new Date(d.getFullYear(), d.getMonth() - 1, s);
+    var to = new Date(from.getFullYear(), from.getMonth() + 1, s);
+    to.setDate(to.getDate() - 1);
+    return { from: from, to: to, fromKey: this.dateKey(from), toKey: this.dateKey(to) };
+  },
+
+  weekStart: function (d) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));   /* Monday */
+    return x;
+  },
+
+  /* A shift is counted where it begins, never split across a boundary, so
+     the weekly figures always add up to the period figure. */
+  guardHours: function (dateKey) {
+    var p = this.periodFor(dateKey);
+    var now = Date.now();
+    var byGuard = {}, order = [], i;
+
+    for (i = 0; i < this.shifts.length; i++) {
+      var sh = this.shifts[i];
+      if (sh.date < p.fromKey || sh.date > p.toKey) continue;
+      var key = String(sh.guard).toLowerCase();
+      if (!byGuard[key]) {
+        byGuard[key] = { name: sh.guard, total: 0, done: 0, shifts: 0, weeks: {} };
+        order.push(key);
+      }
+      var mins = this.shiftLen(sh);
+      byGuard[key].total += mins;
+      byGuard[key].shifts++;
+      if (this.shiftTo(sh) <= now) byGuard[key].done += mins;
+      var wk = this.dateKey(this.weekStart(this.parseLocalDate(sh.date)));
+      byGuard[key].weeks[wk] = (byGuard[key].weeks[wk] || 0) + mins;
+    }
+
+    order.sort(function (a, b) {
+      if (byGuard[b].total !== byGuard[a].total) return byGuard[b].total - byGuard[a].total;
+      return byGuard[a].name.toLowerCase() < byGuard[b].name.toLowerCase() ? -1 : 1;
+    });
+    var out = [];
+    for (i = 0; i < order.length; i++) out.push(byGuard[order[i]]);
+    return { period: p, guards: out };
+  },
+
+  renderGuardHours: function () {
+    var box = document.getElementById('guardHours');
+    var label = document.getElementById('periodLabel');
+    if (!box) return;
+
+    var data = this.guardHours(this.rosterPick || this.currentDate);
+    label.innerHTML = '<span>' + this.showDate(data.period.fromKey) + ' to ' +
+      this.showDate(data.period.toKey) + '</span><span class="onsite-chip none">' +
+      data.guards.length + (data.guards.length === 1 ? ' guard' : ' guards') + '</span>';
+
+    if (!data.guards.length) {
+      box.innerHTML = '<div class="empty-state">Nobody rostered in this period</div>';
+      return;
+    }
+
+    var html = '', i, w;
+    for (i = 0; i < data.guards.length; i++) {
+      var g = data.guards[i];
+      var weeks = [];
+      for (w in g.weeks) if (Object.prototype.hasOwnProperty.call(g.weeks, w)) weeks.push(w);
+      weeks.sort();
+
+      html += '<div class="guard-card"><h4>' +
+        '<button type="button" class="guard-swatch" title="Change colour" ' +
+        'style="background:' + this.guardColour(g.name).hex + '" ' +
+        'onclick="app.openGuardPicker(' + JSON.stringify(this.esc(g.name)).replace(/"/g, '&quot;') + ')"></button>' +
+        '<span>' + this.esc(g.name) + '</span></h4>' +
+        '<div class="guard-tot">' +
+        '<span class="' + (g.done ? 'tot-done' : 'tot-none') + '">Done ' + this.lengthText(g.done) + '</span>' +
+        '<span class="tot-all">Period ' + this.lengthText(g.total) + '</span>' +
+        '<span class="tot-none">' + g.shifts + (g.shifts === 1 ? ' shift' : ' shifts') + '</span>' +
+        '</div>';
+      for (w = 0; w < weeks.length; w++) {
+        html += '<div class="week-row"><span>Week of ' + this.showDate(weeks[w]) + '</span>' +
+          '<b>' + this.lengthText(g.weeks[weeks[w]]) + '</b></div>';
+      }
+      html += '</div>';
+    }
+    box.innerHTML = html;
+  },
+
+  renderRoster: function () {
+    var grid = document.getElementById('rosterGrid');
+    if (!grid) return;
+
+    var now = this.parseLocalDate(this.currentDate) || new Date();
+    if (this.rosterYear === null) { this.rosterYear = now.getFullYear(); this.rosterMonth = now.getMonth(); }
+    if (!this.rosterPick) this.rosterPick = this.currentDate;
+
+    var first = new Date(this.rosterYear, this.rosterMonth, 1);
+    var label = first.toLocaleDateString(this.dateOrder() === 'mdy' ? 'en-US' : 'en-GB',
+      { month: 'long', year: 'numeric' });
+    document.getElementById('rosterMonthLabel').textContent = label;
+
+    /* weeks run Monday to Sunday */
+    var lead = (first.getDay() + 6) % 7;
+    var days = new Date(this.rosterYear, this.rosterMonth + 1, 0).getDate();
+    /* a shift appears on every day it actually covers, not just the one it
+       started on, so a 36 hour watch is visible across the week */
+    var byDay = {}, i, j;
+    for (i = 0; i < this.shifts.length; i++) {
+      var sh = this.shifts[i];
+      var cur = this.parseLocalDate(sh.date);
+      if (!cur) continue;
+      var over = this.spanDays(sh);
+      for (j = 0; j <= over; j++) {
+        var k = this.dateKey(cur);
+        if (!byDay[k]) byDay[k] = [];
+        byDay[k].push({ rec: sh, carried: j > 0 });
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+
+    var html = '';
+    for (i = 0; i < 7; i++) html += '<div class="cal-head">' + this.DAY_NAMES[i] + '</div>';
+    for (i = 0; i < lead; i++) html += '<div class="cal-day blank"></div>';
+
+    for (i = 1; i <= days; i++) {
+      var key = this.rosterYear + '-' + this.pad2(this.rosterMonth + 1) + '-' + this.pad2(i);
+      var on = byDay[key] || [];
+      var names = '';
+      on.sort(function (a, b) { return a.rec.start < b.rec.start ? -1 : 1; });
+      for (var q = 0; q < on.length && q < 3; q++) {
+        names += '<i><b class="guard-dot" style="background:' +
+          this.guardColour(on[q].rec.guard).hex + '"></b>' +
+          this.esc(this.shortName(on[q].rec.guard)) + ' ' +
+          (on[q].carried ? 'cont.' : this.esc(on[q].rec.start)) + '</i>';
+      }
+      if (on.length > 3) names += '<i>+' + (on.length - 3) + ' more</i>';
+      html += '<button type="button" class="cal-day' +
+        (key === this.currentDate ? ' today' : '') +
+        (key === this.rosterPick ? ' chosen' : '') +
+        '" onclick="app.pickRosterDay(\'' + key + '\')"><b>' + i + '</b>' + names + '</button>';
+    }
+    grid.innerHTML = html;
+
+    this.renderRosterDay();
+    this.renderDayPicker();
+    this.renderGuardHours();
+  },
+
+  renderDayPicker: function () {
+    var box = document.getElementById('rosterDays');
+    if (!box || box.children.length) return;
+    var self = this;
+    for (var i = 0; i < 7; i++) {
+      (function (idx) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'day-pick';
+        b.textContent = self.DAY_NAMES[idx];
+        b.addEventListener('click', function () {
+          var at = self.rosterDays.indexOf(idx);
+          if (at === -1) { self.rosterDays.push(idx); b.className = 'day-pick on'; }
+          else { self.rosterDays.splice(at, 1); b.className = 'day-pick'; }
+        });
+        box.appendChild(b);
+      })(i);
+    }
+  },
+
+  /* A calendar cell has room for one word. Taking the first gives "D."
+     for "D. Marsh", which tells you nothing and makes two guards with the
+     same initial identical, so take the surname instead. */
+  shortName: function (name) {
+    var parts = String(name || '').replace(/^\s+|\s+$/g, '').split(/\s+/);
+    if (!parts.length || !parts[0]) return '?';
+    var last = parts[parts.length - 1];
+    return last.length > 1 ? last : parts.join(' ');
+  },
+
+  pickRosterDay: function (key) {
+    if (this.editingRosterId !== null) this.cancelRosterEdit();
+    this.rosterPick = key;
+    this.renderRoster();
+  },
+
+  shiftRoster: function (step) {
+    var d = new Date(this.rosterYear, this.rosterMonth + step, 1);
+    this.rosterYear = d.getFullYear();
+    this.rosterMonth = d.getMonth();
+    this.renderRoster();
+  },
+
+  renderRosterDay: function () {
+    var label = document.getElementById('rosterDayLabel');
+    var box = document.getElementById('rosterDayList');
+    if (!box) return;
+
+    var list = this.shiftsTouching(this.rosterPick);
+    label.innerHTML = '<span>' + this.showDate(this.rosterPick) + '</span><span class="onsite-chip none">' +
+      list.length + (list.length === 1 ? ' shift' : ' shifts') + '</span>';
+
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-state">Nobody rostered for this day</div>';
+      return;
+    }
+
+    var rows = '', i;
+    for (i = 0; i < list.length; i++) {
+      var s = list[i];
+      rows += '<tr><td>' + this.guardDot(s.guard) + this.esc(s.guard) +
+        (s.date !== this.rosterPick
+          ? '<span class="cell-sub carried">on since ' + this.showDate(s.date) + '</span>' : '') +
+        '</td>' +
+        '<td>' + this.esc(s.start) + '</td>' +
+        '<td>' + this.esc(s.end) + this.spanNote(s) + '</td>' +
+        '<td>' + this.esc(this.lengthText(this.shiftLen(s))) + '</td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editRosterShift(' + s.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.removeRosterShift(' + s.id + ')">X</button></td>' +
+        '</tr>';
+    }
+    box.innerHTML = '<table class="data-table"><thead><tr><th>Guard</th><th>From</th><th>To</th><th>Length</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  },
+
+  /* Each shift form: [key, start field, end field]. One list so a form can
+     never end up with buttons that drive the wrong fields. */
+  LENGTH_FORMS: [
+    ['shift', 'shiftStart', 'shiftEnd'],
+    ['rosterAdd', 'rosterStart', 'rosterEnd'],
+    ['rosterEdit', 'rosterEditStart', 'rosterEditEnd']
+  ],
+
+  shiftMinutes: function (start, end) {
+    if (!start || !end) return null;
+    var mins = this.toMinutes(end) - this.toMinutes(start);
+    if (mins <= 0) mins += 1440;   /* the shortest reading of two clock times */
+    return mins;
+  },
+
+  lengthText: function (mins) {
+    if (mins === null) return '\u2014';
+    var hh = Math.floor(mins / 60), mm = mins % 60;
+    return hh + ' hr' + (mm ? ' ' + mm + ' min' : '');
+  },
+
+  /* 480 -> "8", 330 -> "5.5", 495 -> "8.25" */
+  hoursText: function (mins) {
+    if (mins === null) return '';
+    var v = mins / 60;
+    return String(Math.round(v * 100) / 100);
+  },
+
+  formFields: function (key) {
+    for (var i = 0; i < this.LENGTH_FORMS.length; i++) {
+      if (this.LENGTH_FORMS[i][0] === key) return this.LENGTH_FORMS[i];
+    }
+    return null;
+  },
+
+  showShiftLength: function (key) {
+    var pair = this.formFields(key);
+    if (!pair) return;
+    var mins = this.shiftMinutes(
+      document.getElementById(pair[1]).value,
+      document.getElementById(pair[2]).value);
+
+    var out = document.getElementById('len_' + key);
+    if (out) out.textContent = this.lengthText(mins);
+
+    /* keep the box showing the length as it stands, so it can be tweaked
+       rather than worked out from scratch */
+    var box = document.getElementById('lenInput_' + key);
+    if (box) box.value = this.hoursText(mins);
+  },
+
+  /* Sets the end time to the start plus whatever length was typed. */
+  applyShiftLength: function (key) {
+    var pair = this.formFields(key);
+    if (!pair) return;
+
+    var startEl = document.getElementById(pair[1]);
+    var endEl = document.getElementById(pair[2]);
+    var box = document.getElementById('lenInput_' + key);
+    if (!box) return;
+
+    if (!startEl.value) { this.toast('Set the start time first', 'error'); return; }
+
+    var raw = String(box.value).replace(',', '.').replace(/^\s+|\s+$/g, '');
+    var hours = parseFloat(raw);
+    if (!raw || isNaN(hours)) { this.toast('Type a length in hours, such as 12 or 5.5', 'error'); return; }
+    if (hours <= 0) { this.toast('A shift has to be longer than nothing', 'error'); return; }
+    if (hours > this.MAX_SHIFT_HOURS) {
+      this.toast('The longest a shift can be is ' + this.MAX_SHIFT_HOURS + ' hours', 'error');
+      return;
+    }
+
+    var mins = Math.round(hours * 60);
+    if (hours >= this.LONG_SHIFT_HOURS &&
+        !confirm('That is a ' + this.lengthText(mins) + ' shift. Is that right?')) return;
+
+    var total = this.toMinutes(startEl.value) + mins;
+    endEl.value = this.pad2(Math.floor((total % 1440) / 60)) + ':' + this.pad2(total % 60);
+    this.showShiftLength(key);
+    var over = Math.floor(total / 1440);
+    this.toast(this.lengthText(mins) + ', ending ' + endEl.value +
+      (over === 1 ? ' the next day' : (over > 1 ? ' ' + over + ' days later' : '')));
+  },
+
+  /* A shift is "starts at X, runs for N minutes". Storing two clock times
+     could never express more than a day, which is why 36 hour cover was
+     impossible before. The end time is kept in step for display. */
+  MAX_SHIFT_HOURS: 48,
+  LONG_SHIFT_HOURS: 16,
+
+  shiftLen: function (sh) {
+    if (sh.mins) return sh.mins;
+    var m = this.toMinutes(sh.end) - this.toMinutes(sh.start);
+    if (m <= 0) m += 1440;
+    return m;
+  },
+
+  endClock: function (start, mins) {
+    var t = this.toMinutes(start) + mins;
+    return this.pad2(Math.floor((t % 1440) / 60)) + ':' + this.pad2(t % 60);
+  },
+
+  /* how many midnights the shift crosses */
+  spanDays: function (sh) {
+    return Math.floor((this.toMinutes(sh.start) + this.shiftLen(sh)) / 1440);
+  },
+
+  setShiftLength: function (sh, mins) {
+    sh.mins = mins;
+    sh.end = this.endClock(sh.start, mins);
+    return sh;
+  },
+
+  /* a real moment, so shifts spanning days compare properly */
+  stamp: function (dateKey, time) {
+    var d = this.parseLocalDate(dateKey);
+    if (!d) return null;
+    return d.getTime() + this.toMinutes(time || '00:00') * 60000;
+  },
+
+  shiftFrom: function (sh) { return this.stamp(sh.date, sh.start); },
+  shiftTo: function (sh) { return this.shiftFrom(sh) + this.shiftLen(sh) * 60000; },
+
+  /* every shift that touches a day, including one that began earlier */
+  spanNote: function (sh) {
+    var over = this.spanDays(sh);
+    if (!over) return '';
+    return '<span class="cell-sub carried">+' + over + ' day' + (over === 1 ? '' : 's') + '</span>';
+  },
+
+  shiftsTouching: function (date) {
+    var from = this.stamp(date, '00:00');
+    if (from === null) return [];
+    var to = from + 86400000 - 1, out = [], i;
+    for (i = 0; i < this.shifts.length; i++) {
+      var a = this.shiftFrom(this.shifts[i]), b = this.shiftTo(this.shifts[i]);
+      if (a === null) continue;
+      if (a <= to && b >= from) out.push(this.shifts[i]);
+    }
+    return out.sort(function (x, y) { return x.date + x.start < y.date + y.start ? -1 : 1; });
+  },
+
+  toMinutes: function (t) {
+    var p = String(t || '').split(':');
+    return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+  },
+
+  /* Real moments rather than clock times, so a shift running over several
+     days is compared correctly against everything around it. */
+  overlapsAnother: function (date, start, mins, ignoreId) {
+    var a = this.stamp(date, start);
+    if (a === null) return null;
+    var b = a + mins * 60000, i;
+    for (i = 0; i < this.shifts.length; i++) {
+      var s = this.shifts[i];
+      if (s.id === ignoreId) continue;
+      var c = this.shiftFrom(s);
+      if (c === null) continue;
+      if (a < this.shiftTo(s) && c < b) return s;
+    }
+    return null;
+  },
+
+  /* The typed length wins when it is set, because two clock times cannot
+     tell a 12 hour shift from a 36 hour one. Falls back to the clock
+     reading when the box is empty. */
+  typedMinutes: function (key, start, end) {
+    var box = document.getElementById('lenInput_' + key);
+    var raw = box ? String(box.value).replace(',', '.').replace(/^\s+|\s+$/g, '') : '';
+    if (!raw) return this.shiftMinutes(start, end);
+
+    var hours = parseFloat(raw);
+    if (isNaN(hours) || hours <= 0) { this.toast('That shift length could not be read', 'error'); return null; }
+    if (hours > this.MAX_SHIFT_HOURS) {
+      this.toast('The longest a shift can be is ' + this.MAX_SHIFT_HOURS + ' hours', 'error');
+      return null;
+    }
+    var mins = Math.round(hours * 60);
+    var clock = this.shiftMinutes(start, end);
+
+    /* A typed length under a day should agree with the times on screen. If
+       it does not, the times were edited afterwards - trust those. */
+    if (mins < 1440 && clock !== null && mins !== clock) return clock;
+
+    if (hours >= this.LONG_SHIFT_HOURS &&
+        !confirm('That is a ' + this.lengthText(mins) + ' shift. Is that right?')) return null;
+    return mins;
+  },
+
+  editRosterShift: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) if (this.shifts[i].id === id) rec = this.shifts[i];
+    if (!rec) return;
+    this.editingRosterId = id;
+    document.getElementById('rosterEditGuard').value = rec.guard;
+    document.getElementById('rosterEditStart').value = rec.start;
+    document.getElementById('rosterEditEnd').value = rec.end;
+    document.getElementById('rosterEditTitle').textContent =
+      this.showDate(rec.date) + ' \u00b7 ' + rec.start + ' to ' + rec.end;
+    document.getElementById('rosterEditForm').style.display = 'block';
+    this.showShiftLength('rosterEdit');
+    document.getElementById('rosterEditGuard').focus();
+  },
+
+  cancelRosterEdit: function () {
+    this.editingRosterId = null;
+    var f = document.getElementById('rosterEditForm');
+    f.reset();
+    f.style.display = 'none';
+  },
+
+  saveRosterShift: function (e) {
+    e.preventDefault();
+    if (this.editingRosterId === null) return;
+
+    var guard = document.getElementById('rosterEditGuard').value.replace(/^\s+|\s+$/g, '');
+    var start = document.getElementById('rosterEditStart').value;
+    var end = document.getElementById('rosterEditEnd').value;
+    if (!guard || !start || !end) { this.toast('Fill in the guard and both times', 'error'); return; }
+
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) {
+      if (this.shifts[i].id === this.editingRosterId) rec = this.shifts[i];
+    }
+    if (!rec) { this.cancelRosterEdit(); return; }
+
+    /* Stretching one shift usually means it now runs into the next. That is
+       allowed - two guards can be on together - but it should be deliberate. */
+    var mins = this.typedMinutes('rosterEdit', start, end);
+    if (mins === null) return;
+    var clash = this.overlapsAnother(rec.date, start, mins, rec.id);
+    if (clash && !confirm('That overlaps ' + clash.guard + ' on ' + clash.start + ' to ' +
+        clash.end + '. Keep both?')) return;
+
+    var wasGuard = rec.guard;
+    rec.guard = guard;
+    rec.start = start;
+    this.setShiftLength(rec, mins);
+
+    this.cancelRosterEdit();
+    this.saveData();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast(wasGuard.toLowerCase() === guard.toLowerCase()
+      ? 'Shift updated' : guard + ' now covering for ' + wasGuard);
+  },
+
+  /* Hands a run of shifts from one guard to another - the sick week case. */
+  coverShifts: function (e) {
+    e.preventDefault();
+    var off = document.getElementById('coverFrom').value.replace(/^\s+|\s+$/g, '');
+    var onto = document.getElementById('coverTo').value.replace(/^\s+|\s+$/g, '');
+    var from = document.getElementById('coverStart').value;
+    var to = document.getElementById('coverEnd').value;
+
+    if (!off || !onto || !from || !to) { this.toast('Fill in both guards and both dates', 'error'); return; }
+    if (to < from) { this.toast('The last day is before the first', 'error'); return; }
+    if (off.toLowerCase() === onto.toLowerCase()) { this.toast('Those are the same guard', 'error'); return; }
+
+    var hits = [], i;
+    for (i = 0; i < this.shifts.length; i++) {
+      var s = this.shifts[i];
+      if (s.date >= from && s.date <= to &&
+          s.guard.toLowerCase() === off.toLowerCase()) hits.push(s);
+    }
+
+    if (!hits.length) {
+      this.toast('No shifts for ' + off + ' in that range', 'error');
+      return;
+    }
+    if (!confirm('Hand ' + hits.length + (hits.length === 1 ? ' shift' : ' shifts') +
+        ' from ' + off + ' to ' + onto + '?')) return;
+
+    for (i = 0; i < hits.length; i++) hits[i].guard = onto;
+
+    document.getElementById('coverForm').reset();
+    this.saveData();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast(onto + ' now covering ' + hits.length +
+      (hits.length === 1 ? ' shift' : ' shifts') + ' for ' + off);
+  },
+
+  removeRosterShift: function (id) {
+    if (!confirm('Remove this shift from the roster?')) return;
+    if (this.editingRosterId === id) this.cancelRosterEdit();
+    var kept = [], i;
+    for (i = 0; i < this.shifts.length; i++) if (this.shifts[i].id !== id) kept.push(this.shifts[i]);
+    this.shifts = kept;
+    this.saveData();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast('Shift removed');
+  },
+
+  /* Builds a run of shifts across a date range. The same records the day
+     sheet uses, so a rostered shift simply becomes that day's On duty. */
+  addRosterRun: function (e) {
+    e.preventDefault();
+    var guard = document.getElementById('rosterGuard').value.replace(/^\s+|\s+$/g, '');
+    var start = document.getElementById('rosterStart').value;
+    var end = document.getElementById('rosterEnd').value;
+    var from = document.getElementById('rosterFrom').value;
+    var to = document.getElementById('rosterTo').value;
+
+    if (!guard || !start || !end || !from || !to) {
+      this.toast('Fill in the guard, both times and both dates', 'error');
+      return;
+    }
+    if (to < from) { this.toast('The last day is before the first', 'error'); return; }
+
+    var a = this.parseLocalDate(from), b = this.parseLocalDate(to);
+    if (!a || !b) { this.toast('Those dates could not be read', 'error'); return; }
+
+    var span = Math.round((b.getTime() - a.getTime()) / 86400000);
+    if (span > 366) { this.toast('That range is over a year - shorten it', 'error'); return; }
+
+    var runMins = this.typedMinutes('rosterAdd', start, end);
+    if (runMins === null) return;
+
+    var added = 0, skipped = 0, cur = new Date(a.getTime());
+    while (cur.getTime() <= b.getTime()) {
+      var wd = (cur.getDay() + 6) % 7;
+      if (!this.rosterDays.length || this.rosterDays.indexOf(wd) !== -1) {
+        var key = this.dateKey(cur);
+        var clash = false, existing = this.shiftsFor(key), q;
+        for (q = 0; q < existing.length; q++) {
+          if (existing[q].start === start &&
+              existing[q].guard.toLowerCase() === guard.toLowerCase()) clash = true;
+        }
+        if (clash) skipped++;
+        else {
+          this.shifts.push(this.setShiftLength(
+            { id: this.nextId(), date: key, guard: guard, start: start, end: end }, runMins));
+          added++;
+        }
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    this.saveData();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast(added + (added === 1 ? ' shift added' : ' shifts added') +
+      (skipped ? ', ' + skipped + ' already rostered' : ''));
+  },
+
+  clearRosterMonth: function () {
+    var prefix = this.rosterYear + '-' + this.pad2(this.rosterMonth + 1) + '-';
+    var hit = 0, kept = [], i;
+    for (i = 0; i < this.shifts.length; i++) {
+      if (this.shifts[i].date.indexOf(prefix) === 0) hit++;
+      else kept.push(this.shifts[i]);
+    }
+    if (!hit) { this.toast('Nothing rostered this month'); return; }
+    if (!confirm('Remove all ' + hit + ' shifts in ' +
+        document.getElementById('rosterMonthLabel').textContent + '?')) return;
+    this.shifts = kept;
+    this.saveData();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast('Cleared ' + hit + ' shifts');
   },
 
   /* ---------------- shifts ---------------- */
@@ -3646,29 +5197,13 @@ var app = {
   /* Whoever was on when a given time was logged, so an entry can be traced
      back to the guard covering it. Handles a shift running past midnight. */
   guardAt: function (date, time) {
-    var list = this.shiftsFor(date), i, s;
-    for (i = 0; i < list.length; i++) {
-      s = list[i];
-      if (s.end < s.start) {
-        if (time >= s.start || time <= s.end) return s.guard;
-      } else if (time >= s.start && time <= s.end) {
-        return s.guard;
-      }
+    var at = this.stamp(date, time), i;
+    if (at === null) return '';
+    for (i = 0; i < this.shifts.length; i++) {
+      var a = this.shiftFrom(this.shifts[i]);
+      if (a === null) continue;
+      if (at >= a && at <= this.shiftTo(this.shifts[i])) return this.shifts[i].guard;
     }
-
-    /* A night shift is filed under the day it began, so the small hours of
-       the following morning are still covered by yesterday's entry. */
-    var prev = this.parseLocalDate(date);
-    if (prev) {
-      prev.setDate(prev.getDate() - 1);
-      var key = prev.getFullYear() + '-' + this.pad2(prev.getMonth() + 1) + '-' + this.pad2(prev.getDate());
-      var before = this.shiftsFor(key);
-      for (i = 0; i < before.length; i++) {
-        s = before[i];
-        if (s.end < s.start && time <= s.end) return s.guard;
-      }
-    }
-
     return '';
   },
 
@@ -3683,9 +5218,10 @@ var app = {
     return out;
   },
 
-  showGuardSuggestions: function () {
-    var q = document.getElementById('shiftGuard').value.replace(/^\s+|\s+$/g, '').toLowerCase();
-    var list = document.getElementById('shiftGuardList');
+  showGuardSuggestions: function (fieldId, listId) {
+    var field = document.getElementById(fieldId || 'shiftGuard');
+    var q = field.value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var list = document.getElementById(listId || 'shiftGuardList');
     var names = this.knownGuards(), matches = [], i;
     list.innerHTML = '';
     for (i = 0; i < names.length && matches.length < 8; i++) {
@@ -3699,9 +5235,8 @@ var app = {
         item.textContent = name;
         item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
         item.addEventListener('click', function () {
-          document.getElementById('shiftGuard').value = name;
+          field.value = name;
           list.classList.remove('active');
-          document.getElementById('shiftStart').focus();
         });
         list.appendChild(item);
       })(matches[i]);
@@ -3712,6 +5247,7 @@ var app = {
   shiftUseSiteHours: function () {
     document.getElementById('shiftStart').value = document.getElementById('startTime').value || '';
     document.getElementById('shiftEnd').value = document.getElementById('endTime').value || '';
+    this.showShiftLength('shift');
   },
 
   saveShift: function (e) {
@@ -3726,7 +5262,7 @@ var app = {
         if (this.shifts[i].id === this.editingShiftId) {
           this.shifts[i].guard = guard;
           this.shifts[i].start = start;
-          this.shifts[i].end = end;
+          this.setShiftLength(this.shifts[i], this.typedMinutes('shift', start, end));
         }
       }
       this.cancelShiftEdit();
@@ -3736,7 +5272,9 @@ var app = {
       return;
     }
 
-    this.shifts.push({ id: this.nextId(), date: this.viewDate, guard: guard, start: start, end: end });
+    this.shifts.push(this.setShiftLength(
+      { id: this.nextId(), date: this.viewDate, guard: guard, start: start, end: end },
+      this.shiftMinutes(start, end)));
     this.saveData();
     this.renderShifts();
     e.target.reset();
@@ -3744,7 +5282,111 @@ var app = {
     this.toast('Shift recorded');
   },
 
+  /* Two ways a shift changes hands. A swap is for a guard who never
+     arrived - the cover takes the whole thing. A hand over is for a change
+     part way through, which splits the shift so the sheet shows who was
+     actually on at any given moment. */
+  changeMode: null,
+  changingShiftId: null,
+
+  swapShift: function (id) { this.openShiftChange(id, 'swap'); },
+  handOverShift: function (id) { this.openShiftChange(id, 'handover'); },
+
+  openShiftChange: function (id, mode) {
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) if (this.shifts[i].id === id) rec = this.shifts[i];
+    if (!rec) return;
+
+    this.cancelShiftEdit();
+    this.changingShiftId = id;
+    this.changeMode = mode;
+
+    var handover = mode === 'handover';
+    document.getElementById('changeTitle').textContent = handover
+      ? 'Hand over ' + rec.guard + "'s shift"
+      : 'Swap ' + rec.guard + ' out of ' + rec.start + ' to ' + rec.end;
+    document.getElementById('changeGuardLabel').textContent = handover ? 'Handing over to' : 'Covered by';
+    document.getElementById('changeSubmit').textContent = handover ? 'Hand over' : 'Swap guard';
+    document.getElementById('changeHint').textContent = handover
+      ? 'The shift is split at that time. ' + rec.guard +
+        ' keeps the first part, the new guard takes the rest.'
+      : 'The whole shift changes hands. Use this when the rostered guard never arrived.';
+    document.getElementById('changeTimeRow').style.display = handover ? 'block' : 'none';
+
+    var now = new Date();
+    document.getElementById('changeTime').value = handover
+      ? this.pad2(now.getHours()) + ':' + this.pad2(now.getMinutes()) : '';
+    document.getElementById('changeGuard').value = '';
+    document.getElementById('changeForm').style.display = 'block';
+    document.getElementById('changeGuard').focus();
+  },
+
+  cancelShiftChange: function () {
+    this.changingShiftId = null;
+    this.changeMode = null;
+    var f = document.getElementById('changeForm');
+    f.reset();
+    f.style.display = 'none';
+  },
+
+  applyShiftChange: function (e) {
+    e.preventDefault();
+    if (this.changingShiftId === null) return;
+
+    var who = document.getElementById('changeGuard').value.replace(/^\s+|\s+$/g, '');
+    if (!who) { this.toast('Name the guard taking over', 'error'); return; }
+
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) {
+      if (this.shifts[i].id === this.changingShiftId) rec = this.shifts[i];
+    }
+    if (!rec) { this.cancelShiftChange(); return; }
+
+    if (this.changeMode === 'swap') {
+      if (who.toLowerCase() === rec.guard.toLowerCase()) {
+        this.toast('That is the same guard', 'error'); return;
+      }
+      var was = rec.guard;
+      rec.guard = who;
+      this.cancelShiftChange();
+      this.saveData();
+      this.renderShifts();
+      this.renderRoster();
+      this.toast(who + ' covering the whole shift for ' + was);
+      return;
+    }
+
+    var at = document.getElementById('changeTime').value;
+    if (!at) { this.toast('Set the time of the hand over', 'error'); return; }
+
+    var len = this.shiftLen(rec);
+    var offset = this.toMinutes(at) - this.toMinutes(rec.start);
+    if (offset <= 0) offset += 1440;
+    if (offset >= len) {
+      this.toast('That time is outside ' + rec.guard + "'s shift", 'error');
+      return;
+    }
+
+    /* a hand over past midnight belongs to the following day, or the new
+       shift would appear to start before the one it follows */
+    var startDay = this.parseLocalDate(rec.date);
+    var over = Math.floor((this.toMinutes(rec.start) + offset) / 1440);
+    if (over) startDay.setDate(startDay.getDate() + over);
+
+    var taken = len - offset;
+    this.setShiftLength(rec, offset);
+    this.shifts.push(this.setShiftLength(
+      { id: this.nextId(), date: this.dateKey(startDay), guard: who, start: at, end: '' }, taken));
+
+    this.cancelShiftChange();
+    this.saveData();
+    this.renderShifts();
+    this.renderRoster();
+    this.toast(who + ' took over at ' + at + ', ' + this.lengthText(taken) + ' remaining');
+  },
+
   editShift: function (id) {
+    this.cancelShiftChange();
     var rec = null, i;
     for (i = 0; i < this.shifts.length && !rec; i++) if (this.shifts[i].id === id) rec = this.shifts[i];
     if (!rec) return;
@@ -3757,6 +5399,7 @@ var app = {
     title.style.display = 'block';
     document.getElementById('shiftSubmit').textContent = 'Update shift';
     document.getElementById('cancelShiftEdit').style.display = 'inline-block';
+    this.showShiftLength('shift');
     document.getElementById('shiftGuard').focus();
   },
 
@@ -3770,6 +5413,7 @@ var app = {
 
   deleteShift: function (id) {
     if (!confirm('Remove this shift?')) return;
+    if (this.changingShiftId === id) this.cancelShiftChange();
     if (this.editingShiftId === id) this.cancelShiftEdit();
     var kept = [], i;
     for (i = 0; i < this.shifts.length; i++) if (this.shifts[i].id !== id) kept.push(this.shifts[i]);
@@ -3782,28 +5426,41 @@ var app = {
   renderShifts: function () {
     var box = document.getElementById('shiftContainer');
     if (!box) return;
-    var list = this.shiftsFor(this.viewDate);
+    var list = this.shiftsTouching(this.viewDate);
+    var label = document.getElementById('dutyDayLabel');
+    if (label) {
+      label.innerHTML = '<span>' +
+        (this.viewDate === this.currentDate ? 'Today, ' : '') + this.showDate(this.viewDate) +
+        '</span><span class="onsite-chip none">' + list.length +
+        (list.length === 1 ? ' shift' : ' shifts') + '</span>';
+    }
 
     if (!list.length) {
-      box.innerHTML = '<div class="empty-state">No shift recorded for this day</div>';
+      box.innerHTML = '<div class="empty-state">No shift recorded for ' +
+        this.showDate(this.viewDate) + '</div>';
       return;
     }
 
     var rows = '', i;
     for (i = 0; i < list.length; i++) {
       var s = list[i];
-      rows += '<tr><td>' + this.esc(s.guard) + '</td>' +
+      rows += '<tr><td>' + this.guardDot(s.guard) + this.esc(s.guard) +
+        (s.date !== this.viewDate
+          ? '<span class="cell-sub carried">on since ' + this.showDate(s.date) + '</span>' : '') +
+        '</td>' +
         '<td>' + this.esc(s.start) + '</td>' +
-        '<td>' + this.esc(s.end) +
-          (s.end < s.start ? '<span class="cell-sub carried">next day</span>' : '') + '</td>' +
+        '<td>' + this.esc(s.end) + this.spanNote(s) + '</td>' +
+        '<td>' + this.esc(this.lengthText(this.shiftLen(s))) + '</td>' +
         '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.swapShift(' + s.id + ')">Swap</button>' +
+        '<button type="button" class="edit-btn" onclick="app.handOverShift(' + s.id + ')">Hand over</button>' +
         '<button type="button" class="edit-btn" onclick="app.editShift(' + s.id + ')">Edit</button>' +
         '<button type="button" class="delete-btn" onclick="app.deleteShift(' + s.id + ')">X</button>' +
         '</td></tr>';
     }
 
     box.innerHTML = '<table class="data-table"><thead><tr>' +
-      '<th>Guard</th><th>From</th><th>To</th><th></th>' +
+      '<th>Guard</th><th>From</th><th>To</th><th>Length</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
 
@@ -3839,7 +5496,7 @@ var app = {
         rows += '<tr><td>' + this.esc(v.company) +
           (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
           (v.date !== this.currentDate
-            ? '<span class="cell-sub carried">in on ' + this.ukDate(v.date) + '</span>' : '') +
+            ? '<span class="cell-sub carried">in on ' + this.showDate(v.date) + '</span>' : '') +
           '</td><td>' + this.esc(v.vehicle || '-') + '</td>' +
           '<td>' + this.esc(v.entryTime) + '</td>' +
           '<td><button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Sign out</button></td></tr>';
@@ -3859,7 +5516,7 @@ var app = {
       var m = away[i];
       arows += '<tr><td>' + this.esc(m.name) +
         (m.date !== this.currentDate
-          ? '<span class="cell-sub carried">out on ' + this.ukDate(m.date) + '</span>' : '') +
+          ? '<span class="cell-sub carried">out on ' + this.showDate(m.date) + '</span>' : '') +
         '</td><td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
         '<td>' + this.esc(m.outTime) + '</td>' +
         '<td>' + this.esc(m.reason) + '</td>' +
@@ -3873,8 +5530,13 @@ var app = {
   /* A deliberately plain one page sheet - it exists to be read aloud at a
      muster point, so it carries names and times and nothing else. */
   buildMusterPdf: function () {
-    var SLATE = [0.118, 0.161, 0.231], WHITE = [1, 1, 1], GREY = [0.45, 0.49, 0.55];
-    var LINE = [0.80, 0.84, 0.88], INK = [0.06, 0.09, 0.15], RED = [0.73, 0.11, 0.11];
+    var mono = this.activeStyle() === 'mono';
+    var SLATE = mono ? [0, 0, 0] : [0.118, 0.161, 0.231];
+    var WHITE = [1, 1, 1];
+    var GREY = mono ? [0.38, 0.38, 0.38] : [0.45, 0.49, 0.55];
+    var LINE = mono ? [0.72, 0.72, 0.72] : [0.80, 0.84, 0.88];
+    var INK = mono ? [0, 0, 0] : [0.06, 0.09, 0.15];
+    var RED = mono ? [0, 0, 0] : [0.73, 0.11, 0.11];
     var M = 40, RIGHT = PDFKit.PW - 40, FLOOR = 792;
     var doc = new PDFKit.Doc();
     var y = 0, i;
@@ -3916,7 +5578,7 @@ var app = {
     var onSite = this.openEntries();
     var away = this.staffOffSite();
     var now = new Date();
-    var stamp = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
+    var stamp = now.toLocaleDateString(this.dateOrder() === 'mdy' ? 'en-US' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
       ' at ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
     /* A roll call should say who took it. */
@@ -3926,22 +5588,23 @@ var app = {
     newPage();
     doc.rect(M, y, RIGHT - M, 30, SLATE);
     doc.textCentre('ROLL CALL', PDFKit.PW / 2, y + 20, 14, true, WHITE);
-    y += 38;
-    doc.textCentre(stamp + (onDuty ? '   -   taken by ' + onDuty : ''),
-      PDFKit.PW / 2, y, 9.5, false, GREY);
-    y += 10;
+    y += 34;
+
+    doc.line(M, y + 2, RIGHT, y + 2, LINE, 0.8);
+    doc.text(stamp + (onDuty ? '   -   taken by ' + onDuty : ''), M, y + 15, 9.5, false, GREY);
+    y += 22;
 
     room(30);
     doc.text(onSite.length + (onSite.length === 1 ? ' person on site' : ' people on site'),
       M, y + 14, 15, true, onSite.length ? RED : SLATE);
-    y += 24;
+    y += 26;
 
     heading('On site');
     if (onSite.length) {
       var rows = [];
       for (i = 0; i < onSite.length; i++) {
         rows.push([onSite[i].company, onSite[i].rep || '-', onSite[i].vehicle || '-',
-          onSite[i].entryTime, self.ukDate(onSite[i].date), '']);
+          onSite[i].entryTime, self.showDate(onSite[i].date), '']);
       }
       table([{ label: 'Company / visitor', w: 145 }, { label: 'Representative', w: 105 },
              { label: 'Vehicle', w: 85 }, { label: 'In', w: 40 },
@@ -3957,7 +5620,7 @@ var app = {
       var arows = [];
       for (i = 0; i < away.length; i++) {
         arows.push([away[i].name, self.vehicleLabel(away[i]), away[i].reason,
-          away[i].outTime, self.ukDate(away[i].date), '']);
+          away[i].outTime, self.showDate(away[i].date), '']);
       }
       table([{ label: 'Name', w: 120 }, { label: 'Vehicle', w: 110 },
              { label: 'Reason', w: 125 }, { label: 'Out', w: 40 },
@@ -3995,16 +5658,62 @@ var app = {
 
   /* Numbers run in the order entries were logged that day, so the number
      beside a row stays meaningful even when the list is filtered. */
-  daySequence: function (list, timeKey) {
-    var map = {}, byDate = {}, i, v;
-    var ordered = this.byTime(list, timeKey || 'entryTime');
-    for (i = 0; i < ordered.length; i++) {
-      v = ordered[i];
-      if (!byDate[v.date]) byDate[v.date] = 0;
-      byDate[v.date]++;
-      map[v.id] = byDate[v.date];
+  /* One running number per day across everything that is not an inducted
+     contractor - visitors, staff going off site, incidents - so the sheet
+     reads 1, 2, 3 straight down rather than each kind counting from one.
+     Contractors keep their own sequence, since they print separately. */
+  dayIndex: function () {
+    var all = [], map = {}, byDate = {}, i;
+
+    for (i = 0; i < this.visitors.length; i++) {
+      var v = this.visitors[i];
+      if (this.isContractorEntry(v)) continue;
+      all.push({ key: 'v' + v.id, date: v.date, t: v.entryTime || '' });
+    }
+    for (i = 0; i < this.staffMovements.length; i++) {
+      var m = this.staffMovements[i];
+      all.push({ key: 's' + m.id, date: m.date, t: m.outTime || '' });
+    }
+    for (i = 0; i < this.incidents.length; i++) {
+      var n = this.incidents[i];
+      all.push({ key: 'i' + n.id, date: n.date, t: n.time || '' });
+    }
+
+    all.sort(function (a, b) {
+      var ka = a.date + ' ' + a.t, kb = b.date + ' ' + b.t;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+    for (i = 0; i < all.length; i++) {
+      if (!byDate[all[i].date]) byDate[all[i].date] = 0;
+      byDate[all[i].date]++;
+      map[all[i].key] = byDate[all[i].date];
     }
     return map;
+  },
+
+  contractorIndex: function () {
+    var all = [], map = {}, byDate = {}, i;
+    for (i = 0; i < this.visitors.length; i++) {
+      var v = this.visitors[i];
+      if (!this.isContractorEntry(v)) continue;
+      all.push({ id: v.id, date: v.date, t: v.entryTime || '' });
+    }
+    all.sort(function (a, b) {
+      var ka = a.date + ' ' + a.t, kb = b.date + ' ' + b.t;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+    for (i = 0; i < all.length; i++) {
+      if (!byDate[all[i].date]) byDate[all[i].date] = 0;
+      byDate[all[i].date]++;
+      map[all[i].id] = byDate[all[i].date];
+    }
+    return map;
+  },
+
+  /* the number a record shows, whichever list it came from */
+  seqFor: function (kind, rec) {
+    if (kind === 'visitor' && this.isContractorEntry(rec)) return this.contractorIndex()[rec.id];
+    return this.dayIndex()[(kind === 'staff' ? 's' : (kind === 'incident' ? 'i' : 'v')) + rec.id];
   },
 
   numCell: function (entry, seq, kind, otherDay) {
@@ -4013,7 +5722,7 @@ var app = {
     var colour = f ? this.esc(this.flagName(entry.flag)) : 'No colour';
     /* Numbering is per day, so a row carried over from an earlier day can
        otherwise show the same number as today's first entry. Mark it. */
-    var where = otherDay ? 'Entry ' + seq + ' from ' + this.ukDate(entry.date) : 'Entry ' + seq;
+    var where = otherDay ? 'Entry ' + seq + ' from ' + this.showDate(entry.date) : 'Entry ' + seq;
     return '<td class="num"><button type="button" class="num-btn' + (f ? ' flagged' : '') +
       (otherDay ? ' carried' : '') + '"' + style + ' title="' + where + ', ' + colour +
       '" aria-label="' + where + ', ' + colour +
@@ -4065,17 +5774,26 @@ var app = {
     this.renderIncidents();
   },
 
+  /* Only colours actually in use on the day being viewed, which is what
+     the printed sheet lists. Showing every named colour, or every colour
+     used on any day, made the screen and the sheet disagree. */
   renderFlagLegend: function () {
     var el = document.getElementById('flagLegend');
+    if (!el) return;
     var labels = this.flagLabels();
     var used = {}, i;
-    for (i = 0; i < this.visitors.length; i++) if (this.visitors[i].flag) used[this.visitors[i].flag] = 1;
-    for (i = 0; i < this.staffMovements.length; i++) if (this.staffMovements[i].flag) used[this.staffMovements[i].flag] = 1;
-    for (i = 0; i < this.incidents.length; i++) if (this.incidents[i].flag) used[this.incidents[i].flag] = 1;
+
+    var shown = this.entriesFor(this.viewDate)
+      .concat(this.openEntries(), this.shiftsTouching(this.viewDate),
+              this.staffMovesFor(this.viewDate), this.staffOffSite(),
+              this.incidentsFor(this.viewDate));
+    for (i = 0; i < shown.length; i++) {
+      if (shown[i].flag) used[shown[i].flag] = 1;
+    }
 
     var html = '';
     for (i = 0; i < this.FLAGS.length; i++) {
-      if (!used[this.FLAGS[i].id] && !labels[i]) continue;
+      if (!used[this.FLAGS[i].id]) continue;
       html += '<span><i style="background:' + this.FLAGS[i].hex + '"></i>' +
         this.esc(labels[i] || this.FLAGS[i].name) + '</span>';
     }
@@ -4121,8 +5839,9 @@ var app = {
   /* DD-MM-YY, so a folder of sheets reads at a glance on a thumb drive. */
   dateStamp: function (dateKey) {
     var d = this.parseLocalDate(dateKey) || new Date();
-    return this.pad2(d.getDate()) + '-' + this.pad2(d.getMonth() + 1) + '-' +
-      this.pad2(d.getFullYear() % 100);
+    var dd = this.pad2(d.getDate()), mm = this.pad2(d.getMonth() + 1);
+    var yy = this.pad2(d.getFullYear() % 100);
+    return this.dateOrder() === 'mdy' ? mm + '-' + dd + '-' + yy : dd + '-' + mm + '-' + yy;
   },
 
   /* DD-MM-YY HHMM to HHMM */
@@ -4145,24 +5864,24 @@ var app = {
 
   /* A single shift, expressed as a range the sheet builder understands. */
   shiftRange: function (sh) {
+    var from = this.shiftFrom(sh), to = this.shiftTo(sh);
+    var lastDay = new Date(to);
+    var over = this.spanDays(sh);
     return {
       type: 'shift',
       from: sh.date,
-      to: sh.date,
+      to: this.dateKey(lastDay),
+      fromStamp: from,
+      toStamp: to,
       startTime: sh.start,
       endTime: sh.end,
+      spanDays: over,
       shiftId: sh.id,
       guard: sh.guard,
-      label: this.ukDate(sh.date) + ' \u00b7 ' + sh.start + ' to ' + sh.end,
+      label: this.showDate(sh.date) + ' \u00b7 ' + sh.start + ' to ' + sh.end +
+        (over ? ' (+' + over + ' day' + (over === 1 ? '' : 's') + ')' : ''),
       slug: null
     };
-  },
-
-  /* True when a logged time falls inside a shift, midnight crossings and all. */
-  withinWindow: function (time, start, end) {
-    if (!start || !end) return true;
-    if (end < start) return time >= start || time <= end;
-    return time >= start && time <= end;
   },
 
   /* ---------------- reporting periods ---------------- */
@@ -4260,14 +5979,32 @@ var app = {
   },
 
   buildPdf: function (range) {
-    var SLATE = [0.118, 0.161, 0.231];
+    var style = (range && range.style) || this.activeStyle();
+    var mono = style === 'mono';
+    var rich = style === 'colour';
+
+    var SLATE = mono ? [0, 0, 0] : [0.118, 0.161, 0.231];
     var WHITE = [1, 1, 1];
-    var GREY  = [0.45, 0.49, 0.55];
-    var LINE  = [0.80, 0.84, 0.88];
-    var GREEN = [0.08, 0.50, 0.24];
-    var AMBER = [0.71, 0.33, 0.04];
-    var RED   = [0.73, 0.11, 0.11];
-    var INK   = [0.06, 0.09, 0.15];
+    var GREY  = mono ? [0.38, 0.38, 0.38] : [0.45, 0.49, 0.55];
+    var LINE  = mono ? [0.72, 0.72, 0.72] : [0.80, 0.84, 0.88];
+    var GREEN = mono ? [0, 0, 0] : [0.08, 0.50, 0.24];
+    var AMBER = mono ? [0, 0, 0] : [0.71, 0.33, 0.04];
+    var RED   = mono ? [0, 0, 0] : [0.73, 0.11, 0.11];
+    var INK   = mono ? [0, 0, 0] : [0.06, 0.09, 0.15];
+
+    /* Colour carries meaning in three places, so mono needs substitutes
+       rather than a desaturation. The kind is already spelled out in the
+       What column; a flag is not, so it keeps a lettered marker. */
+    var flagMark = {}, markLetters = 'abcdefgh';
+    function markFor(flagId) {
+      if (!flagId) return '';
+      if (!flagMark[flagId]) flagMark[flagId] = markLetters.charAt(Object.keys(flagMark).length);
+      return flagMark[flagId];
+    }
+
+    function tint(rgb, amount) {
+      return [1 - (1 - rgb[0]) * amount, 1 - (1 - rgb[1]) * amount, 1 - (1 - rgb[2]) * amount];
+    }
 
     var M = 40, RIGHT = PDFKit.PW - 40, TOP = 52, FLOOR = 792;
     var doc = new PDFKit.Doc();
@@ -4309,6 +6046,10 @@ var app = {
 
       for (var r = 0; r < rows.length; r++) {
         if (y + ROW > FLOOR) { newPage(); head(); }
+
+        /* a whole-row wash, set by the caller when the style asks for it */
+        if (rows[r].tint) doc.rect(M, y, RIGHT - M, ROW, rows[r].tint);
+
         var x = M + 5;
         for (var c = 0; c < cols.length; c++) {
           var cell = rows[r][c];
@@ -4332,13 +6073,24 @@ var app = {
     var toKey = isRange ? range.to : this.viewDate;
     var winStart = (range && range.startTime) ? range.startTime : null;
     var winEnd = (range && range.endTime) ? range.endTime : null;
+    var winFrom = (range && range.fromStamp) || null;
+    var winTo = (range && range.toStamp) || null;
     var self0 = this;
-    function inWindow(t) { return self0.withinWindow(t, winStart, winEnd); }
+
+    /* A shift sheet covers the whole watch, midnights and all, so records
+       are matched on the moment they happened rather than the clock. */
+    function inWindow(dateKey, t) {
+      if (winFrom === null) return true;
+      var s = self0.stamp(dateKey, t);
+      return s !== null && s >= winFrom && s <= winTo;
+    }
 
     var todays = this.entriesBetween(fromKey, toKey);
-    if (winStart) {
+    if (winFrom !== null) {
       var windowed = [], wi;
-      for (wi = 0; wi < todays.length; wi++) if (inWindow(todays[wi].entryTime)) windowed.push(todays[wi]);
+      for (wi = 0; wi < todays.length; wi++) {
+        if (inWindow(todays[wi].date, todays[wi].entryTime)) windowed.push(todays[wi]);
+      }
       todays = windowed;
     }
     var sheetDay = this.parseLocalDate(fromKey) || new Date();
@@ -4363,23 +6115,58 @@ var app = {
        per-day totals and a frequency table instead */
     var detailed = !isRange || dayKeys.length <= 31;
 
+    /* A range covering exactly one shift is a handover sheet, whatever it
+       does to the calendar. It keeps the day-by-day listing but drops the
+       period-report furniture, which is noise on a single watch. */
+    var isShift = !!(range && range.shiftId);
+
+    /* A shift that stays inside one day reads best split the way the day
+       sheet is - other visitors, then contractors with their induction
+       standing. Once a watch crosses midnight, knowing which day an entry
+       belongs to matters more, so it groups by day instead. */
+    var splitSheet = !isRange || (isShift && !range.spanDays);
+
+    /* The induction list and the regular visitor list are reference data,
+       not a record of the shift. They travel inside every export anyway, so
+       a handover sheet does not reprint them - a period report, read for
+       compliance rather than at a gate, still does, and keeps its table. */
+    var refTables = isRange && !isShift && !(range && range.logSheet);
+
+    /* A running log: everything that happened in one order, minus the
+       inducted contractors, mirroring the Daily page on screen. */
+    var logSheet = !!(range && range.logSheet);
+
+    /* A date column only earns its place when the sheet really covers more
+       than one day. Deciding it on "is this a range" made a shift sheet and
+       a whole-day sheet of the same day look different for no reason. */
+    var sheetSpans = fromKey !== toKey;
+    if (logSheet) splitSheet = false;
+
     /* ---- title ---- */
     newPage();
     doc.rect(M, y, RIGHT - M, 30, SLATE);
-    doc.textCentre(isRange ? 'SITE OCCURRENCE REPORT' : 'SITE OCCURRENCE SHEET',
+    doc.textCentre(logSheet ? 'SITE RUNNING LOG'
+      : (isShift ? 'SHIFT HANDOVER SHEET'
+      : (isRange ? 'SITE OCCURRENCE REPORT' : 'SITE OCCURRENCE SHEET')),
       PDFKit.PW / 2, y + 20, 14, true, WHITE);
-    y += 38;
-    doc.textCentre(dateLabel + '   -   ' + (winStart ? 'Shift ' : 'Access hours ') + hours,
-      PDFKit.PW / 2, y, 9.5, false, GREY);
-    y += 8;
+    y += 34;
+
 
     /* Who held the gate, printed before anything else and with room to
        sign - that is what turns this from a printout into a record. */
     var shiftList = [], sIdx;
+    /* A watch that began earlier and is still running was on duty for this
+       sheet, so match on the span rather than the starting date. */
+    var rangeFrom = this.stamp(fromKey, '00:00');
+    var rangeTo = this.stamp(toKey, '23:59');
     for (sIdx = 0; sIdx < this.shifts.length; sIdx++) {
       var shCand = this.shifts[sIdx];
-      if (shCand.date < fromKey || shCand.date > toKey) continue;
-      if (range && range.shiftId && shCand.id !== range.shiftId) continue;
+      if (range && range.shiftId) {
+        if (shCand.id !== range.shiftId) continue;
+      } else {
+        var sa = this.shiftFrom(shCand);
+        if (sa === null || sa > rangeTo || this.shiftTo(shCand) < rangeFrom) continue;
+      }
       shiftList.push(shCand);
     }
     shiftList.sort(function (a, b) {
@@ -4387,46 +6174,88 @@ var app = {
       return ka < kb ? -1 : (ka > kb ? 1 : 0);
     });
 
+    var staffList = [];
+    for (var sm = 0; sm < this.staffMovements.length; sm++) {
+      if (this.staffMovements[sm].date >= fromKey && this.staffMovements[sm].date <= toKey &&
+          inWindow(this.staffMovements[sm].date, this.staffMovements[sm].outTime)) {
+        staffList.push(this.staffMovements[sm]);
+      }
+    }
+    staffList.sort(function (a, b) {
+      var ka = a.date + ' ' + a.outTime, kb = b.date + ' ' + b.outTime;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+
     var incList = [], ii;
     for (ii = 0; ii < this.incidents.length; ii++) {
       var nRec = this.incidents[ii];
-      if (nRec.date >= fromKey && nRec.date <= toKey && inWindow(nRec.time)) incList.push(nRec);
+      if (nRec.date >= fromKey && nRec.date <= toKey && inWindow(nRec.date, nRec.time)) incList.push(nRec);
     }
     incList.sort(function (a, b) {
       var ka = a.date + ' ' + a.time, kb = b.date + ' ' + b.time;
       return ka < kb ? -1 : (ka > kb ? 1 : 0);
     });
-    var incSeq = this.daySequence(this.incidents, 'time');
+    var logIdx = this.dayIndex();
 
-    heading('On duty');
-    if (shiftList.length) {
+    /* The date moves into the heading, since the line that carried it is
+       now the shift itself. Access hours only appear where no shift is
+       named, otherwise the times below already say them. */
+    var dutyHead = 'On duty, ' + this.showDate(fromKey) +
+      (sheetSpans ? ' to ' + this.showDate(toKey) : '') +
+      (isShift || logSheet ? '' : '   \u00b7   Access hours ' + hours);
+    heading(dutyHead);
+
+    if (!shiftList.length) {
+      paragraph('No shift recorded.');
+    } else if (refTables) {
+      /* a month can hold sixty shifts, where a table still earns its place */
       var shRows = [];
       for (sIdx = 0; sIdx < shiftList.length; sIdx++) {
         var sh = shiftList[sIdx];
-        shRows.push(isRange
-          ? [this.ukDate(sh.date), sh.guard, sh.start, sh.end + (sh.end < sh.start ? ' +1' : ''), '']
-          : [sh.guard, sh.start, sh.end + (sh.end < sh.start ? ' (next day)' : ''), '']);
+        var over = this.spanDays(sh);
+        shRows.push((mono ? [] : [{ t: '', fill: this.guardColour(sh.guard).rgb }]).concat([
+          this.showDate(sh.date), sh.guard, sh.start,
+          sh.end + (over ? ' +' + over : ''), this.lengthText(this.shiftLen(sh)), '']));
       }
-      table(isRange
-        ? [{ label: 'Date', w: 80 }, { label: 'Guard on duty', w: 165 },
-           { label: 'From', w: 60 }, { label: 'To', w: 70 }, { label: 'Signature', w: 140 }]
-        : [{ label: 'Guard on duty', w: 190 }, { label: 'From', w: 70 },
-           { label: 'To', w: 95 }, { label: 'Signature', w: 160 }], shRows);
+      table((mono ? [] : [{ label: '', w: 12 }]).concat([
+             { label: 'Date', w: 74 }, { label: 'Guard on duty', w: mono ? 140 : 132 },
+             { label: 'From', w: 52 }, { label: 'To', w: 62 },
+             { label: 'Length', w: 62 }, { label: 'Signature', w: mono ? 125 : 121 }]), shRows);
     } else {
-      paragraph('No shift recorded.');
+      var self = this;
+      for (sIdx = 0; sIdx < shiftList.length; sIdx++) {
+        var s2 = shiftList[sIdx];
+        var over2 = this.spanDays(s2);
+        var line = s2.guard + '   \u00b7   ' + s2.start + ' to ' + s2.end +
+          (over2 ? ' +' + over2 + ' day' + (over2 === 1 ? '' : 's') : '') +
+          '   \u00b7   ' + this.lengthText(this.shiftLen(s2)) +
+          (s2.date !== fromKey ? '   \u00b7   on since ' + this.showDate(s2.date) : '');
+
+        room(22);
+        var lx = M;
+        if (!mono) {
+          doc.rect(M, y + 3.5, 8, 8, self.guardColour(s2.guard).rgb);
+          lx = M + 13;
+        }
+        doc.text(PDFKit.fit(line, RIGHT - lx - 165, 9.5, false), lx, y + 10, 9.5, false, INK);
+        doc.text('Signed', RIGHT - 152, y + 10, 8.5, false, GREY);
+        doc.line(RIGHT - 118, y + 12, RIGHT, y + 12, LINE, 0.7);
+        y += 19;
+      }
+      y += 4;
     }
 
-    if (isRange) {
+    if (isRange && !isShift && !logSheet) {
       heading('Summary');
       var busiest = '', busiestN = 0, dk;
       for (dk = 0; dk < dayKeys.length; dk++) {
         if (byDay[dayKeys[dk]].length > busiestN) {
           busiestN = byDay[dayKeys[dk]].length;
-          busiest = this.ukDate(dayKeys[dk]);
+          busiest = this.showDate(dayKeys[dk]);
         }
       }
       var srows = [
-        ['Period covered', this.ukDate(fromKey) + ' to ' + this.ukDate(toKey)],
+        ['Period covered', this.showDate(fromKey) + ' to ' + this.showDate(toKey)],
         ['Total movements', String(todays.length)],
         ['Days with activity', String(dayKeys.length)],
         ['Busiest day', busiestN ? busiest + ' (' + busiestN + ')' : '-'],
@@ -4457,7 +6286,7 @@ var app = {
             if (!dayList[q].exitTime) open++;
           }
           drows.push([
-            this.ukDate(dayKeys[dk]),
+            this.showDate(dayKeys[dk]),
             (this.parseLocalDate(dayKeys[dk]) || new Date()).toLocaleDateString('en-GB', { weekday: 'long' }),
             String(dayList.length), firstIn, lastOut || '-', open ? String(open) : '-'
           ]);
@@ -4519,15 +6348,14 @@ var app = {
       { label: 'Out', w: 38 }
     ];
 
-    var visitorSeq = this.daySequence(this.visitors);
-    var staffSeq = this.daySequence(this.staffMovements, 'outTime');
+    var conIdx = this.contractorIndex();
 
     function movementRows(list) {
       var out = [], t, v;
       for (t = 0; t < list.length; t++) {
         v = list[t];
         out.push([
-          { t: String(visitorSeq[v.id] || ''), fill: v.flag ? hexToRgb(FLAG_HEX[v.flag]) : null,
+          { t: String(logIdx['v' + v.id] || ''), fill: v.flag ? hexToRgb(FLAG_HEX[v.flag]) : null,
             c: v.flag ? [1, 1, 1] : null, b: !!v.flag },
           v.company, v.rep || '-', v.vehicle || '-', v.reason, v.entryTime, v.exitTime || '-'
         ]);
@@ -4535,66 +6363,251 @@ var app = {
       return out;
     }
 
-    if (!isRange) {
-      /* the printed sheet is split the same way the day log is, so the
-         contractor movements and their induction standing sit together */
+    if (logSheet || splitSheet) {
+      var logRows = [], lg, bits;
+      for (lg = 0; lg < todays.length; lg++) {
+        if (this.isContractorEntry(todays[lg])) continue;
+        bits = [todays[lg].company];
+        if (todays[lg].rep) bits.push(todays[lg].rep);
+        if (todays[lg].vehicle) bits.push(todays[lg].vehicle);
+        bits.push(todays[lg].reason);
+        logRows.push({ date: todays[lg].date, time: todays[lg].entryTime,
+          until: todays[lg].exitTime || '', what: 'Visitor',
+          detail: bits.join(' \u00b7 '), flag: todays[lg].flag,
+          tag: 'V', seq: logIdx['v' + todays[lg].id] });
+      }
+      for (lg = 0; lg < staffList.length; lg++) {
+        logRows.push({ date: staffList[lg].date, time: staffList[lg].outTime,
+          until: staffList[lg].backTime || '', what: 'Staff out',
+          detail: staffList[lg].name + ' \u00b7 ' + this.vehicleLabel(staffList[lg]) +
+            ' \u00b7 ' + staffList[lg].reason,
+          flag: staffList[lg].flag, tag: 'S', seq: logIdx['s' + staffList[lg].id] });
+      }
+      for (lg = 0; lg < incList.length; lg++) {
+        logRows.push({ date: incList[lg].date, time: incList[lg].time,
+          until: incList[lg].ended || '', what: incList[lg].type,
+          detail: incList[lg].detail, flag: incList[lg].flag,
+          tag: 'I', seq: logIdx['i' + incList[lg].id] });
+      }
+      logRows.sort(function (a, b) {
+        var ka = a.date + ' ' + a.time, kb = b.date + ' ' + b.time;
+        return ka < kb ? -1 : (ka > kb ? 1 : 0);
+      });
+
+
+      /* The band lets the eye group the log at a glance. It is deliberately
+         not the only signal - the What column still says what each row is,
+         so a sheet printed in mono loses nothing. */
+      var KIND_BAND = { V: [0.11, 0.31, 0.85], S: [0.05, 0.58, 0.53], I: [0.92, 0.35, 0.04] };
+
+      /* mono drops the band column outright rather than shrinking it, since
+         a column too narrow for its text renders as an ellipsis */
+      var LOG_COLS = (mono ? [] : [{ label: '', w: 12 }]).concat(sheetSpans
+        ? [{ label: '#', w: mono ? 36 : 24 }, { label: 'Date', w: 68 },
+           { label: 'Time', w: 72 }, { label: 'What', w: 104 }, { label: 'Details', w: 235 }]
+        : [{ label: '#', w: mono ? 36 : 24 }, { label: 'Time', w: 76 },
+           { label: 'What', w: 114 }, { label: 'Details', w: 289 }]);
+
+      function logBody(rows) {
+        var out = [], q;
+        for (q = 0; q < rows.length; q++) {
+          var r = rows[q];
+          /* the number takes the kind colour so band and number read as one
+             mark, exactly as the contractor table does with its standing.
+             A guard's own flag is the more urgent signal, so it takes the
+             number where one is set and the band still shows the kind. */
+          var numFill = r.flag ? hexToRgb(FLAG_HEX[r.flag]) : KIND_BAND[r.tag];
+          var numCell = mono
+            ? { t: String(r.seq || '') + (r.flag ? '-' + markFor(r.flag) : ''), b: !!r.flag }
+            : { t: String(r.seq || ''), fill: numFill, c: [1, 1, 1], b: true };
+          var when = r.time + (r.until ? ' - ' + r.until : '');
+          var line = (mono ? [] : [{ t: '', fill: KIND_BAND[r.tag] }]).concat(sheetSpans
+            ? [numCell, self0.showDate(r.date), when, r.what, r.detail]
+            : [numCell, when, r.what, r.detail]);
+          if (rich) line.tint = tint(KIND_BAND[r.tag], 0.10);
+          out.push(line);
+        }
+        return out;
+      }
+
+      /* the same compact shape as the kind key, so a sheet ends with its
+         legends inline rather than another headed block */
+      function flagKeyInline(ids, lead) {
+        if (!ids.length) return;
+        room(26);
+        var fx = M, q;
+        if (lead) {
+          doc.text(lead, fx, y + 10, 8.5, true, GREY);
+          fx += PDFKit.width(lead, 8.5, true) + 10;
+        }
+        for (q = 0; q < ids.length; q++) {
+          var name = self0.flagName(ids[q]);
+          if (mono) {
+            doc.text(markFor(ids[q]), fx, y + 10, 8.5, true, INK);
+            doc.text(name, fx + 12, y + 10, 8.5, false, GREY);
+            fx += 12 + PDFKit.width(name, 8.5, false) + 18;
+          } else {
+            doc.rect(fx, y + 2, 9, 9, hexToRgb(FLAG_HEX[ids[q]]));
+            doc.text(name, fx + 14, y + 10, 8.5, false, GREY);
+            fx += 14 + PDFKit.width(name, 8.5, false) + 18;
+          }
+        }
+        y += 18;
+      }
+
+      function flagsIn(list) {
+        var seen = {}, out = [], q;
+        for (q = 0; q < list.length; q++) if (list[q].flag) seen[list[q].flag] = 1;
+        for (q = 0; q < self0.FLAGS.length; q++) {
+          if (seen[self0.FLAGS[q].id]) out.push(self0.FLAGS[q].id);
+        }
+        return out;
+      }
+
+      function kindKey() {
+        if (mono) return;
+        room(26);
+        var kx = M, pairs = [['Visitor', 'V'], ['Staff', 'S'], ['Incident', 'I']], kk;
+        for (kk = 0; kk < pairs.length; kk++) {
+          doc.rect(kx, y + 2, 9, 9, KIND_BAND[pairs[kk][1]]);
+          doc.text(pairs[kk][0], kx + 14, y + 10, 8.5, false, GREY);
+          kx += 14 + PDFKit.width(pairs[kk][0], 8.5, false) + 18;
+        }
+        y += 18;
+      }
+
+      heading(splitSheet ? 'Log' : 'Running log');
+      if (!logRows.length) {
+        paragraph('Nothing recorded.');
+      } else if (!sheetSpans) {
+        table(LOG_COLS, logBody(logRows));
+        paragraph(logRows.length + (logRows.length === 1 ? ' entry recorded.' : ' entries recorded.'));
+        kindKey();
+        flagKeyInline(flagsIn(logRows.map(function (q) { return { flag: q.flag }; })), 'Marked');
+      } else {
+        /* grouped by day once it crosses midnight */
+        var logDays = [], seenDay = {}, ld;
+        for (ld = 0; ld < logRows.length; ld++) {
+          if (!seenDay[logRows[ld].date]) { seenDay[logRows[ld].date] = []; logDays.push(logRows[ld].date); }
+          seenDay[logRows[ld].date].push(logRows[ld]);
+        }
+        for (ld = 0; ld < logDays.length; ld++) {
+          var dLabel = this.parseLocalDate(logDays[ld]);
+          room(30);
+          doc.text(dLabel.toLocaleDateString(this.dateOrder() === 'mdy' ? 'en-US' : 'en-GB',
+            { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
+            '  -  ' + seenDay[logDays[ld]].length +
+            (seenDay[logDays[ld]].length === 1 ? ' entry' : ' entries'),
+            M, y + 10, 9.5, true, SLATE);
+          y += 16;
+          table(LOG_COLS, logBody(seenDay[logDays[ld]]));
+        }
+        paragraph(logRows.length + ' entries across ' + logDays.length +
+          (logDays.length === 1 ? ' day.' : ' days.'));
+        kindKey();
+        flagKeyInline(flagsIn(logRows.map(function (q) { return { flag: q.flag }; })), 'Marked');
+      }
+      /* the sheet is split the way the day log is: everything in one order,
+         then the inducted contractors with their standing beside them.
+         Contractors always start a fresh page, so the two never run into
+         one another on a sheet that gets read at a gate. */
+      if (splitSheet) {
+      newPage();
       var pages = this.splitByPage(todays);
 
-      var CON_COLS = [
-        { label: '#', w: 24 },
-        { label: 'Company', w: 104 },
-        { label: 'Representative', w: 84 },
-        { label: 'Vehicle', w: 66 },
-        { label: 'Reason', w: 100 },
+      /* the wider number column in mono is paid for across the text
+         columns rather than out of Reason alone, which was running into
+         the time beside it */
+      /* the same band the Log uses, coloured by induction standing, so a
+         row can be read at a glance the same way. The number cell stays
+         free for the guard's own flags. */
+      /* which standings actually appear, so the key explains the colours
+         on the page rather than the whole vocabulary */
+      var seenHue = { green: false, amber: false, red: false };
+
+      function statusKey() {
+        if (mono) return;
+        var pairs = [];
+        if (seenHue.green) pairs.push([GREEN, 'Valid']);
+        if (seenHue.amber) pairs.push([AMBER, 'Expires soon']);
+        if (seenHue.red) pairs.push([RED, 'Not in date']);
+        if (!pairs.length) return;
+
+        room(26);
+        var sx = M, q;
+        doc.text('Induction', sx, y + 10, 8.5, true, GREY);
+        sx += PDFKit.width('Induction', 8.5, true) + 10;
+        for (q = 0; q < pairs.length; q++) {
+          doc.rect(sx, y + 2, 9, 9, pairs[q][0]);
+          doc.text(pairs[q][1], sx + 14, y + 10, 8.5, false, GREY);
+          sx += 14 + PDFKit.width(pairs[q][1], 8.5, false) + 18;
+        }
+        y += 18;
+      }
+
+      var CON_COLS = (mono ? [] : [{ label: '', w: 12 }]).concat([
+        { label: '#', w: mono ? 36 : 24 },
+        { label: 'Company', w: mono ? 100 : 98 },
+        { label: 'Representative', w: mono ? 80 : 84 },
+        { label: 'Vehicle', w: mono ? 62 : 66 },
+        { label: 'Reason', w: mono ? 100 : 94 },
         { label: 'In', w: 34 },
         { label: 'Out', w: 34 },
         { label: 'Induction', w: 69 }
-      ];
+      ]);
 
       var self = this;
       function shortStanding(v) {
         var s = self.entryInduction(v);
-        if (!s) return { t: '-', c: null };
-        if (s.unknown) return { t: 'Not listed', c: RED, b: true };
-        if (s.missing) return { t: 'No date', c: RED, b: true };
-        if (!s.valid) return { t: 'Due', c: RED, b: true };
-        return s.soon ? { t: 'Soon', c: AMBER, b: true } : { t: 'Valid', c: GREEN, b: true };
+        if (!s) return { cell: { t: '-', c: null }, hue: null };
+        if (s.unknown) return { cell: { t: mono ? 'NOT LISTED' : 'Not listed', c: RED, b: true }, hue: RED };
+        if (s.missing) return { cell: { t: mono ? 'NO DATE' : 'No date', c: RED, b: true }, hue: RED };
+        if (!s.valid) return { cell: { t: mono ? 'DUE' : 'Due', c: RED, b: true }, hue: RED };
+        if (s.soon) return { cell: { t: mono ? 'SOON' : 'Soon', c: AMBER, b: true }, hue: AMBER };
+        return { cell: { t: 'Valid', c: GREEN, b: !mono }, hue: GREEN };
       }
 
-      heading('Other visitors');
-      if (pages.daily.length) {
-        var oOpen = 0;
-        for (var oi = 0; oi < pages.daily.length; oi++) if (!pages.daily[oi].exitTime) oOpen++;
-        table(MOVE_COLS, movementRows(pages.daily));
-        paragraph(pages.daily.length +
-          (pages.daily.length === 1 ? ' other movement' : ' other movements') +
-          (oOpen ? ', ' + oOpen + ' with no exit time logged.' : '.'));
-      } else {
-        paragraph('No other visitors recorded.');
-      }
-
-      heading('Contractor movements');
+      heading('Contractor access');
       if (pages.contractors.length) {
         var crowsMove = [], cOpen = 0;
         for (var ci2 = 0; ci2 < pages.contractors.length; ci2++) {
           var cv = pages.contractors[ci2];
           if (!cv.exitTime) cOpen++;
-          crowsMove.push([
-            { t: String(visitorSeq[cv.id] || ''), fill: cv.flag ? hexToRgb(FLAG_HEX[cv.flag]) : null,
-              c: cv.flag ? [1, 1, 1] : null, b: !!cv.flag },
+          var st = shortStanding(cv);
+          if (st.hue === GREEN) seenHue.green = true;
+          else if (st.hue === AMBER) seenHue.amber = true;
+          else if (st.hue === RED) seenHue.red = true;
+          /* the number takes the induction colour so the pair reads as one
+             mark. A guard's own flag is the more urgent signal, so where
+             one is set it takes the number and the band still shows the
+             standing underneath it. */
+          var numFill = cv.flag ? hexToRgb(FLAG_HEX[cv.flag]) : st.hue;
+          var crow = (mono ? [] : [{ t: '', fill: st.hue }]).concat([
+            mono
+              ? { t: String(conIdx[cv.id] || '') + (cv.flag ? '-' + markFor(cv.flag) : ''), b: !!cv.flag }
+              : { t: String(conIdx[cv.id] || ''), fill: numFill,
+                  c: numFill ? [1, 1, 1] : null, b: true },
             cv.company, cv.rep || '-', cv.vehicle || '-', cv.reason,
-            cv.entryTime, cv.exitTime || '-', shortStanding(cv)
+            cv.entryTime, cv.exitTime || '-', st.cell
           ]);
+          if (rich && st.hue) crow.tint = tint(st.hue, 0.10);
+          crowsMove.push(crow);
         }
         table(CON_COLS, crowsMove);
         paragraph(pages.contractors.length +
-          (pages.contractors.length === 1 ? ' contractor movement' : ' contractor movements') +
+          (pages.contractors.length === 1 ? ' contractor arrival' : ' contractor arrivals') +
           (cOpen ? ', ' + cOpen + ' with no exit time logged.' : '.'));
+        statusKey();
       } else {
-        paragraph('No contractor movements recorded.');
+        paragraph('No contractor access recorded.');
+      }
+
+      /* each table keys only the flags it actually used, so a legend never
+         sits far from the colour it explains */
+      flagKeyInline(flagsIn(pages.contractors), 'Marked');
       }
     } else if (detailed && dayKeys.length) {
-      heading('Movements in detail');
+      heading(isShift ? 'Movements during this shift' : 'Movements in detail');
       for (var dd = 0; dd < dayKeys.length; dd++) {
         var dayRows = byDay[dayKeys[dd]];
         room(60);
@@ -4612,18 +6625,7 @@ var app = {
     }
 
     /* ---- staff leaving site ---- */
-    var staffList = [];
-    for (var sm = 0; sm < this.staffMovements.length; sm++) {
-      if (this.staffMovements[sm].date >= fromKey && this.staffMovements[sm].date <= toKey &&
-          inWindow(this.staffMovements[sm].outTime)) {
-        staffList.push(this.staffMovements[sm]);
-      }
-    }
-    staffList.sort(function (a, b) {
-      var ka = a.date + ' ' + a.outTime, kb = b.date + ' ' + b.outTime;
-      return ka < kb ? -1 : (ka > kb ? 1 : 0);
-    });
-
+    if (!logSheet && !splitSheet) {
     heading('Staff leaving site');
     if (staffList.length && !detailed) {
       /* same reasoning as the visitor listing - a year of departures would
@@ -4652,16 +6654,16 @@ var app = {
       for (sm = 0; sm < staffList.length; sm++) {
         var mv = staffList[sm];
         if (!mv.backTime) stillOut++;
-        var numCell = { t: String(staffSeq[mv.id] || ''),
+        var numCell = { t: String(logIdx['s' + mv.id] || ''),
           fill: mv.flag ? hexToRgb(FLAG_HEX[mv.flag]) : null,
           c: mv.flag ? [1, 1, 1] : null, b: !!mv.flag };
-        strows.push(isRange
-          ? [numCell, this.ukDate(mv.date), mv.name, this.vehicleLabel(mv), mv.reason,
+        strows.push(sheetSpans
+          ? [numCell, this.showDate(mv.date), mv.name, this.vehicleLabel(mv), mv.reason,
              mv.outTime, mv.backTime || '-']
           : [numCell, mv.name, this.vehicleLabel(mv), mv.reason,
              mv.outTime, mv.backTime || '-']);
       }
-      var stCols = isRange
+      var stCols = sheetSpans
         ? [{ label: '#', w: 24 }, { label: 'Date', w: 70 }, { label: 'Name', w: 96 },
            { label: 'Vehicle', w: 110 }, { label: 'Reason', w: 111 },
            { label: 'Out', w: 52 }, { label: 'Back', w: 52 }]
@@ -4676,20 +6678,23 @@ var app = {
     }
 
     /* ---- incidents and occurrences ---- */
+    }
+
+    if (!logSheet && !splitSheet) {
     heading('Incidents and occurrences');
     if (incList.length) {
       var incRows = [];
       for (ii = 0; ii < incList.length; ii++) {
         var n2 = incList[ii];
-        var numCell2 = { t: String(incSeq[n2.id] || ''),
+        var numCell2 = { t: String(logIdx['i' + n2.id] || ''),
           fill: n2.flag ? hexToRgb(FLAG_HEX[n2.flag]) : null,
           c: n2.flag ? [1, 1, 1] : null, b: !!n2.flag };
-        incRows.push(isRange
-          ? [numCell2, this.ukDate(n2.date), n2.time + (n2.ended ? ' - ' + n2.ended : ''),
+        incRows.push(sheetSpans
+          ? [numCell2, this.showDate(n2.date), n2.time + (n2.ended ? ' - ' + n2.ended : ''),
              n2.type, n2.detail]
           : [numCell2, n2.time + (n2.ended ? ' - ' + n2.ended : ''), n2.type, n2.detail]);
       }
-      table(isRange
+      table(sheetSpans
         ? [{ label: '#', w: 24 }, { label: 'Date', w: 70 }, { label: 'Time', w: 78 },
            { label: 'Type', w: 118 }, { label: 'Details', w: 225 }]
         : [{ label: '#', w: 24 }, { label: 'Time', w: 82 },
@@ -4697,6 +6702,8 @@ var app = {
       paragraph(incList.length + (incList.length === 1 ? ' entry recorded.' : ' entries recorded.'));
     } else {
       paragraph('Nothing recorded.');
+    }
+
     }
 
     /* ---- colour key, only if colours were actually used ---- */
@@ -4707,17 +6714,19 @@ var app = {
     var flagRows = [];
     for (uf = 0; uf < this.FLAGS.length; uf++) {
       if (!usedFlags[this.FLAGS[uf].id]) continue;
-      flagRows.push([
-        { t: '  ', fill: hexToRgb(this.FLAGS[uf].hex) },
-        this.flagName(this.FLAGS[uf].id)
-      ]);
+      flagRows.push(mono
+        ? [{ t: markFor(this.FLAGS[uf].id), b: true }, this.flagName(this.FLAGS[uf].id)]
+        : [{ t: '  ', fill: hexToRgb(this.FLAGS[uf].hex) }, this.flagName(this.FLAGS[uf].id)]);
     }
-    if (flagRows.length) {
-      heading('Colour key');
-      table([{ label: 'Colour', w: 70 }, { label: 'Meaning', w: 445 }], flagRows);
+    if (flagRows.length && !logSheet && !splitSheet) {
+      heading(mono ? 'Marks used' : 'Colour key');
+      table(mono
+        ? [{ label: 'Mark', w: 70 }, { label: 'Meaning', w: 445 }]
+        : [{ label: 'Colour', w: 70 }, { label: 'Meaning', w: 445 }], flagRows);
     }
 
     /* ---- contractor inductions ---- */
+    if (refTables) {
     heading('Contractor inductions (per representative)');
     if (this.contractors.length) {
       var now = new Date();
@@ -4728,6 +6737,11 @@ var app = {
       var crows = [], due = 0, soonCount = 0, people = 0;
       for (var c2 = 0; c2 < sorted.length; c2++) {
         var entries = this.inductionEntries(sorted[c2]);
+        if (!entries.length) {
+          crows.push([sorted[c2].name, 'Nobody inducted', '-', '-',
+            { t: 'NONE RECORDED', c: RED, b: true }]);
+          continue;
+        }
         for (var ei = 0; ei < entries.length; ei++) {
           var ent = entries[ei];
           people++;
@@ -4737,13 +6751,15 @@ var app = {
           if (!ent.valid) { stTxt = 'INDUCTION DUE'; stCol = RED; }
           else if (ent.soon) { stTxt = 'Expires in ' + ent.days + 'd'; stCol = AMBER; }
           else { stTxt = 'Valid'; stCol = GREEN; }
-          crows.push([
+          var iRow = [
             ei === 0 ? sorted[c2].name : '',
             ent.name,
             ent.vehicles.join(', ') || '-',
-            this.ukDate(ent.date),
-            { t: stTxt, c: stCol, b: true }
-          ]);
+            this.showDate(ent.date),
+            { t: mono ? stTxt.toUpperCase() : stTxt, c: stCol, b: true }
+          ];
+          if (rich) iRow.tint = tint(stCol, 0.10);
+          crows.push(iRow);
         }
       }
       table([
@@ -4828,13 +6844,16 @@ var app = {
     } else {
       paragraph('No regular visitors recorded.');
     }
+    }
 
     /* ---- footers, once the page count is known ---- */
     var total = doc.pages.length;
     for (var p = 0; p < total; p++) {
       doc.select(p);
       doc.line(M, 806, RIGHT, 806, LINE, 0.5);
-      doc.text('Security Access Tracker  -  ' + (isRange ? 'report for ' : 'sheet for ') + dateLabel, M, 816, 7.5, false, GREY);
+      doc.text('Security Access Tracker  -  ' +
+        (logSheet ? 'running log for ' : (isShift ? 'shift sheet for ' :
+        (isRange ? 'report for ' : 'sheet for '))) + dateLabel, M, 816, 7.5, false, GREY);
       doc.textRight('Page ' + (p + 1) + ' of ' + total, RIGHT, 816, 7.5, false, GREY);
       doc.text('This file carries its own backup data - reopen it with Restore to recover these records.',
         M, 826, 7, false, GREY);
@@ -4889,45 +6908,77 @@ var app = {
     var custom = this.customExportName();
     var whole = document.getElementById('exportWholeDay');
     var wholeDay = !!(whole && whole.checked);
+    var logBox = document.getElementById('exportRunningLog');
+    var withLog = !!(logBox && logBox.checked);
     var shifts = this.shiftsFor(this.viewDate);
-    var jobs = [], i;
+    var covers = [], i;
 
     if (wholeDay || !shifts.length) {
-      jobs.push({
+      covers.push({
         range: null,
         name: this.sheetFileName(this.viewDate,
           document.getElementById('startTime').value,
           document.getElementById('endTime').value, custom)
       });
-      return jobs;
-    }
-
-    for (i = 0; i < shifts.length; i++) {
-      jobs.push({
-        range: this.shiftRange(shifts[i]),
-        name: this.sheetFileName(this.viewDate, shifts[i].start, shifts[i].end,
-          custom ? custom + ' ' + shifts[i].start.replace(':', '') : '')
-      });
-    }
-
-    /* whatever no shift covers */
-    var all = this.entriesFor(this.viewDate)
-      .concat(this.staffMovesFor(this.viewDate), this.incidentsFor(this.viewDate));
-    var loose = 0;
-    for (i = 0; i < all.length; i++) {
-      var t = all[i].entryTime || all[i].outTime || all[i].time;
-      var covered = false;
-      for (var s = 0; s < shifts.length; s++) {
-        if (this.withinWindow(t, shifts[s].start, shifts[s].end)) { covered = true; break; }
+    } else {
+      for (i = 0; i < shifts.length; i++) {
+        var r = this.shiftRange(shifts[i]);
+        r.logSheet = false;
+        covers.push({
+          range: r,
+          name: r.spanDays
+            ? this.sheetFileName(this.viewDate, null, null,
+                (custom || this.dateStamp(this.viewDate)) + ' ' + shifts[i].start.replace(':', '') +
+                ' to ' + this.dateStamp(r.to) + ' ' + shifts[i].end.replace(':', ''))
+            : this.sheetFileName(this.viewDate, shifts[i].start, shifts[i].end,
+                custom ? custom + ' ' + shifts[i].start.replace(':', '') : '')
+        });
       }
-      if (!covered) loose++;
+
+      /* whatever no shift covers */
+      var all = this.entriesFor(this.viewDate)
+        .concat(this.staffMovesFor(this.viewDate), this.incidentsFor(this.viewDate));
+      var loose = 0;
+      for (i = 0; i < all.length; i++) {
+        var t = all[i].entryTime || all[i].outTime || all[i].time;
+        var at = this.stamp(all[i].date, t);
+        var covered = false;
+        for (var s = 0; s < shifts.length; s++) {
+          if (at !== null && at >= this.shiftFrom(shifts[s]) && at <= this.shiftTo(shifts[s])) {
+            covered = true; break;
+          }
+        }
+        if (!covered) loose++;
+      }
+      if (loose) {
+        covers.push({
+          range: null,
+          name: this.sheetFileName(this.viewDate, null, null, custom ? custom + ' full day' : ''),
+          note: loose + ' entries fell outside every shift, so the whole day is included as well'
+        });
+      }
     }
-    if (loose) {
+
+    /* Each watch gets its handover sheet and, if wanted, a running log
+       covering exactly the same hours - so a guard hands over one pair for
+       their own shift, not a log of somebody else's day as well. */
+    var jobs = [];
+    for (i = 0; i < covers.length; i++) {
+      jobs.push({ range: covers[i].range, name: covers[i].name, note: covers[i].note });
+      if (!withLog) continue;
+
+      var base = covers[i].range, logRange, k;
+      if (base) {
+        logRange = {};
+        for (k in base) if (Object.prototype.hasOwnProperty.call(base, k)) logRange[k] = base[k];
+        logRange.logSheet = true;
+      } else {
+        logRange = { type: 'log', from: this.viewDate, to: this.viewDate,
+                     logSheet: true, slug: null, label: this.showDate(this.viewDate) };
+      }
       jobs.push({
-        range: null,
-        name: this.sheetFileName(this.viewDate, null, null,
-          custom ? custom + ' full day' : ''),
-        note: loose + ' entries fell outside every shift, so the whole day is included as well'
+        range: logRange,
+        name: covers[i].name.replace(/\.pdf$/i, '') + ' running log.pdf'
       });
     }
 
@@ -4961,10 +7012,11 @@ var app = {
     /* staggered, because a browser will block a burst of downloads */
     function run(i) {
       if (i >= jobs.length) {
+        self.resetExportStyle();
         self.markBackup();
         self.toast(jobs.length === 1
           ? 'Sheet saved as ' + jobs[0].name
-          : jobs.length + ' sheets saved, one per shift' + (note ? '. ' + note : ''));
+          : jobs.length + ' sheets saved' + (note ? '. ' + note : ''));
         return;
       }
       try {
@@ -5176,8 +7228,8 @@ var app = {
       else keptIncidents.push(this.incidents[i]);
     }
 
-    if (!removed) { this.toast('Nothing older than ' + this.ukDate(key) + ' to clear'); return; }
-    if (!confirm('Remove ' + removed + ' records from before ' + this.ukDate(key) +
+    if (!removed) { this.toast('Nothing older than ' + this.showDate(key) + ' to clear'); return; }
+    if (!confirm('Remove ' + removed + ' records from before ' + this.showDate(key) +
                  '? Contractors and regular visitors are not affected. Save a backup first.')) return;
 
     this.visitors = kept;
@@ -5271,17 +7323,6 @@ var app = {
             report.pending.push({ rec: match, date: inc.inductionDate,
               who: target.name + ' - ' + (match.name || 'representative') });
           }
-        }
-      }
-    }
-
-    if (isContractor && incoming.inductionDate) {
-      if (!target.inductionDate) target.inductionDate = incoming.inductionDate;
-      else if (target.inductionDate !== incoming.inductionDate) {
-        report.conflicts++;
-        if (report.pending) {
-          report.pending.push({ rec: target, date: incoming.inductionDate,
-            who: target.name + ' - default date' });
         }
       }
     }
@@ -5542,7 +7583,7 @@ var app = {
   },
 
   clearToday: function () {
-    if (!confirm('Clear the sheet for ' + this.ukDate(this.viewDate) + '? This cannot be undone.')) return;
+    if (!confirm('Clear the sheet for ' + this.showDate(this.viewDate) + '? This cannot be undone.')) return;
     this.cancelEntryEdit();
     this.cancelStaffMoveEdit();
     var kept = [];
