@@ -147,7 +147,7 @@ body.night .day-pick{background:#0b1220;border-color:#334155;color:#cbd5e1}
 .sheet-summary{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;font-size:.85rem;color:#475569}
 .onsite-chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:9999px;padding:.35rem .75rem;font-weight:600;cursor:pointer;font-size:.8rem}
 .onsite-chip.active{background:#2563eb;color:#fff;border-color:#2563eb}
-.onsite-chip.none{background:#f1f5f9;border-color:#e2e8f0;color:#64748b;cursor:default}
+.onsite-chip.none{background:#f1f5f9;border-color:#e2e8f0;color:#5b6879;cursor:default}
 tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 .data-table td.num,.data-table th.num{width:2.6rem;text-align:center;padding:.4rem .2rem}
 .num-btn{width:2rem;height:2rem;border-radius:.3rem;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
@@ -191,6 +191,20 @@ body.night .form-title{color:#60a5fa}
 body.night .edit-btn{color:#60a5fa}
 body.night .rep-empty{color:#94a3b8}
 .guard-card{border:1px solid #e2e8f0;border-radius:.45rem;padding:.65rem .75rem;margin-bottom:.6rem;background:#fff}
+.head-row{display:flex;align-items:baseline;gap:.75rem;margin-bottom:.75rem}
+.head-row h2{flex:1;min-width:0;margin-bottom:0;padding-bottom:.5rem;border-bottom:2px solid #1e293b}
+.head-btn{flex:0 0 auto;padding:.4rem .85rem;font-size:.82rem;align-self:center}
+body.night .head-row h2{border-bottom-color:#334155}
+.fold{padding:0;overflow:hidden}
+.fold-head{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:.95rem 1rem;font-family:inherit;font-size:1rem;font-weight:700;color:#1e293b;text-align:left;cursor:pointer}
+.fold-head span{flex:1;min-width:0}
+.fold-arrow{width:.55rem;height:.55rem;border-right:2px solid #64748b;border-bottom:2px solid #64748b;transform:rotate(45deg);margin:-.2rem .15rem 0 .5rem;flex:0 0 auto;transition:transform .15s}
+.fold.open .fold-arrow{transform:rotate(-135deg);margin-top:.15rem}
+.fold-body{display:none;padding:0 1rem 1rem}
+.fold.open .fold-body{display:block}
+.fold + .fold{margin-top:.5rem}
+body.night .fold-head{color:#e2e8f0}
+body.night .fold-arrow{border-color:#94a3b8}
 .guard-dot{display:inline-block;width:.6rem;height:.6rem;border-radius:.15rem;margin-right:.35rem;vertical-align:baseline;flex:0 0 auto}
 .colour-input{width:3.4rem;height:2.4rem;padding:.15rem;border:1px solid #cbd5e1;border-radius:.375rem;background:#fff;flex:0 0 auto}
 body.night .colour-input{background:#0b1220;border-color:#334155}
@@ -200,9 +214,13 @@ body.night .colour-input{background:#0b1220;border-color:#334155}
 .guard-tot span{padding:.2rem .5rem;border-radius:9999px;font-size:.74rem;font-weight:700}
 .tot-done{background:#f0fdf4;color:#15803d}
 .tot-all{background:#eff6ff;color:#1d4ed8}
-.tot-none{background:#f1f5f9;color:#64748b}
+.tot-none{background:#f1f5f9;color:#5b6879}
 .week-row{display:flex;justify-content:space-between;font-size:.78rem;color:#475569;padding:.15rem 0;border-top:1px solid #f1f5f9}
 .week-row b{font-weight:600;color:#0f172a}
+.guard-tot .tot-done,.guard-tot .tot-all,.guard-tot .tot-none{border:1px solid transparent}
+body.night .tot-done{background:#0f2417;color:#4ade80;border-color:#14532d}
+body.night .tot-all{background:#16243a;color:#93c5fd;border-color:#1e3a5f}
+body.night .tot-none{background:#1e2d45;color:#94a3b8;border-color:#243553}
 body.night .guard-card{background:#111c2e;border-color:#1e2d45}
 body.night .guard-card h4{color:#e2e8f0}
 body.night .week-row{color:#94a3b8;border-top-color:#1e2d45}
@@ -461,10 +479,13 @@ body.night .act-kind{color:#94a3b8}
 <div id="sheet" class="tab-content">
 <div id="sheetDateBar">
 <div class="section">
+<div class="head-row">
 <h2>Sheet date</h2>
+<button type="button" class="button button-primary head-btn" id="quickExportBtn">Export</button>
+</div>
 <div class="sheet-bar">
 <button type="button" class="button button-secondary" id="prevDay">&#8249; Prev</button>
-<input type="date" id="sheetDate">
+<input type="date" id="sheetDate" aria-label="Date of the sheet being viewed">
 <button type="button" class="button button-secondary" id="nextDay">Next &#8250;</button>
 <button type="button" class="button button-secondary" id="todayBtn">Today</button>
 </div>
@@ -482,7 +503,7 @@ body.night .act-kind{color:#94a3b8}
 <div class="section">
 <h2>Occurrence sheet</h2>
 <div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
-<input type="search" id="sheetSearch" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
+<input type="search" id="sheetSearch" aria-label="Search this day's log" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
 <div class="page-switch" role="tablist">
 <button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
 <button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
@@ -743,7 +764,7 @@ body.night .act-kind{color:#94a3b8}
 <div class="action-row">
 <button type="button" class="button button-primary" id="addContractorBtn">Add contractor</button>
 </div>
-<input type="search" id="contractorSearch" class="filter-box" maxlength="40" placeholder="Filter by company or representative">
+<input type="search" id="contractorSearch" aria-label="Search the contractor list" class="filter-box" maxlength="40" placeholder="Filter by company or representative">
 <form id="contractorForm" style="display:none" autocomplete="off">
 <h3 class="form-title" id="contractorFormTitle">New contractor</h3>
 <div class="form-group">
@@ -778,7 +799,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <div class="form-group">
 <label for="visitorVehicle">Shared pool vehicles</label>
-<input type="text" id="visitorVehicle" placeholder="Comma separate. Any representative can be logged against these.">
+<input type="text" id="visitorVehicle" maxlength="200" placeholder="Comma separate. Any representative can be logged against these.">
 </div>
 <div class="form-group">
 <label>Representatives and their usual vehicles</label>
@@ -788,7 +809,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <div class="form-group">
 <label for="visitorReason">Usual reason for visit</label>
-<input type="text" id="visitorReason" placeholder="Optional">
+<input type="text" id="visitorReason" maxlength="80" placeholder="Optional">
 </div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="visitorSubmit">Save visitor</button>
@@ -808,7 +829,7 @@ body.night .act-kind{color:#94a3b8}
 <h2>Site vehicles</h2>
 <div class="form-group">
 <label for="siteVehicles">Vehicles kept on site</label>
-<input type="text" id="siteVehicles" placeholder="Comma separate, e.g. VAN1 ABC, TIPPER2 DEF">
+<input type="text" id="siteVehicles" maxlength="200" placeholder="Comma separate, e.g. VAN1 ABC, TIPPER2 DEF">
 </div>
 <div class="action-row">
 <button type="button" class="button button-primary" id="saveSiteVehiclesBtn">Save site vehicles</button>
@@ -845,8 +866,9 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div id="settings" class="tab-content">
-<div class="section">
-<h2>Site Access Hours</h2>
+<div class="section fold" id="fold_siteaccesshours">
+<button type="button" class="fold-head" id="foldBtn_siteaccesshours" aria-expanded="false" aria-controls="foldBody_siteaccesshours"><span>Site Access Hours</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_siteaccesshours">
 <div class="grid-2">
 <div class="form-group">
 <label for="startTime">Start time</label>
@@ -858,9 +880,11 @@ body.night .act-kind{color:#94a3b8}
 </div>
 </div>
 </div>
+</div>
 
-<div class="section">
-<h2>Sheet style</h2>
+<div class="section fold" id="fold_sheetstyle">
+<button type="button" class="fold-head" id="foldBtn_sheetstyle" aria-expanded="false" aria-controls="foldBody_sheetstyle"><span>Sheet style</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_sheetstyle">
 <div class="form-group">
 <label for="sheetStyle">How exported sheets are printed</label>
 <select id="sheetStyle">
@@ -871,18 +895,37 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <p class="field-hint">Your default. It can be changed for a single export in the Export section below.</p>
 </div>
+</div>
 
-<div class="section">
-<h2>Hours period</h2>
+<div class="section fold" id="fold_hoursperiod">
+<button type="button" class="fold-head" id="foldBtn_hoursperiod" aria-expanded="false" aria-controls="foldBody_hoursperiod"><span>Hours period</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_hoursperiod">
 <div class="form-group">
 <label for="periodDay">Each period starts on day</label>
 <input type="number" id="periodDay" min="1" max="28" step="1">
 </div>
 <p class="field-hint">Guard hours are totalled from this day of one month to the day before it in the next. Limited to 1&ndash;28 so every month has one.</p>
 </div>
+</div>
 
-<div class="section">
-<h2>Date format</h2>
+<div class="section fold" id="fold_signing">
+<button type="button" class="fold-head" id="foldBtn_signing" aria-expanded="false" aria-controls="foldBody_signing"><span>Signing</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_signing">
+<div class="form-group">
+<label for="signMode">How the signature line reads</label>
+<select id="signMode">
+<option value="capitals">The guard's name in block capitals</option>
+<option value="blank">A blank line to sign by hand</option>
+<option value="electronic">Signed electronically by the guard</option>
+</select>
+</div>
+<p class="field-hint">A blank line is the strongest record, since it is signed on the day. Block capitals say plainly who was on without claiming to be signed.</p>
+</div>
+</div>
+
+<div class="section fold" id="fold_dateformat">
+<button type="button" class="fold-head" id="foldBtn_dateformat" aria-expanded="false" aria-controls="foldBody_dateformat"><span>Date format</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_dateformat">
 <div class="form-group">
 <label for="dateFormat">How dates are shown</label>
 <select id="dateFormat">
@@ -892,15 +935,19 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <p class="field-hint">Applies on screen, on the printed sheets and to exported file names.</p>
 </div>
+</div>
 
-<div class="section">
-<h2>Unknown companies</h2>
+<div class="section fold" id="fold_unknowncompanies">
+<button type="button" class="fold-head" id="foldBtn_unknowncompanies" aria-expanded="false" aria-controls="foldBody_unknowncompanies"><span>Unknown companies</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_unknowncompanies">
 <label class="check-row"><input type="checkbox" id="learnEnabled" checked> Keep a record of companies that are not on any list</label>
 <p class="field-hint">A company logged that is on neither the contractor nor regular visitor list is held under Irregular visitors, on the Regular Visitors tab. Nothing interrupts the gate; classify them when there is time.</p>
 </div>
+</div>
 
-<div class="section">
-<h2>Export</h2>
+<div class="section fold" id="fold_export">
+<button type="button" class="fold-head" id="foldBtn_export" aria-expanded="false" aria-controls="foldBody_export"><span>Export</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_export">
 <div id="backupNote" class="induction-note" role="status" aria-live="polite" style="display:none"></div>
 <div class="form-group">
 <label for="exportName">File name</label>
@@ -916,23 +963,39 @@ body.night .act-kind{color:#94a3b8}
 <p class="field-hint">Returns to your default once the export has run.</p>
 </div>
 <label class="check-row"><input type="checkbox" id="exportWholeDay"> Export the whole day as one sheet</label>
-<label class="check-row"><input type="checkbox" id="exportRunningLog" checked> Also export a running log &mdash; everything in one order, without the inducted contractors</label>
+<label class="check-row"><input type="checkbox" id="exportBlock"> Export an operational day as one sheet, the log divided by shift</label>
+<div class="grid-2" id="blockTimes">
+<div class="form-group">
+<label for="blockFrom">Operational day from</label>
+<div class="time-row"><input type="time" id="blockFrom" value="05:00"><button type="button" id="now_blockFrom" class="button button-secondary now-btn">Now</button></div>
+</div>
+<div class="form-group">
+<label for="blockTo">to</label>
+<div class="time-row"><input type="time" id="blockTo" value="05:00"><button type="button" id="now_blockTo" class="button button-secondary now-btn">Now</button></div>
+</div>
+</div>
+<p class="field-hint">The same time either end means a full 24 hours, so 05:00 to 05:00 runs to the following morning.</p>
+<label class="check-row"><input type="checkbox" id="exportRunningLog"> Also export a running log &mdash; the same log again on its own sheet, with no contractor detail at all</label>
 <div class="action-row">
-<button type="button" class="button button-primary" id="exportPdfBtn">Export day sheet as PDF</button>
+<p class="field-hint">Export from the button beside the sheet date on the Day Sheet. These settings decide what it produces.</p>
 <button type="button" class="button button-secondary" id="exportJsonBtn">Save backup file</button>
 <button type="button" class="button button-secondary" id="importJsonBtn">Restore from PDF or backup</button>
 </div>
 <p class="text-muted">A day with recorded shifts exports one sheet per shift by default, each covering only that shift's movements. Tick the box above to get a single sheet for the whole day instead. Every export carries the records inside it, so any of these can be restored on another device. <strong>The day sheet holds one day only</strong> &mdash; to carry a whole stint off site use a period report below, or a backup file for everything.</p>
 </div>
+</div>
 
-<div class="section">
-<h2>Row colours</h2>
+<div class="section fold" id="fold_rowcolours">
+<button type="button" class="fold-head" id="foldBtn_rowcolours" aria-expanded="false" aria-controls="foldBody_rowcolours"><span>Row colours</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_rowcolours">
 <p class="text-muted" style="margin-top:0">Tap the number beside any entry to colour it. Name the colours here and the meanings print on the reports.</p>
 <div id="flagEditor"></div>
 </div>
+</div>
 
-<div class="section">
-<h2>Period report</h2>
+<div class="section fold" id="fold_periodreport">
+<button type="button" class="fold-head" id="foldBtn_periodreport" aria-expanded="false" aria-controls="foldBody_periodreport"><span>Period report</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_periodreport">
 <div class="form-group">
 <label for="periodType">Cover</label>
 <select id="periodType">
@@ -963,8 +1026,11 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <p class="text-muted">A week or month report lists every movement day by day. Longer periods give daily totals and the most frequent visitors instead, so the file stays manageable. Contractor inductions and regular visitors are included either way.</p>
 </div>
-<div class="section">
-<h2>Data</h2>
+</div>
+
+<div class="section fold" id="fold_data">
+<button type="button" class="fold-head" id="foldBtn_data" aria-expanded="false" aria-controls="foldBody_data"><span>Data</span><i class="fold-arrow"></i></button>
+<div class="fold-body" id="foldBody_data">
 <p class="text-muted" id="storageNote" style="margin-top:0"></p>
 <div class="action-row">
 <button type="button" class="button button-secondary" id="pruneBtn">Clear movements over 12 months old</button>
@@ -982,6 +1048,8 @@ body.night .act-kind{color:#94a3b8}
 <button type="button" class="button button-secondary" id="forceUpdateBtn">Check for a new version</button>
 </div>
 </div>
+</div>
+
 </div>
 
 </div>
@@ -1387,7 +1455,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v77';
+var BUILD = 'sat-v100';
 
 var app = {
   visitors: [],
@@ -1458,8 +1526,9 @@ var app = {
       var gs = ['entry', 'day', 'db'], gi;
       for (gi = 0; gi < gs.length; gi++) self.activateSub(gs[gi], self.subPage[gs[gi]]);
 
-      var wanted = self.tabFromHash();
-      if (wanted) self.activateTab(wanted);
+      /* stated here rather than left to the class in the markup, so the
+         opening view and the code cannot drift apart */
+      if (!self.goToHash()) self.activateTab(self.TABS[0]);
       self.backupNudge();
       if (note === 'migrated') {
         self.toast('Records moved to larger storage on this device');
@@ -1470,13 +1539,22 @@ var app = {
   /* The sheet date was fixed at start-up, so an app left open overnight
      kept filing entries under yesterday. Re-check whenever the app is
      looked at again, and on a timer while it sits open. */
+  dayWatch: null,
+
   startDayWatch: function () {
     var self = this;
+    /* Keep the handle and refuse to start twice: without one the timer
+       cannot be stopped, and a second call would leave two running. */
+    if (this.dayWatch) return;
     if (typeof setInterval === 'function') {
-      setInterval(function () { self.checkDayRollover(); }, 30000);
+      this.dayWatch = setInterval(function () { self.checkDayRollover(); }, 30000);
     }
+    /* No point watching a page nobody is looking at, and the browser
+       throttles it anyway. Stop on the way out, start again on return,
+       and check immediately in case the day turned while it was away. */
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) return;
+      if (document.hidden) { self.stopDayWatch(); return; }
+      self.startDayWatch();
       self.checkDayRollover();
       self.refreshFromStore();
     });
@@ -1486,10 +1564,7 @@ var app = {
       setTimeout(function () { self.syncStickyOffset(); }, 150);
     });
 
-    window.addEventListener('hashchange', function () {
-      var t = self.tabFromHash();
-      if (t) self.activateTab(t);
-    });
+    window.addEventListener('hashchange', function () { self.goToHash(); });
   },
 
   /* The same records can be open in a browser tab and the installed app at
@@ -1519,6 +1594,11 @@ var app = {
       self.renderStaffRegister();
       if (after !== before) self.toast('Updated with changes made elsewhere');
     });
+  },
+
+  stopDayWatch: function () {
+    if (this.dayWatch && typeof clearInterval === 'function') clearInterval(this.dayWatch);
+    this.dayWatch = null;
   },
 
   checkDayRollover: function () {
@@ -1674,7 +1754,11 @@ var app = {
         }
         self.migrate();
         self.seedIds();
-      } catch (e) {}
+      } catch (e) {
+        /* Records that fail to load look exactly like no records at all,
+           which is the most alarming thing this app could show someone. */
+        self.toast('Your saved records could not be read. Do not clear anything - restore from a backup or a sheet.', 'error');
+      }
       if (done) done(note);
     });
   },
@@ -1775,7 +1859,16 @@ var app = {
     }
     if (!this.shifts) this.shifts = [];
     for (i = 0; i < this.shifts.length; i++) {
-      if (!this.shifts[i].mins) this.setShiftLength(this.shifts[i], this.shiftLen(this.shifts[i]));
+      var sh = this.shifts[i];
+      /* A record can arrive from a damaged file or an older build, so give
+         it the fields everything downstream assumes are there. */
+      if (typeof sh.guard !== 'string' || !sh.guard) sh.guard = 'Unnamed guard';
+      if (!/^\d{2}:\d{2}$/.test(sh.start || '')) sh.start = '00:00';
+      if (typeof sh.mins !== 'number' || sh.mins < 0) {
+        this.setShiftLength(sh, this.shiftLen(sh));
+      } else {
+        sh.end = this.endClock(sh.start, sh.mins);
+      }
     }
     if (!this.irregulars) this.irregulars = [];
     if (!this.incidents) this.incidents = [];
@@ -1862,7 +1955,7 @@ var app = {
   },
 
   updateHeaderDate: function () {
-    document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-GB', {
+    document.getElementById('headerDate').textContent = new Date().toLocaleDateString(this.locale(), {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
   },
@@ -1923,7 +2016,7 @@ var app = {
     document.getElementById('regularVisitorForm').addEventListener('submit', function (e) { self.addRegularVisitor(e); });
     document.getElementById('cancelVisitorBtn').addEventListener('click', function () { self.hideVisitorForm(); });
 
-    document.getElementById('exportPdfBtn').addEventListener('click', function () { self.exportDaySheets(); });
+    document.getElementById('quickExportBtn').addEventListener('click', function () { self.exportDaySheets(); });
     document.getElementById('exportJsonBtn').addEventListener('click', function () { self.exportJson(); });
     document.getElementById('importJsonBtn').addEventListener('click', function () { document.getElementById('jsonImportInput').click(); });
     document.getElementById('jsonImportInput').addEventListener('change', function (e) { self.handleImport(e); });
@@ -1971,6 +2064,14 @@ var app = {
 
     document.getElementById('settingsBtn').addEventListener('click', function () { self.activateTab('settings'); });
 
+    for (k = 0; k < self.FOLDS.length; k++) {
+      (function (slug) {
+        var btn = document.getElementById('foldBtn_' + slug);
+        if (btn) btn.addEventListener('click', function () { self.toggleFold(slug); });
+      })(self.FOLDS[k]);
+    }
+    self.applyFolds();
+
     var groups = ['entry', 'day', 'db'], g, k;
     for (g = 0; g < groups.length; g++) {
       (function (group) {
@@ -1986,7 +2087,8 @@ var app = {
 
     var times = ['entryTime', 'exitTime', 'staffOutTime', 'staffBackTime',
                  'incidentTime', 'incidentEnd', 'shiftStart', 'shiftEnd',
-                 'rosterStart', 'rosterEnd', 'rosterEditStart', 'rosterEditEnd', 'changeTime'];
+                 'rosterStart', 'rosterEnd', 'rosterEditStart', 'rosterEditEnd', 'changeTime',
+                 'opFrom', 'opTo'];
     for (k = 0; k < times.length; k++) {
       (function (fieldId) {
         var b = document.getElementById('now_' + fieldId);
@@ -2053,6 +2155,15 @@ var app = {
     rg.addEventListener('focus', function () { self.showGuardSuggestions('rosterGuard', 'rosterGuardList'); });
     rg.addEventListener('blur', function () {
       setTimeout(function () { document.getElementById('rosterGuardList').classList.remove('active'); }, 200);
+    });
+
+    var sm = document.getElementById('signMode');
+    sm.value = self.signMode();
+    sm.addEventListener('change', function () {
+      self.setSignMode(sm.value);
+      self.toast(sm.value === 'blank' ? 'Sheets will print a line to sign'
+        : (sm.value === 'capitals' ? 'Sheets will print the name in capitals'
+        : 'Sheets will read signed electronically'));
     });
 
     var pd = document.getElementById('periodDay');
@@ -2169,6 +2280,8 @@ var app = {
 
   /* The home screen shortcuts point at #tracker and #archive, so the tab
      named in the address has to actually open. */
+  FOLDS: ['siteaccesshours', 'sheetstyle', 'hoursperiod', 'signing', 'dateformat', 'unknowncompanies', 'export', 'rowcolours', 'periodreport', 'data'],
+
   TABS: ['tracker', 'sheet', 'roster', 'database', 'settings'],
 
   /* Held as a list rather than looked up by selector, so the panes and their
@@ -2236,16 +2349,85 @@ var app = {
     if (name === 'roster') this.renderRoster();
   },
 
+  /* Some things worth a home screen shortcut are sub-tabs rather than
+     tabs, so a hash may name one of those and be routed to both. */
+  ROUTES: {
+    muster: { tab: 'sheet', group: 'day', pane: 'subMuster' },
+    duty:   { tab: 'sheet', group: 'day', pane: 'subDuty' },
+    sheet:  { tab: 'sheet', group: 'day', pane: 'subSheet' },
+    incident: { tab: 'tracker', group: 'entry', pane: 'subIncident' }
+  },
+
   tabFromHash: function () {
     var h = '';
     try { h = String(window.location.hash || '').replace('#', ''); } catch (e) {}
+    if (!h) return '';
+    var r = this.ROUTES[h];
+    if (r) return r.tab;
     return this.TABS.indexOf(h) === -1 ? '' : h;
+  },
+
+  routeFromHash: function () {
+    var h = '';
+    try { h = String(window.location.hash || '').replace('#', ''); } catch (e) {}
+    return this.ROUTES[h] || null;
+  },
+
+  goToHash: function () {
+    var wanted = this.tabFromHash();
+    if (!wanted) return false;
+    this.activateTab(wanted);
+    var r = this.routeFromHash();
+    if (r) this.activateSub(r.group, r.pane);
+    return true;
   },
 
   /* The tab bar sticks below the header, so its offset has to be the
      header's real height - hardcoding it left the bar tucked under the
      header edge, and worse on a folding screen where the height changes
      the moment the device opens. */
+  /* Each section opens and closes on its own; what is open is remembered,
+     so a setting being adjusted repeatedly is not re-opened every time. */
+  openFolds: function () {
+    try {
+      var v = JSON.parse(localStorage.getItem('sat-folds') || 'null');
+      if (!Array.isArray(v)) return [];
+      var self = this;
+      return v.filter(function (s) { return self.FOLDS.indexOf(s) !== -1; });
+    } catch (e) { return []; }
+  },
+
+  toggleFold: function (slug) {
+    /* checked here rather than relying on the lookup failing, so a bad
+       name can never reach the stored list */
+    if (this.FOLDS.indexOf(slug) === -1) return;
+    var sec = document.getElementById('fold_' + slug);
+    var btn = document.getElementById('foldBtn_' + slug);
+    if (!sec || !btn) return;
+
+    var open = !sec.classList.contains('open');
+    if (open) sec.classList.add('open'); else sec.classList.remove('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+    var list = this.openFolds(), at = list.indexOf(slug);
+    if (open && at === -1) list.push(slug);
+    if (!open && at !== -1) list.splice(at, 1);
+    try { localStorage.setItem('sat-folds', JSON.stringify(list)); } catch (e) {}
+  },
+
+  applyFolds: function () {
+    var open = this.openFolds(), i;
+    for (i = 0; i < this.FOLDS.length; i++) {
+      var slug = this.FOLDS[i];
+      var sec = document.getElementById('fold_' + slug);
+      var btn = document.getElementById('foldBtn_' + slug);
+      if (!sec || !btn) continue;
+      var on = open.indexOf(slug) !== -1;
+      if (on) sec.classList.add('open'); else sec.classList.remove('open');
+      btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+    }
+  },
+
   syncStickyOffset: function () {
     var hdr = document.getElementById('appHeader');
     var nav = document.getElementById('tabNav');
@@ -2714,7 +2896,9 @@ var app = {
             relearned = this.learnFromEntry(this.visitors[ej]);
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        this.toast('Saved, but the lists could not be updated from this entry', 'error');
+      }
 
       this.cancelEntryEdit();
       this.saveData();
@@ -2746,7 +2930,14 @@ var app = {
     });
 
     var learned = null;
-    try { learned = this.learnFromEntry(this.visitors[this.visitors.length - 1]); } catch (e) {}
+    /* The visit is already recorded, so a failure here must not lose it.
+       But swallowing this entirely means the holding list quietly stops
+       growing and nobody finds out, so say so once. */
+    try {
+      learned = this.learnFromEntry(this.visitors[this.visitors.length - 1]);
+    } catch (e) {
+      this.toast('Recorded, but this company could not be added to the lists', 'error');
+    }
 
     this.logPage = this.isContractorEntry(this.visitors[this.visitors.length - 1])
       ? 'contractors' : 'daily';
@@ -3126,12 +3317,49 @@ var app = {
     if (el) el.value = this.sheetStyle();
   },
 
+  SIGN_MODES: ['capitals', 'blank', 'electronic'],
+
+  signMode: function () {
+    var v = null;
+    try { v = localStorage.getItem('sat-sign'); } catch (e) {}
+    return this.SIGN_MODES.indexOf(v) === -1 ? 'capitals' : v;
+  },
+
+  setSignMode: function (v) {
+    if (this.SIGN_MODES.indexOf(v) === -1) return false;
+    try { localStorage.setItem('sat-sign', v); } catch (e) {}
+    return true;
+  },
+
   dateOrder: function () {
     try { return localStorage.getItem('sat-datefmt') === 'mdy' ? 'mdy' : 'dmy'; } catch (e) { return 'dmy'; }
   },
 
   setDateOrder: function (v) {
     try { localStorage.setItem('sat-datefmt', v === 'mdy' ? 'mdy' : 'dmy'); } catch (e) {}
+  },
+
+  /* Day and month only. In a log the year is already in the heading, and
+     the width is better spent on the details. */
+  /* The one place a locale is named. Hardcoded elsewhere and a single
+     sheet can carry both conventions at once, which is worse than either. */
+  locale: function () {
+    return this.dateOrder() === 'mdy' ? 'en-US' : 'en-GB';
+  },
+
+  /* Always 24 hour, because every other time on screen and on the sheets
+     is. One clock reading 2:45 PM beside another reading 14:45 is worse
+     than either convention on its own. */
+  clockNow: function () {
+    var d = new Date();
+    return this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+  },
+
+  showDayMonth: function (s) {
+    var d = this.parseLocalDate(s);
+    if (!d) return '-';
+    var dd = this.pad2(d.getDate()), mm = this.pad2(d.getMonth() + 1);
+    return this.dateOrder() === 'mdy' ? mm + '/' + dd : dd + '/' + mm;
   },
 
   showDate: function (s) {
@@ -4533,6 +4761,13 @@ var app = {
 
   guardPickTarget: '',
 
+  shownGuards: [],
+
+  openGuardPickerAt: function (i) {
+    var g = this.shownGuards[i];
+    if (g) this.openGuardPicker(g.name);
+  },
+
   openGuardPicker: function (name) {
     this.guardPickTarget = name;
     var panel = document.getElementById('guardSwatches');
@@ -4605,12 +4840,6 @@ var app = {
     return { from: from, to: to, fromKey: this.dateKey(from), toKey: this.dateKey(to) };
   },
 
-  weekStart: function (d) {
-    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));   /* Monday */
-    return x;
-  },
-
   /* A shift is counted where it begins, never split across a boundary, so
      the weekly figures always add up to the period figure. */
   guardHours: function (dateKey) {
@@ -4626,7 +4855,7 @@ var app = {
         byGuard[key] = { name: sh.guard, total: 0, done: 0, shifts: 0, weeks: {} };
         order.push(key);
       }
-      var mins = this.shiftLen(sh);
+      var mins = this.shiftRealMins(sh);
       byGuard[key].total += mins;
       byGuard[key].shifts++;
       if (this.shiftTo(sh) <= now) byGuard[key].done += mins;
@@ -4649,6 +4878,7 @@ var app = {
     if (!box) return;
 
     var data = this.guardHours(this.rosterPick || this.currentDate);
+    this.shownGuards = data.guards;
     label.innerHTML = '<span>' + this.showDate(data.period.fromKey) + ' to ' +
       this.showDate(data.period.toKey) + '</span><span class="onsite-chip none">' +
       data.guards.length + (data.guards.length === 1 ? ' guard' : ' guards') + '</span>';
@@ -4665,10 +4895,13 @@ var app = {
       for (w in g.weeks) if (Object.prototype.hasOwnProperty.call(g.weeks, w)) weeks.push(w);
       weeks.sort();
 
+      /* An index, never the name. Escaping a name into an inline handler
+         cannot be made safe: the browser decodes the entity before the
+         script is parsed, so the quotes climb back out of it. */
       html += '<div class="guard-card"><h4>' +
         '<button type="button" class="guard-swatch" title="Change colour" ' +
         'style="background:' + this.guardColour(g.name).hex + '" ' +
-        'onclick="app.openGuardPicker(' + JSON.stringify(this.esc(g.name)).replace(/"/g, '&quot;') + ')"></button>' +
+        'onclick="app.openGuardPickerAt(' + i + ')"></button>' +
         '<span>' + this.esc(g.name) + '</span></h4>' +
         '<div class="guard-tot">' +
         '<span class="' + (g.done ? 'tot-done' : 'tot-none') + '">Done ' + this.lengthText(g.done) + '</span>' +
@@ -4693,7 +4926,7 @@ var app = {
     if (!this.rosterPick) this.rosterPick = this.currentDate;
 
     var first = new Date(this.rosterYear, this.rosterMonth, 1);
-    var label = first.toLocaleDateString(this.dateOrder() === 'mdy' ? 'en-US' : 'en-GB',
+    var label = first.toLocaleDateString(this.locale(),
       { month: 'long', year: 'numeric' });
     document.getElementById('rosterMonthLabel').textContent = label;
 
@@ -4735,7 +4968,7 @@ var app = {
       html += '<button type="button" class="cal-day' +
         (key === this.currentDate ? ' today' : '') +
         (key === this.rosterPick ? ' chosen' : '') +
-        '" onclick="app.pickRosterDay(\'' + key + '\')"><b>' + i + '</b>' + names + '</button>';
+        '" onclick="app.pickRosterDayNum(' + i + ')"><b>' + i + '</b>' + names + '</button>';
     }
     grid.innerHTML = html;
 
@@ -4772,6 +5005,15 @@ var app = {
     if (!parts.length || !parts[0]) return '?';
     var last = parts[parts.length - 1];
     return last.length > 1 ? last : parts.join(' ');
+  },
+
+  /* The handler carries a day number, never a built string. Interpolating
+     text into an inline handler cannot be made safe by escaping, so the
+     rule here is that only numbers ever go in. */
+  pickRosterDayNum: function (day) {
+    day = parseInt(day, 10);
+    if (!(day >= 1 && day <= 31)) return;
+    this.pickRosterDay(this.rosterYear + '-' + this.pad2(this.rosterMonth + 1) + '-' + this.pad2(day));
   },
 
   pickRosterDay: function (key) {
@@ -4911,7 +5153,8 @@ var app = {
   LONG_SHIFT_HOURS: 16,
 
   shiftLen: function (sh) {
-    if (sh.mins) return sh.mins;
+    /* 0 is a real answer here, so it must not be read as absent */
+    if (typeof sh.mins === 'number' && sh.mins >= 0) return sh.mins;
     var m = this.toMinutes(sh.end) - this.toMinutes(sh.start);
     if (m <= 0) m += 1440;
     return m;
@@ -4934,14 +5177,44 @@ var app = {
   },
 
   /* a real moment, so shifts spanning days compare properly */
+  /* The real moment a clock time falls on. Built as a date rather than by
+     adding milliseconds to midnight: on the nights the clocks move, adding
+     six hours' worth of milliseconds to midnight lands on 07:00, not 06:00. */
   stamp: function (dateKey, time) {
     var d = this.parseLocalDate(dateKey);
     if (!d) return null;
-    return d.getTime() + this.toMinutes(time || '00:00') * 60000;
+    var mins = this.toMinutes(time || '00:00');
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+                    Math.floor(mins / 60), mins % 60, 0, 0).getTime();
   },
 
   shiftFrom: function (sh) { return this.stamp(sh.date, sh.start); },
-  shiftTo: function (sh) { return this.shiftFrom(sh) + this.shiftLen(sh) * 60000; },
+
+  /* The date the shift's clock end falls on. */
+  shiftEndDate: function (sh) {
+    var d = this.parseLocalDate(sh.date);
+    if (!d) return sh.date;
+    var over = this.spanDays(sh);
+    if (over) d.setDate(d.getDate() + over);
+    return this.dateKey(d);
+  },
+
+  /* Anchored to the clock end, not to the start plus a length. A rota is
+     written in clock times: 22:00 to 06:00 is seven real hours the night
+     the clocks go forward and nine the night they go back, which is what
+     the guard actually works. Deriving the end from elapsed milliseconds
+     made the printed sheet and the app disagree by an hour twice a year. */
+  shiftTo: function (sh) {
+    var at = this.stamp(this.shiftEndDate(sh), sh.end || this.endClock(sh.start, this.shiftLen(sh)));
+    return at === null ? this.shiftFrom(sh) + this.shiftLen(sh) * 60000 : at;
+  },
+
+  /* Hours actually worked, which differs from the rostered length only on
+     the two nights a year the clocks move. */
+  shiftRealMins: function (sh) {
+    var mins = Math.round((this.shiftTo(sh) - this.shiftFrom(sh)) / 60000);
+    return mins > 0 ? mins : this.shiftLen(sh);
+  },
 
   /* every shift that touches a day, including one that began earlier */
   spanNote: function (sh) {
@@ -5450,7 +5723,7 @@ var app = {
         '</td>' +
         '<td>' + this.esc(s.start) + '</td>' +
         '<td>' + this.esc(s.end) + this.spanNote(s) + '</td>' +
-        '<td>' + this.esc(this.lengthText(this.shiftLen(s))) + '</td>' +
+        '<td>' + this.esc(this.lengthText(this.shiftRealMins(s))) + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.swapShift(' + s.id + ')">Swap</button>' +
         '<button type="button" class="edit-btn" onclick="app.handOverShift(' + s.id + ')">Hand over</button>' +
@@ -5482,7 +5755,7 @@ var app = {
       '<small>' + (away.length
         ? away.length + (away.length === 1 ? ' staff member off site' : ' staff off site')
         : 'No staff signed out') +
-      ' \u00b7 as at ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) +
+      ' \u00b7 as at ' + this.clockNow() +
       (duty ? ' \u00b7 on duty: ' + this.esc(duty) : '') +
       '</small>';
 
@@ -5578,8 +5851,8 @@ var app = {
     var onSite = this.openEntries();
     var away = this.staffOffSite();
     var now = new Date();
-    var stamp = now.toLocaleDateString(this.dateOrder() === 'mdy' ? 'en-US' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
-      ' at ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    var stamp = now.toLocaleDateString(this.locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
+      ' at ' + this.clockNow();
 
     /* A roll call should say who took it. */
     var onDuty = this.guardAt(this.currentDate,
@@ -5726,7 +5999,14 @@ var app = {
     return '<td class="num"><button type="button" class="num-btn' + (f ? ' flagged' : '') +
       (otherDay ? ' carried' : '') + '"' + style + ' title="' + where + ', ' + colour +
       '" aria-label="' + where + ', ' + colour +
-      '" onclick="app.openFlagPicker(\'' + kind + '\',' + entry.id + ')">' + seq + '</button></td>';
+      '" onclick="app.openFlagPickerAt(' + this.KINDS.indexOf(kind) + ',' + entry.id + ')">' + seq + '</button></td>';
+  },
+
+  KINDS: ['visitor', 'staff', 'incident'],
+
+  openFlagPickerAt: function (i, id) {
+    var kind = this.KINDS[parseInt(i, 10)];
+    if (kind) this.openFlagPicker(kind, id);
   },
 
   openFlagPicker: function (kind, id) {
@@ -5834,8 +6114,11 @@ var app = {
     }
   },
 
-  /* ---------------- sheet naming and shift windows ---------------- */
+  /* ---------------- operational day ---------------- */
 
+  /* A block that runs from one clock time to another, crossing midnight
+     when it needs to, so a site working 05:00 to 05:00 gets one sheet for
+     its day rather than two half ones split at midnight. */
   /* DD-MM-YY, so a folder of sheets reads at a glance on a thumb drive. */
   dateStamp: function (dateKey) {
     var d = this.parseLocalDate(dateKey) || new Date();
@@ -5863,6 +6146,34 @@ var app = {
   },
 
   /* A single shift, expressed as a range the sheet builder understands. */
+  /* An operational day: a fixed window that need not respect midnight.
+     The same time either end means a full 24 hours. */
+  blockRange: function (dateKey) {
+    var from = document.getElementById('blockFrom').value || '05:00';
+    var to = document.getElementById('blockTo').value || from;
+    var startAt = this.stamp(dateKey, from);
+    if (startAt === null) return null;
+
+    var mins = this.toMinutes(to) - this.toMinutes(from);
+    if (mins <= 0) mins += 1440;
+    var endAt = startAt + mins * 60000;
+    var lastDay = this.dateKey(new Date(endAt));
+
+    return {
+      type: 'block',
+      from: dateKey,
+      to: lastDay,
+      fromStamp: startAt,
+      toStamp: endAt,
+      startTime: from,
+      endTime: to,
+      byShift: true,
+      slug: null,
+      label: this.showDate(dateKey) + ' \u00b7 ' + from + ' to ' + to +
+        (lastDay !== dateKey ? ' the next day' : '')
+    };
+  },
+
   shiftRange: function (sh) {
     var from = this.shiftFrom(sh), to = this.shiftTo(sh);
     var lastDay = new Date(to);
@@ -5894,10 +6205,13 @@ var app = {
            'July', 'August', 'September', 'October', 'November', 'December'],
 
   /* Monday to Sunday, matching how a rota week is usually counted. */
-  weekStart: function (dateKey) {
-    var d = this.parseLocalDate(dateKey) || new Date();
-    var dow = (d.getDay() + 6) % 7;
-    d.setDate(d.getDate() - dow);
+  /* The Monday of the week containing a day, given either a date key or a
+     Date. There were two of these with different signatures; the second
+     silently shadowed the first, so edits to it would have done nothing. */
+  weekStart: function (day) {
+    var d = this.parseLocalDate(day) || new Date();
+    d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     return d;
   },
 
@@ -5917,7 +6231,7 @@ var app = {
       from = this.isoKey(start);
       to = this.isoKey(end);
       label = 'Week ' + this.isoWeekNumber(start) + ', ' +
-        start.toLocaleDateString('en-GB') + ' to ' + end.toLocaleDateString('en-GB');
+        start.toLocaleDateString(this.locale()) + ' to ' + end.toLocaleDateString(this.locale());
       slug = start.getFullYear() + '-W' + this.pad2(this.isoWeekNumber(start));
     } else if (type === 'month') {
       var m = Number(value);
@@ -6094,7 +6408,7 @@ var app = {
       todays = windowed;
     }
     var sheetDay = this.parseLocalDate(fromKey) || new Date();
-    var dateLabel = isRange ? range.label : sheetDay.toLocaleDateString('en-GB', {
+    var dateLabel = isRange ? range.label : sheetDay.toLocaleDateString(this.locale(), {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     var onSiteAtExport = this.stillOnSite(todays).length;
@@ -6124,17 +6438,23 @@ var app = {
        sheet is - other visitors, then contractors with their induction
        standing. Once a watch crosses midnight, knowing which day an entry
        belongs to matters more, so it groups by day instead. */
-    var splitSheet = !isRange || (isShift && !range.spanDays);
+    var splitSheet = !isRange || (isShift && !range.spanDays) || !!(range && range.byShift);
 
     /* The induction list and the regular visitor list are reference data,
        not a record of the shift. They travel inside every export anyway, so
        a handover sheet does not reprint them - a period report, read for
        compliance rather than at a gate, still does, and keeps its table. */
-    var refTables = isRange && !isShift && !(range && range.logSheet);
+
 
     /* A running log: everything that happened in one order, minus the
        inducted contractors, mirroring the Daily page on screen. */
     var logSheet = !!(range && range.logSheet);
+    var byShift = !!(range && range.byShift);
+    var signing = this.signMode();
+
+    /* Declared here, after the flags it depends on. Reading them earlier
+       silently gave undefined and put the reference tables back. */
+    var refTables = isRange && !isShift && !logSheet && !byShift;
 
     /* A date column only earns its place when the sheet really covers more
        than one day. Deciding it on "is this a range" made a shift sheet and
@@ -6147,7 +6467,7 @@ var app = {
     doc.rect(M, y, RIGHT - M, 30, SLATE);
     doc.textCentre(logSheet ? 'SITE RUNNING LOG'
       : (isShift ? 'SHIFT HANDOVER SHEET'
-      : (isRange ? 'SITE OCCURRENCE REPORT' : 'SITE OCCURRENCE SHEET')),
+      : ((isRange && !byShift) ? 'SITE OCCURRENCE REPORT' : 'SITE OCCURRENCE SHEET')),
       PDFKit.PW / 2, y + 20, 14, true, WHITE);
     y += 34;
 
@@ -6213,9 +6533,15 @@ var app = {
       for (sIdx = 0; sIdx < shiftList.length; sIdx++) {
         var sh = shiftList[sIdx];
         var over = this.spanDays(sh);
+        /* the guard is already named in its own column, so the column
+           carries the mark rather than repeating the name */
+        var sigCell = signing === 'blank' ? ''
+          : (signing === 'capitals'
+              ? { t: sh.guard.toUpperCase(), b: true }
+              : { t: 'Signed electronically', c: GREY });
         shRows.push((mono ? [] : [{ t: '', fill: this.guardColour(sh.guard).rgb }]).concat([
           this.showDate(sh.date), sh.guard, sh.start,
-          sh.end + (over ? ' +' + over : ''), this.lengthText(this.shiftLen(sh)), '']));
+          sh.end + (over ? ' +' + over : ''), this.lengthText(this.shiftRealMins(sh)), sigCell]));
       }
       table((mono ? [] : [{ label: '', w: 12 }]).concat([
              { label: 'Date', w: 74 }, { label: 'Guard on duty', w: mono ? 140 : 132 },
@@ -6228,7 +6554,7 @@ var app = {
         var over2 = this.spanDays(s2);
         var line = s2.guard + '   \u00b7   ' + s2.start + ' to ' + s2.end +
           (over2 ? ' +' + over2 + ' day' + (over2 === 1 ? '' : 's') : '') +
-          '   \u00b7   ' + this.lengthText(this.shiftLen(s2)) +
+          '   \u00b7   ' + this.lengthText(this.shiftRealMins(s2)) +
           (s2.date !== fromKey ? '   \u00b7   on since ' + this.showDate(s2.date) : '');
 
         room(22);
@@ -6237,15 +6563,26 @@ var app = {
           doc.rect(M, y + 3.5, 8, 8, self.guardColour(s2.guard).rgb);
           lx = M + 13;
         }
-        doc.text(PDFKit.fit(line, RIGHT - lx - 165, 9.5, false), lx, y + 10, 9.5, false, INK);
-        doc.text('Signed', RIGHT - 152, y + 10, 8.5, false, GREY);
-        doc.line(RIGHT - 118, y + 12, RIGHT, y + 12, LINE, 0.7);
+        doc.text(PDFKit.fit(line, RIGHT - lx - 170, 9.5, false), lx, y + 10, 9.5, false, INK);
+
+        if (signing === 'blank') {
+          doc.text('Signed', RIGHT - 152, y + 10, 8.5, false, GREY);
+          doc.line(RIGHT - 118, y + 12, RIGHT, y + 12, LINE, 0.7);
+        } else {
+          var sigTxt = signing === 'capitals'
+            ? s2.guard.toUpperCase()
+            : 'Signed electronically by ' + s2.guard;
+          var bold = signing === 'capitals';
+          var sigW = PDFKit.width(sigTxt, 8.5, bold);
+          doc.text(sigTxt, RIGHT - Math.min(sigW, 165), y + 10, 8.5, bold,
+            signing === 'capitals' ? INK : GREY);
+        }
         y += 19;
       }
       y += 4;
     }
 
-    if (isRange && !isShift && !logSheet) {
+    if (isRange && !isShift && !logSheet && !byShift) {
       heading('Summary');
       var busiest = '', busiestN = 0, dk;
       for (dk = 0; dk < dayKeys.length; dk++) {
@@ -6287,7 +6624,7 @@ var app = {
           }
           drows.push([
             this.showDate(dayKeys[dk]),
-            (this.parseLocalDate(dayKeys[dk]) || new Date()).toLocaleDateString('en-GB', { weekday: 'long' }),
+            (this.parseLocalDate(dayKeys[dk]) || new Date()).toLocaleDateString(this.locale(), { weekday: 'long' }),
             String(dayList.length), firstIn, lastOut || '-', open ? String(open) : '-'
           ]);
         }
@@ -6403,8 +6740,8 @@ var app = {
       /* mono drops the band column outright rather than shrinking it, since
          a column too narrow for its text renders as an ellipsis */
       var LOG_COLS = (mono ? [] : [{ label: '', w: 12 }]).concat(sheetSpans
-        ? [{ label: '#', w: mono ? 36 : 24 }, { label: 'Date', w: 68 },
-           { label: 'Time', w: 72 }, { label: 'What', w: 104 }, { label: 'Details', w: 235 }]
+        ? [{ label: '#', w: mono ? 36 : 24 }, { label: 'Date', w: 44 },
+           { label: 'Time', w: 72 }, { label: 'What', w: 104 }, { label: 'Details', w: 259 }]
         : [{ label: '#', w: mono ? 36 : 24 }, { label: 'Time', w: 76 },
            { label: 'What', w: 114 }, { label: 'Details', w: 289 }]);
 
@@ -6422,7 +6759,7 @@ var app = {
             : { t: String(r.seq || ''), fill: numFill, c: [1, 1, 1], b: true };
           var when = r.time + (r.until ? ' - ' + r.until : '');
           var line = (mono ? [] : [{ t: '', fill: KIND_BAND[r.tag] }]).concat(sheetSpans
-            ? [numCell, self0.showDate(r.date), when, r.what, r.detail]
+            ? [numCell, self0.showDayMonth(r.date), when, r.what, r.detail]
             : [numCell, when, r.what, r.detail]);
           if (rich) line.tint = tint(KIND_BAND[r.tag], 0.10);
           out.push(line);
@@ -6476,7 +6813,48 @@ var app = {
         y += 18;
       }
 
-      heading(splitSheet ? 'Log' : 'Running log');
+      heading(logSheet ? 'Running log' : 'Log');
+
+      /* grouped under the shift that was on at the time, so one document
+         still shows whose watch each entry belonged to */
+      if (byShift && logRows.length) {
+        var blocks = [], q2, r2;
+        for (q2 = 0; q2 < shiftList.length; q2++) blocks.push({ sh: shiftList[q2], rows: [] });
+        var loose2 = [];
+        for (r2 = 0; r2 < logRows.length; r2++) {
+          var at2 = self0.stamp(logRows[r2].date, logRows[r2].time);
+          var placed = false;
+          for (q2 = 0; q2 < blocks.length && !placed; q2++) {
+            if (at2 !== null && at2 >= self0.shiftFrom(blocks[q2].sh) &&
+                at2 <= self0.shiftTo(blocks[q2].sh)) {
+              blocks[q2].rows.push(logRows[r2]);
+              placed = true;
+            }
+          }
+          if (!placed) loose2.push(logRows[r2]);
+        }
+
+        for (q2 = 0; q2 < blocks.length; q2++) {
+          if (!blocks[q2].rows.length) continue;
+          var bsh = blocks[q2].sh;
+          room(34);
+          if (!mono) doc.rect(M, y + 2, 8, 8, self0.guardColour(bsh.guard).rgb);
+          doc.text(bsh.guard + '   \u00b7   ' + bsh.start + ' to ' + bsh.end,
+            mono ? M : M + 13, y + 10, 9.5, true, SLATE);
+          y += 16;
+          table(LOG_COLS, logBody(blocks[q2].rows));
+        }
+        if (loose2.length) {
+          room(34);
+          doc.text('Outside any shift', M, y + 10, 9.5, true, SLATE);
+          y += 16;
+          table(LOG_COLS, logBody(loose2));
+        }
+        paragraph(logRows.length + (logRows.length === 1 ? ' entry recorded.' : ' entries recorded.') +
+          (loose2.length ? '  ' + loose2.length + ' fell outside every shift.' : ''));
+        kindKey();
+        flagKeyInline(flagsIn(logRows.map(function (q) { return { flag: q.flag }; })), 'Marked');
+      } else
       if (!logRows.length) {
         paragraph('Nothing recorded.');
       } else if (!sheetSpans) {
@@ -6494,7 +6872,7 @@ var app = {
         for (ld = 0; ld < logDays.length; ld++) {
           var dLabel = this.parseLocalDate(logDays[ld]);
           room(30);
-          doc.text(dLabel.toLocaleDateString(this.dateOrder() === 'mdy' ? 'en-US' : 'en-GB',
+          doc.text(dLabel.toLocaleDateString(this.locale(),
             { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
             '  -  ' + seenDay[logDays[ld]].length +
             (seenDay[logDays[ld]].length === 1 ? ' entry' : ' entries'),
@@ -6612,7 +6990,7 @@ var app = {
         var dayRows = byDay[dayKeys[dd]];
         room(60);
         y += 6;
-        doc.text((this.parseLocalDate(dayKeys[dd]) || new Date()).toLocaleDateString('en-GB', {
+        doc.text((this.parseLocalDate(dayKeys[dd]) || new Date()).toLocaleDateString(this.locale(), {
           weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
         }) + '  -  ' + dayRows.length + (dayRows.length === 1 ? ' movement' : ' movements'),
           M, y + 8, 9.5, true, SLATE);
@@ -6874,7 +7252,11 @@ var app = {
       staffMovements: staffList,
       siteVehicles: this.siteVehicles,
       shifts: shiftList,
-      incidents: incList
+      incidents: incList,
+      irregulars: this.irregulars,
+      /* without these a restored sheet has coloured rows and nothing
+         saying what the colours mean */
+      flagNames: this.flagLabels()
     };
 
     return doc.build(PDFKit.b64enc(PDFKit.toUtf8(JSON.stringify(payload))));
@@ -6913,7 +7295,18 @@ var app = {
     var shifts = this.shiftsFor(this.viewDate);
     var covers = [], i;
 
-    if (wholeDay || !shifts.length) {
+    var blockBox = document.getElementById('exportBlock');
+    if (blockBox && blockBox.checked) {
+      var br = this.blockRange(this.viewDate);
+      if (br) {
+        covers.push({
+          range: br,
+          name: this.sheetFileName(this.viewDate, null, null,
+            (custom || this.dateStamp(this.viewDate)) + ' ' +
+            br.startTime.replace(':', '') + ' to ' + br.endTime.replace(':', ''))
+        });
+      }
+    } else if (wholeDay || !shifts.length) {
       covers.push({
         range: null,
         name: this.sheetFileName(this.viewDate,
@@ -6959,6 +7352,8 @@ var app = {
       }
     }
 
+    /* One sheet for the whole operational block, sitting alongside the
+       per-shift files rather than replacing them. */
     /* Each watch gets its handover sheet and, if wanted, a running log
        covering exactly the same hours - so a guard hands over one pair for
        their own shift, not a log of somebody else's day as well. */
@@ -7163,7 +7558,11 @@ var app = {
         }).catch(function () { window.location.reload(true); });
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      /* Checking for an update is a convenience, not the app working. Say
+         so and carry on rather than leaving the button looking dead. */
+      this.toast('Could not check for a new version. The app still works offline.', 'error');
+    }
     setTimeout(function () { window.location.reload(true); }, 300);
   },
 
@@ -7256,7 +7655,8 @@ var app = {
       siteVehicles: this.siteVehicles,
       shifts: this.shifts,
       irregulars: this.irregulars,
-      incidents: this.incidents
+      incidents: this.incidents,
+      flagNames: this.flagLabels()
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -7361,6 +7761,34 @@ var app = {
   mergeData: function (d) {
     var report = { added: 0, conflicts: 0, records: 0, movements: 0, pending: [], applied: 0 };
     var i, j, inc, match;
+
+    /* A file can arrive from another device or be damaged on a drive, so
+       nothing in it may be assumed to be the shape it claims. */
+    if (!d || typeof d !== 'object') return report;
+
+    /* Names are adopted only into slots this device has left blank, so a
+       file can fill in the meaning of a colour but never rename one that
+       is already in use here. */
+    if (Array.isArray(d.flagNames)) {
+      var mine = this.flagLabels(), took = 0, fi;
+      for (fi = 0; fi < mine.length; fi++) {
+        if (!mine[fi] && typeof d.flagNames[fi] === 'string' && d.flagNames[fi]) {
+          mine[fi] = d.flagNames[fi];
+          took++;
+        }
+      }
+      if (took) this.setFlagLabels(mine);
+    }
+    var lists = ['visitors', 'contractors', 'regularVisitors', 'staff',
+                 'staffMovements', 'siteVehicles', 'shifts', 'irregulars', 'incidents'];
+    for (i = 0; i < lists.length; i++) {
+      if (d[lists[i]] === undefined) continue;
+      if (!Array.isArray(d[lists[i]])) { d[lists[i]] = []; continue; }
+      d[lists[i]] = d[lists[i]].filter(function (rec) {
+        return lists[i] === 'siteVehicles' ? typeof rec === 'string'
+                                           : (rec && typeof rec === 'object');
+      });
+    }
 
     if (d.contractors) {
       for (i = 0; i < d.contractors.length; i++) {
@@ -7530,9 +7958,18 @@ var app = {
     try {
       data = JSON.parse(PDFKit.fromUtf8(Array.prototype.slice.call(bytes)));
       return { data: data, source: 'backup file' };
-    } catch (err) {
-      return null;
+    } catch (err) { /* not a backup file either */ }
+
+    /* One of our sheets whose records cannot be read is a different problem
+       from the wrong file altogether, and the answer is different too: the
+       records still exist, in the original. */
+    /* No try needed: a byte array either contains the marker or it does
+       not, and a guard here would hide a real fault in the reader. */
+    if (bytes && bytes.length && PDFKit.bytesToBinary(bytes).indexOf('SATBackup') !== -1) {
+      return { repacked: true };
     }
+
+    return null;
   },
 
   handleImport: function (e) {
@@ -7551,6 +7988,11 @@ var app = {
         found = null;
       }
 
+      if (found && found.repacked) {
+        self.toast('That sheet came from this app, but another program has repacked it and the records can no longer be read. Use the original file, or a saved backup.', 'error');
+        input.value = '';
+        return;
+      }
       if (!found || !found.data) {
         self.toast('No saved records found in that file', 'error');
         input.value = '';
