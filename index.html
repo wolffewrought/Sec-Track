@@ -156,6 +156,12 @@ tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
 /* Night mode. Defining our own dark palette also stops Samsung Internet
    applying its forced-dark inversion, which mangles the status colours. */
 body.night{background:#0b1220;color:#e2e8f0}
+/* The html element sits behind the body. Darkening only the body leaves
+   whatever the body does not fill showing the light page underneath, which
+   on a short tab is a pale block across the bottom of the screen. */
+html.night{background:#0b1220}
+html,body{min-height:100%}
+body{min-height:100vh}
 body.night .section{background:#111c2e;box-shadow:none;border:1px solid #1e2d45}
 body.night .section h2{color:#e2e8f0;border-bottom-color:#334155}
 body.night .tab-nav{background:#111c2e;border-bottom-color:#1e2d45}
@@ -191,6 +197,8 @@ body.night .form-title{color:#60a5fa}
 body.night .edit-btn{color:#60a5fa}
 body.night .rep-empty{color:#94a3b8}
 .guard-card{border:1px solid #e2e8f0;border-radius:.45rem;padding:.65rem .75rem;margin-bottom:.6rem;background:#fff}
+.sheet-date-read{margin-top:.6rem;font-size:.9rem;font-weight:600;color:#334155}
+body.night .sheet-date-read{color:#cbd5e1}
 .head-row{display:flex;align-items:baseline;gap:.75rem;margin-bottom:.75rem}
 .head-row h2{flex:1;min-width:0;margin-bottom:0;padding-bottom:.5rem;border-bottom:2px solid #1e293b}
 .head-btn{flex:0 0 auto;padding:.4rem .85rem;font-size:.82rem;align-self:center}
@@ -312,6 +320,7 @@ body.night .act-kind{color:#94a3b8}
 <div class="subtab-nav" role="tablist">
 <button type="button" id="btnSubVisitor" class="subtab active" role="tab" aria-selected="true">Visitor</button>
 <button type="button" id="btnSubStaffOut" class="subtab" role="tab" aria-selected="false">Staff</button>
+<button type="button" id="btnSubKeyMove" class="subtab" role="tab" aria-selected="false">Key</button>
 <button type="button" id="btnSubIncident" class="subtab" role="tab" aria-selected="false">Incident</button>
 </div>
 <div id="subVisitor" class="subpane active">
@@ -423,6 +432,46 @@ body.night .act-kind{color:#94a3b8}
 </form>
 </div>
 </div>
+<div id="subKeyMove" class="subpane">
+<div class="section">
+<h2>Issue or return a key</h2>
+<form id="keyMoveForm">
+<input type="hidden" id="keyMoveEditId">
+<input type="hidden" id="keyToFrom">
+<div class="form-group">
+<label for="keyPick">Key</label>
+<select id="keyPick" required></select>
+</div>
+<div class="form-group">
+<label for="keyTo">Issued to</label>
+<div class="autocomplete-wrapper">
+<input type="text" id="keyTo" maxlength="60" autocomplete="off" placeholder="Name of the person taking it" required>
+<div class="autocomplete-list" id="keyToList"></div>
+</div>
+</div>
+<div class="grid-2">
+<div class="form-group">
+<label for="keyOutTime">Issued at</label>
+<div class="time-row"><input type="time" id="keyOutTime" required><button type="button" id="now_keyOutTime" class="button button-secondary now-btn">Now</button></div>
+</div>
+<div class="form-group">
+<label for="keyBackTime">Returned at</label>
+<div class="time-row"><input type="time" id="keyBackTime"><button type="button" id="now_keyBackTime" class="button button-secondary now-btn">Now</button></div>
+</div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary" id="keyMoveSubmit">Record</button>
+<button type="button" class="button button-secondary" id="keyMoveCancel" style="display:none">Cancel</button>
+</div>
+</form>
+</div>
+
+<div class="section">
+<h2>Out at the moment</h2>
+<div id="keysOutContainer"></div>
+</div>
+</div>
+
 <div id="subIncident" class="subpane">
 <div class="section">
 <h2>Record incident</h2>
@@ -503,12 +552,16 @@ body.night .act-kind{color:#94a3b8}
 <button type="button" class="button button-secondary" id="nextDay">Next &#8250;</button>
 <button type="button" class="button button-secondary" id="todayBtn">Today</button>
 </div>
+<div class="sheet-date-read" id="sheetDateRead" role="status" aria-live="polite"></div>
+<div style="display:none">
+</div>
 <div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
 </div>
 </div>
 <div class="subtab-nav" role="tablist">
 <button type="button" id="btnSubSheet" class="subtab active" role="tab" aria-selected="true">Sheet</button>
 <button type="button" id="btnSubDuty" class="subtab" role="tab" aria-selected="false">Duty</button>
+<button type="button" id="btnSubHandover" class="subtab" role="tab" aria-selected="false">Handover</button>
 <button type="button" id="btnSubMuster" class="subtab" role="tab" aria-selected="false">Muster</button>
 </div>
 <div id="subSheet" class="subpane active">
@@ -518,6 +571,8 @@ body.night .act-kind{color:#94a3b8}
 <h2>Occurrence sheet</h2>
 <div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <input type="search" id="sheetSearch" aria-label="Search this day's log" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
+<label class="check-row"><input type="checkbox" id="searchAllDays"> Search every day, not just this one</label>
+<div id="historyResults"></div>
 <div class="page-switch" role="tablist">
 <button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
 <button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
@@ -600,6 +655,15 @@ body.night .act-kind{color:#94a3b8}
 <p class="field-hint">More than one shift can be recorded for a day, so a handover is shown on the sheet and on the printed report.</p>
 </div>
 </div>
+<div id="subHandover" class="subpane">
+<div class="section">
+<h2>To hand over</h2>
+<div id="handoverSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="handoverContainer"></div>
+<p class="field-hint">Gathered from what has already been recorded. Anything listed here is still outstanding at the end of this day.</p>
+</div>
+</div>
+
 <div id="subMuster" class="subpane">
 <div class="section">
 <h2>Roll call</h2>
@@ -797,7 +861,7 @@ body.night .act-kind{color:#94a3b8}
 <input type="hidden" id="guardEditId">
 <div class="form-group">
 <label for="guardName">Name</label>
-<input type="text" id="guardName" maxlength="60" autocomplete="off" required>
+<div class="autocomplete-wrapper"><input type="text" id="guardName" maxlength="60" autocomplete="off" required><div class="autocomplete-list" id="guardNameList"></div></div>
 </div>
 <div class="form-group">
 <label for="guardPhone">Phone</label>
@@ -850,6 +914,7 @@ body.night .act-kind{color:#94a3b8}
 <div class="subtab-nav" role="tablist">
 <button type="button" id="btnSubContractors" class="subtab active" role="tab" aria-selected="true">Contractors</button>
 <button type="button" id="btnSubRegulars" class="subtab" role="tab" aria-selected="false">Visitors</button>
+<button type="button" id="btnSubKeys" class="subtab" role="tab" aria-selected="false">Keys</button>
 <button type="button" id="btnSubStaffList" class="subtab" role="tab" aria-selected="false">Staff</button>
 </div>
 <div id="subContractors" class="subpane active">
@@ -918,6 +983,33 @@ body.night .act-kind{color:#94a3b8}
 <div id="irregularsContainer"></div>
 </div>
 </div>
+<div id="subKeys" class="subpane">
+<div class="section">
+<h2>Keys held at the gate</h2>
+<div id="keySummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="keysContainer"></div>
+</div>
+
+<div class="section">
+<h2>Add a key</h2>
+<form id="keyForm">
+<input type="hidden" id="keyEditId">
+<div class="form-group">
+<label for="keyName">What it opens</label>
+<input type="text" id="keyName" maxlength="60" autocomplete="off" placeholder="Block C main door" required>
+</div>
+<div class="form-group">
+<label for="keyTag">Tag or number</label>
+<input type="text" id="keyTag" maxlength="30" autocomplete="off" placeholder="Optional, as marked on the fob">
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary" id="keySubmit">Add key</button>
+<button type="button" class="button button-secondary" id="keyCancel" style="display:none">Cancel</button>
+</div>
+</form>
+</div>
+</div>
+
 <div id="subStaffList" class="subpane">
 <div class="section">
 <h2>Site vehicles</h2>
@@ -1008,6 +1100,18 @@ body.night .act-kind{color:#94a3b8}
 <div class="form-group">
 <label for="paperSize">Paper size</label>
 <select id="paperSize"><option value="a4">A4</option><option value="letter">US Letter</option></select>
+</div>
+<div class="form-group">
+<label for="clockFormat">Clock</label>
+<select id="clockFormat">
+<option value="24">24 hour &mdash; 14:45</option>
+<option value="12">am and pm &mdash; 2:45 pm</option>
+</select>
+</div>
+<div class="form-group">
+<label for="tzPick">Time zone</label>
+<select id="tzPick"></select>
+<p class="field-hint">Only changes how times are written out. Entries are still stamped by the device clock, so leave this on the device setting unless sheets are read somewhere else.</p>
 </div>
 <div class="form-group">
 <label for="weekStart">Weeks start on</label>
@@ -1593,7 +1697,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v111';
+var BUILD = 'sat-v121';
 
 var app = {
   visitors: [],
@@ -1771,7 +1875,33 @@ var app = {
     this.setViewDate(d.getFullYear() + '-' + this.pad2(d.getMonth() + 1) + '-' + this.pad2(d.getDate()));
   },
 
+  /* Everything that shows a time or a date, in one call. Listing the
+     renders at each call site would leave one out the day another is
+     added, and a setting would appear to work everywhere but one screen. */
+  redraw: function () {
+    this.renderSheetControls();
+    this.setLogPage(this.logPage || 'daily');
+    this.renderShifts();
+    this.renderIncidents();
+    this.renderMuster();
+    this.renderHandover();
+    this.renderKeys();
+    this.renderKeysOut();
+    this.renderRoster();
+  },
+
   renderSheetControls: function () {
+    /* The picker is a native control and always shows the browser's own
+       format, whatever the app is set to. It cannot be restyled, so the
+       date is written out underneath it in the chosen order instead. */
+    var read = document.getElementById('sheetDateRead');
+    if (read) {
+      var d = this.parseLocalDate(this.viewDate);
+      read.textContent = d
+        ? d.toLocaleDateString(this.locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
+          '   \u00b7   ' + this.showDate(this.viewDate)
+        : '';
+    }
     var input = document.getElementById('sheetDate');
     input.value = this.viewDate;
     input.max = this.currentDate;
@@ -1888,6 +2018,8 @@ var app = {
           self.shifts = d.shifts || [];
           self.irregulars = d.irregulars || [];
       self.guards = d.guards || [];
+      self.keys = d.keys || [];
+      self.keyMoves = d.keyMoves || [];
           self.incidents = d.incidents || [];
         }
         self.migrate();
@@ -2009,6 +2141,8 @@ var app = {
       }
     }
     if (!this.irregulars) this.irregulars = [];
+    if (!Array.isArray(this.keys)) this.keys = [];
+    if (!Array.isArray(this.keyMoves)) this.keyMoves = [];
     this.syncGuards();
     if (!this.incidents) this.incidents = [];
     for (i = 0; i < this.incidents.length; i++) {
@@ -2083,7 +2217,9 @@ var app = {
       shifts: this.shifts,
       irregulars: this.irregulars,
       incidents: this.incidents,
-      guards: this.guards
+      guards: this.guards,
+      keys: this.keys,
+      keyMoves: this.keyMoves
     }, function () {
       self.toast('Could not save - export a backup and clear older movements', 'error');
     });
@@ -2162,8 +2298,28 @@ var app = {
       });
     }
 
-    document.getElementById('startTime').addEventListener('change', function (e) { localStorage.setItem('sat-start', e.target.value); });
-    document.getElementById('endTime').addEventListener('change', function (e) { localStorage.setItem('sat-end', e.target.value); });
+    /* A native time picker does not always fire change when it is
+       dismissed rather than confirmed, and there is no button here to
+       press, so the value would simply be lost. Commit on leaving the
+       field as well, guard the write like every other, and say it took. */
+    [['startTime', 'sat-start', 'Site access from'],
+     ['endTime', 'sat-end', 'Site access to']].forEach(function (spec) {
+      var el = document.getElementById(spec[0]);
+      if (!el) return;
+      var last = el.value;
+      var commit = function () {
+        var v = el.value;
+        if (v === last) return;
+        last = v;
+        var ok = true;
+        try { localStorage.setItem(spec[1], v); } catch (err) { ok = false; }
+        self.renderSheetControls();
+        self.toast(ok ? spec[2] + ' set to ' + self.showTime(v)
+                      : 'Could not save that - the device storage is full', ok ? '' : 'error');
+      };
+      el.addEventListener('change', commit);
+      el.addEventListener('blur', commit);
+    });
 
     document.getElementById('addContractorBtn').addEventListener('click', function () { self.showContractorForm(); });
     document.getElementById('contractorForm').addEventListener('submit', function (e) { self.addContractor(e); });
@@ -2185,10 +2341,12 @@ var app = {
     });
 
     document.getElementById('sheetSearch').addEventListener('input', function () {
+      self.renderHistory();
       self.renderLog();
       self.renderStaffMovements();
       self.renderIncidents();
     });
+    document.getElementById('searchAllDays').addEventListener('change', function () { self.renderHistory(); });
     document.getElementById('contractorSearch').addEventListener('input', function () {
       self.renderArchive();
     });
@@ -2202,6 +2360,25 @@ var app = {
 
     document.getElementById('changeForm').addEventListener('submit', function (e) { self.applyShiftChange(e); });
     document.getElementById('changeCancel').addEventListener('click', function () { self.cancelShiftChange(); });
+    /* Every field that takes a guard name offers the same list. Four of
+       them had none, so a guard already on the roster had to be typed out
+       again by hand - and a typo made a second guard. */
+    [['shiftGuard', 'shiftGuardList'], ['rosterEditGuard', 'rosterEditGuardList'],
+     ['coverFrom', 'coverFromList'], ['coverTo', 'coverToList'],
+     ['guardName', 'guardNameList']].forEach(function (pair) {
+      var el = document.getElementById(pair[0]);
+      if (!el) return;
+      var show = function () { self.showGuardSuggestions(pair[0], pair[1]); };
+      el.addEventListener('input', show);
+      el.addEventListener('focus', show);
+      el.addEventListener('blur', function () {
+        setTimeout(function () {
+          var l = document.getElementById(pair[1]);
+          if (l) l.classList.remove('active');
+        }, 200);
+      });
+    });
+
     var cg = document.getElementById('changeGuard');
     cg.addEventListener('input', function () { self.showGuardSuggestions('changeGuard', 'changeGuardList'); });
     cg.addEventListener('focus', function () { self.showGuardSuggestions('changeGuard', 'changeGuardList'); });
@@ -2263,7 +2440,7 @@ var app = {
     var times = ['entryTime', 'exitTime', 'staffOutTime', 'staffBackTime',
                  'incidentTime', 'incidentEnd', 'shiftStart', 'shiftEnd',
                  'rosterStart', 'rosterEnd', 'rosterEditStart', 'rosterEditEnd', 'changeTime',
-                 'blockFrom', 'blockTo'];
+                 'blockFrom', 'blockTo', 'keyOutTime', 'keyBackTime'];
     for (k = 0; k < times.length; k++) {
       (function (fieldId) {
         var b = document.getElementById('now_' + fieldId);
@@ -2286,6 +2463,24 @@ var app = {
     });
     document.getElementById('rosterClearMonth').addEventListener('click', function () { self.clearRosterMonth(); });
     document.getElementById('resetRosterOrderBtn').addEventListener('click', function () { self.resetFoldOrder('roster'); });
+    (function (el) {
+      var show = function () { self.showPeopleSuggestions('keyTo', 'keyToList', 'keyToFrom'); };
+      el.addEventListener('input', function () {
+        /* typing over a chosen name drops what stood beside it */
+        document.getElementById('keyToFrom').value = '';
+        show();
+      });
+      el.addEventListener('focus', show);
+      el.addEventListener('blur', function () {
+        setTimeout(function () { document.getElementById('keyToList').classList.remove('active'); }, 200);
+      });
+    })(document.getElementById('keyTo'));
+
+    document.getElementById('keyForm').addEventListener('submit', function (e) { self.saveKey(e); });
+    document.getElementById('keyCancel').addEventListener('click', function () { self.cancelKeyEdit(); });
+    document.getElementById('keyMoveForm').addEventListener('submit', function (e) { self.saveKeyMove(e); });
+    document.getElementById('keyMoveCancel').addEventListener('click', function () { self.cancelKeyMoveEdit(); });
+
     document.getElementById('guardForm').addEventListener('submit', function (e) { self.saveGuard(e); });
     document.getElementById('guardCancel').addEventListener('click', function () { self.cancelGuardEdit(); });
     document.getElementById('guardColourAuto').addEventListener('click', function () {
@@ -2298,6 +2493,26 @@ var app = {
 
     var ps = document.getElementById('paperSize');
     var ws = document.getElementById('weekStart');
+    var cf = document.getElementById('clockFormat');
+    var tz = document.getElementById('tzPick');
+    cf.value = self.clockFormat();
+    tz.innerHTML = self.TIME_ZONES.map(function (z) {
+      return '<option value="' + z + '">' +
+        (z ? self.esc(z.replace('_', ' ')) : 'The device setting (' + self.esc(self.deviceZone()) + ')') +
+        '</option>';
+    }).join('');
+    tz.value = self.timeZone();
+    cf.addEventListener('change', function () {
+      self.setClockFormat(cf.value);
+      self.redraw();
+      self.toast(cf.value === '12' ? 'Times shown as am and pm' : 'Times shown on the 24 hour clock');
+    });
+    tz.addEventListener('change', function () {
+      self.setTimeZone(tz.value);
+      self.redraw();
+      self.toast(tz.value ? 'Times written for ' + tz.value.replace('_', ' ') : 'Times follow the device');
+    });
+
     ps.value = self.paperSize();
     ws.value = String(self.weekStartsOn());
     ps.addEventListener('change', function () {
@@ -2322,11 +2537,15 @@ var app = {
       self.renderGuards();
       self.toast(lOn.checked ? self.licenceLabel() + ' tracking on' : 'Licence tracking off');
     });
-    lLbl.addEventListener('change', function () {
+    var labelCommit = function () {
+      if (lLbl.value === (self.licenceLabel() === 'Licence' ? '' : self.licenceLabel())) return;
       self.setLicenceLabel(lLbl.value);
       self.applyLicenceMode();
       self.renderGuards();
-    });
+      self.toast('Now called ' + self.licenceLabel());
+    };
+    lLbl.addEventListener('change', labelCommit);
+    lLbl.addEventListener('blur', labelCommit);
     self.applyLicenceMode();
     for (k = 0; k < self.LENGTH_FORMS.length; k++) {
       (function (key, startId, endId) {
@@ -2336,12 +2555,21 @@ var app = {
         /* the box sits inside a form, so Enter would otherwise save the
            shift before the length had been applied */
         var box = document.getElementById('lenInput_' + key);
-        if (box) box.addEventListener('keydown', function (ev) {
-          if (ev.key === 'Enter') {
-            if (ev.preventDefault) ev.preventDefault();
-            self.applyShiftLength(key);
-          }
-        });
+        if (box) {
+          box.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter') {
+              if (ev.preventDefault) ev.preventDefault();
+              self.applyShiftLength(key);
+            }
+          });
+          /* On a phone nobody presses Enter; they type the hours and tap
+             the next thing. Without this the length is quietly ignored and
+             the shift is refused for having no end time - with the answer
+             sitting in the box the whole time. */
+          box.addEventListener('blur', function () {
+            if (box.value !== '') self.applyShiftLength(key);
+          });
+        }
 
         var refresh = function () { self.showShiftLength(key); };
         document.getElementById(startId).addEventListener('input', refresh);
@@ -2424,7 +2652,13 @@ var app = {
     document.getElementById('prevDay').addEventListener('click', function () { self.shiftViewDate(-1); });
     document.getElementById('nextDay').addEventListener('click', function () { self.shiftViewDate(1); });
     document.getElementById('todayBtn').addEventListener('click', function () { self.setViewDate(self.currentDate); });
-    document.getElementById('sheetDate').addEventListener('change', function (ev) { self.setViewDate(ev.target.value); });
+    /* Same reasoning as the access hours: a native picker may not fire
+       change when it is dismissed, and there is no button beside it. */
+    (function (el) {
+      var commit = function () { if (el.value && el.value !== self.viewDate) self.setViewDate(el.value); };
+      el.addEventListener('change', commit);
+      el.addEventListener('blur', commit);
+    })(document.getElementById('sheetDate'));
 
     document.getElementById('staffMoveForm').addEventListener('submit', function (e) { self.recordStaffMove(e); });
     document.getElementById('staffNowBtn').addEventListener('click', function () {
@@ -2479,7 +2713,11 @@ var app = {
     document.getElementById('periodType').addEventListener('change', function () { self.renderPeriodControls(); });
     document.getElementById('periodValue').addEventListener('change', function () { self.renderPeriodSummary(); });
     document.getElementById('periodYear').addEventListener('change', function () { self.renderPeriodSummary(); });
-    document.getElementById('periodWeek').addEventListener('change', function () { self.renderPeriodSummary(); });
+    (function (el) {
+      var commit = function () { self.renderPeriodSummary(); };
+      el.addEventListener('change', commit);
+      el.addEventListener('blur', commit);
+    })(document.getElementById('periodWeek'));
     document.getElementById('exportPeriodBtn').addEventListener('click', function () { self.exportPeriod(); });
 
     var learnBox = document.getElementById('learnEnabled');
@@ -2505,9 +2743,9 @@ var app = {
   /* Held as a list rather than looked up by selector, so the panes and their
      buttons can never drift apart. */
   SUBTABS: {
-    entry: [['btnSubVisitor', 'subVisitor'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubIncident', 'subIncident']],
-    day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubMuster', 'subMuster']],
-    db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubStaffList', 'subStaffList']],
+    entry: [['btnSubVisitor', 'subVisitor'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubKeyMove', 'subKeyMove'], ['btnSubIncident', 'subIncident']],
+    day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubHandover', 'subHandover'], ['btnSubMuster', 'subMuster']],
+    db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubKeys', 'subKeys'], ['btnSubStaffList', 'subStaffList']],
     roster: [['btnSubRoster', 'subRoster'], ['btnSubGuards', 'subGuards']]
   },
 
@@ -3546,7 +3784,7 @@ var app = {
       var v = src[j];
       var otherDay = v.date !== this.viewDate;
       var exitCell = v.exitTime
-        ? this.esc(v.exitTime)
+        ? this.esc(this.showTime(v.exitTime))
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
       rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
         this.numCell(v, onContractors ? cIdx[v.id] : vIdx['v' + v.id], 'visitor', otherDay) +
@@ -3557,7 +3795,7 @@ var app = {
         '</td>' +
         '<td>' + this.esc(v.vehicle || '-') + '</td>' +
         '<td>' + this.esc(v.reason) + '</td>' +
-        '<td>' + this.esc(v.entryTime) + '</td>' +
+        '<td>' + this.esc(this.showTime(v.entryTime)) + '</td>' +
         '<td>' + exitCell + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.editEntry(' + v.id + ')">Edit</button>' +
@@ -3793,7 +4031,20 @@ var app = {
      than either convention on its own. */
   clockNow: function () {
     var d = new Date();
-    return this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+    var tz = this.timeZone();
+    if (tz) {
+      try {
+        var parts = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit',
+          minute: '2-digit', hour12: false }).format(d);
+        if (/^\d{2}:\d{2}$/.test(parts)) return this.showTime(parts);
+      } catch (e) {
+        /* A zone the device does not know is a setting that will silently
+           never apply, so clear it rather than leave it looking chosen. */
+        this.setTimeZone('');
+        this.toast('This device does not know that time zone, so times follow the device', 'error');
+      }
+    }
+    return this.showTime(this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes()));
   },
 
   showDayMonth: function (s) {
@@ -3813,7 +4064,7 @@ var app = {
   renderArchive: function () {
     var container = document.getElementById('archiveContainer');
     if (!this.contractors.length) {
-      container.innerHTML = '<div class="empty-state">No contractors on the list</div>';
+      container.innerHTML = '<div class="empty-state">No contractors yet. Add one below, or log a visit and the company will appear here.</div>';
       return;
     }
 
@@ -4043,7 +4294,7 @@ var app = {
   renderVisitors: function () {
     var container = document.getElementById('visitorsContainer');
     if (!this.regularVisitors.length) {
-      container.innerHTML = '<div class="empty-state">No regular visitors saved</div>';
+      container.innerHTML = '<div class="empty-state">No regular visitors yet. Add one below, or log a visit and the company will appear here.</div>';
       return;
     }
 
@@ -4256,7 +4507,7 @@ var app = {
     document.getElementById('siteVehicles').value = (this.siteVehicles || []).join(', ');
 
     if (!this.staff.length) {
-      box.innerHTML = '<div class="empty-state">Nobody on the staff register</div>';
+      box.innerHTML = '<div class="empty-state">Nobody on the staff register yet. Add the people who work on site below.</div>';
       return;
     }
 
@@ -4387,7 +4638,8 @@ var app = {
     if (mode === 'none') vehicle = '';
 
     if (backTime && backTime < outTime &&
-        !confirm('Back ' + backTime + ' is before out ' + outTime + '. Record it anyway?')) return;
+        !confirm('Back ' + this.showTime(backTime) + ' is before out ' +
+                 this.showTime(outTime) + '. Record it anyway?')) return;
 
     if (this.editingMoveId !== null) {
       for (var mi = 0; mi < this.staffMovements.length; mi++) {
@@ -4561,7 +4813,7 @@ var app = {
       var m = display[i];
       var otherDay = m.date !== this.viewDate;
       var backCell = m.backTime
-        ? this.esc(m.backTime)
+        ? this.esc(this.showTime(m.backTime))
         : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button>';
       rows += '<tr' + (m.backTime ? '' : ' class="on-site"') + '>' +
         this.numCell(m, seq['s' + m.id], 'staff', otherDay) +
@@ -4570,7 +4822,7 @@ var app = {
         '</td>' +
         '<td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
         '<td>' + this.esc(m.reason) + '</td>' +
-        '<td>' + this.esc(m.outTime) + '</td>' +
+        '<td>' + this.esc(this.showTime(m.outTime)) + '</td>' +
         '<td>' + backCell + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.editStaffMove(' + m.id + ')">Edit</button>' +
@@ -4731,8 +4983,8 @@ var app = {
       body += '<tr' + (open ? ' class="on-site"' : '') + '>' +
         '<td class="band"><i class="kind-band kind-' + r.kind + '"></i></td>' +
         this.numCell(r.rec, seq, r.kind, false) +
-        '<td>' + this.esc(r.time) +
-          (r.until ? '<span class="cell-sub">to ' + this.esc(r.until) + '</span>' : '') + '</td>' +
+        '<td>' + this.esc(this.showTime(r.time)) +
+          (r.until ? '<span class="cell-sub">to ' + this.esc(this.showTime(r.until)) + '</span>' : '') + '</td>' +
         '<td><span class="act-kind">' +
           this.esc(r.kind === 'incident' ? r.label : (r.kind === 'staff' ? 'Staff' : 'Visitor')) +
           '</span>' +
@@ -4882,8 +5134,8 @@ var app = {
       var n = list[i];
       rows += '<tr>' +
         this.numCell(n, seq['i' + n.id], 'incident', false) +
-        '<td>' + this.esc(n.time) +
-          (n.ended ? '<span class="cell-sub">to ' + this.esc(n.ended) + '</span>' : '') + '</td>' +
+        '<td>' + this.esc(this.showTime(n.time)) +
+          (n.ended ? '<span class="cell-sub">to ' + this.esc(this.showTime(n.ended)) + '</span>' : '') + '</td>' +
         '<td>' + this.esc(n.type) + '</td>' +
         '<td>' + this.esc(n.detail) + '</td>' +
         '<td class="row-actions">' +
@@ -4993,7 +5245,7 @@ var app = {
     if (!box) return;
 
     if (!this.irregulars.length) {
-      box.innerHTML = '<div class="empty-state">Nothing waiting to be classified</div>';
+      box.innerHTML = '<div class="empty-state">Nothing waiting to be classified. New companies logged at the gate appear here.</div>';
       return;
     }
 
@@ -5143,6 +5395,51 @@ var app = {
     return (d.getDay() - this.weekStartsOn() + 7) % 7;
   },
 
+  /* Written out as the site prefers. The stored value never changes: a
+     record is always HH:MM, and only the reading of it moves. */
+  clockFormat: function () {
+    var v = '';
+    try { v = localStorage.getItem('sat-clock') || ''; } catch (e) {}
+    return v === '12' ? '12' : '24';
+  },
+
+  setClockFormat: function (v) {
+    try { localStorage.setItem('sat-clock', v === '12' ? '12' : '24'); } catch (e) {}
+  },
+
+  showTime: function (hhmm) {
+    var s = String(hhmm || '');
+    if (!/^\d{1,2}:\d{2}$/.test(s)) return s;
+    if (this.clockFormat() === '24') return s;
+    var p = s.split(':'), hr = parseInt(p[0], 10);
+    var suffix = hr < 12 ? 'am' : 'pm';
+    var shown = hr % 12;
+    if (shown === 0) shown = 12;
+    return shown + ':' + p[1] + ' ' + suffix;
+  },
+
+  TIME_ZONES: ['', 'UTC', 'Europe/London', 'Europe/Dublin', 'Europe/Paris', 'Europe/Berlin',
+               'Europe/Madrid', 'Europe/Warsaw', 'America/New_York', 'America/Chicago',
+               'America/Denver', 'America/Los_Angeles', 'America/Toronto', 'America/Sao_Paulo',
+               'Africa/Johannesburg', 'Africa/Lagos', 'Asia/Dubai', 'Asia/Kolkata',
+               'Asia/Singapore', 'Asia/Tokyo', 'Australia/Perth', 'Australia/Sydney',
+               'Pacific/Auckland'],
+
+  timeZone: function () {
+    var v = '';
+    try { v = localStorage.getItem('sat-tz') || ''; } catch (e) {}
+    return this.TIME_ZONES.indexOf(v) > 0 ? v : '';
+  },
+
+  setTimeZone: function (v) {
+    try { localStorage.setItem('sat-tz', this.TIME_ZONES.indexOf(v) > 0 ? v : ''); } catch (e) {}
+  },
+
+  deviceZone: function () {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'the device setting'; }
+    catch (e) { return 'the device setting'; }
+  },
+
   paperSize: function () {
     var v = '';
     try { v = localStorage.getItem('sat-paper') || ''; } catch (e) {}
@@ -5199,6 +5496,612 @@ var app = {
       if (!st.valid) out.push(s);
     }
     return out;
+  },
+
+  /* The day filter answers "what happened today". After something goes
+     wrong the question is "has this van been here before", and answering
+     that meant paging through days one at a time. */
+  searchHistory: function (q) {
+    q = String(q || '').toLowerCase().replace(/^\s+|\s+$/g, '');
+    if (q.length < 2) return [];
+    var out = [], i;
+    var hit = function (rec, bits, kind, when) {
+      if (bits.join(' ').toLowerCase().indexOf(q) === -1) return;
+      out.push({ rec: rec, kind: kind, date: rec.date, time: when, what: bits });
+    };
+    for (i = 0; i < this.visitors.length; i++) {
+      var v = this.visitors[i];
+      hit(v, [v.company, v.rep || '', v.vehicle || '', v.reason || ''], 'Visitor', v.entryTime);
+    }
+    for (i = 0; i < this.staffMovements.length; i++) {
+      var m = this.staffMovements[i];
+      hit(m, [m.name, m.vehicle || '', m.reason || ''], 'Staff out', m.outTime);
+    }
+    for (i = 0; i < this.incidents.length; i++) {
+      var n = this.incidents[i];
+      hit(n, [n.type, n.detail || ''], n.type, n.time);
+    }
+    out.sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? 1 : -1; });
+    return out;
+  },
+
+  renderHistory: function () {
+    var box = document.getElementById('historyResults');
+    var on = document.getElementById('searchAllDays');
+    if (!box || !on) return;
+    if (!on.checked) { box.innerHTML = ''; return; }
+
+    var q = document.getElementById('sheetSearch').value;
+    var found = this.searchHistory(q);
+    if (String(q).replace(/^\s+|\s+$/g, '').length < 2) {
+      box.innerHTML = '<div class="empty-state">Type at least two letters to search every day.</div>';
+      return;
+    }
+    if (!found.length) {
+      box.innerHTML = '<div class="empty-state">Nothing anywhere in the records matches that.</div>';
+      return;
+    }
+
+    var self = this;
+    var days = {}, order = [];
+    found.forEach(function (f) {
+      if (!days[f.date]) { days[f.date] = []; order.push(f.date); }
+      days[f.date].push(f);
+    });
+
+    var rows = '', k;
+    for (k = 0; k < order.length && k < 40; k++) {
+      var day = order[k];
+      rows += '<tr><td colspan="2"><b>' + this.esc(this.showDate(day)) + '</b></td></tr>' +
+        days[day].map(function (f) {
+          return '<tr><td>' + self.esc(f.kind) +
+            '<span class="cell-sub">' + self.esc(f.what.filter(Boolean).join(' \u00b7 ')) + '</span>' +
+            '</td><td>' + self.esc(self.showTime(f.time)) + '</td></tr>';
+        }).join('');
+    }
+    box.innerHTML = '<p class="field-hint">' + found.length +
+      (found.length === 1 ? ' match' : ' matches') + ' across ' + order.length +
+      (order.length === 1 ? ' day' : ' days') +
+      (order.length > 40 ? ', showing the most recent 40' : '') + '</p>' +
+      '<table class="data-table"><tbody>' + rows + '</tbody></table>';
+  },
+
+  /* Everyone the app knows of, and where each of them is from. Three
+     people called John Smith - a guard, an engineer and a scaffolder -
+     are only telling apart by what stands beside the name. */
+  peopleKnown: function () {
+    var out = [], seen = {}, i, j;
+    function add(name, from) {
+      name = String(name || '').replace(/^\s+|\s+$/g, '');
+      if (!name) return;
+      var k = (name + '|' + from).toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1;
+      out.push({ name: name, from: from });
+    }
+
+    for (i = 0; i < this.guards.length; i++) add(this.guards[i].name, 'Guard');
+    for (i = 0; i < this.staff.length; i++) {
+      add(this.staff[i].name, this.staff[i].role ? 'Staff, ' + this.staff[i].role : 'Staff');
+    }
+    for (i = 0; i < this.contractors.length; i++) {
+      var c = this.contractors[i];
+      for (j = 0; j < (c.reps || []).length; j++) add(c.reps[j].name, c.name);
+    }
+    for (i = 0; i < this.regularVisitors.length; i++) {
+      var r = this.regularVisitors[i];
+      for (j = 0; j < (r.reps || []).length; j++) add(r.reps[j].name, r.name);
+    }
+    for (i = 0; i < this.irregulars.length; i++) {
+      var g = this.irregulars[i];
+      for (j = 0; j < (g.reps || []).length; j++) add(g.reps[j].name, g.name);
+    }
+    /* anyone who has already had a key, in case they are on no list */
+    for (i = 0; i < this.keyMoves.length; i++) {
+      add(this.keyMoves[i].to, this.keyMoves[i].toFrom || 'Had a key before');
+    }
+
+    return out.sort(function (a, b) {
+      return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+    });
+  },
+
+  showPeopleSuggestions: function (fieldId, listId, fromId) {
+    var field = document.getElementById(fieldId);
+    var list = document.getElementById(listId);
+    if (!field || !list) return;
+    var q = field.value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var all = this.peopleKnown(), rows = [], i;
+
+    for (i = 0; i < all.length && rows.length < 12; i++) {
+      if (!q || all[i].name.toLowerCase().indexOf(q) !== -1 ||
+          String(all[i].from).toLowerCase().indexOf(q) !== -1) rows.push(all[i]);
+    }
+
+    list.innerHTML = '';
+    if (!rows.length) { list.classList.remove('active'); return; }
+
+    var self = this;
+    for (i = 0; i < rows.length; i++) {
+      (function (p) {
+        var item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.innerHTML = self.esc(p.name) + ' <span class="ac-reg">' + self.esc(p.from) + '</span>';
+        item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+        item.addEventListener('click', function () {
+          field.value = p.name;
+          /* kept beside the name, so the sheet says which John Smith */
+          var from = document.getElementById(fromId);
+          if (from) from.value = p.from;
+          list.classList.remove('active');
+        });
+        list.appendChild(item);
+      })(rows[i]);
+    }
+    list.classList.add('active');
+  },
+
+  /* ---------------- keys ---------------- */
+
+  /* Two lists, the way staff already work: what exists, and what has
+     happened to it. Matching a return to an issue by the wording of a
+     note was never going to be reliable - this pairs on the key itself. */
+  keys: [],
+  keyMoves: [],
+
+  keyById: function (id) {
+    var i;
+    for (i = 0; i < this.keys.length; i++) if (String(this.keys[i].id) === String(id)) return this.keys[i];
+    return null;
+  },
+
+  /* The name is not enough on its own when three people share it. */
+  holderLabel: function (m) {
+    return m.to + (m.toFrom ? '  \u00b7  ' + m.toFrom : '');
+  },
+
+  keyLabel: function (id) {
+    var k = this.keyById(id);
+    if (!k) return 'a key no longer listed';
+    return k.name + (k.tag ? ' (' + k.tag + ')' : '');
+  },
+
+  /* Every issue with no return against it, oldest first. */
+  keysOut: function (upTo) {
+    var limit = upTo ? this.stamp(upTo, '23:59') : Infinity;
+    var out = [], i;
+    for (i = 0; i < this.keyMoves.length; i++) {
+      var m = this.keyMoves[i];
+      if (m.backTime) continue;
+      var at = this.stamp(m.date, m.outTime);
+      if (at !== null && at > limit) continue;
+      out.push(m);
+    }
+    return out.sort(function (a, b) { return (a.date + a.outTime) < (b.date + b.outTime) ? -1 : 1; });
+  },
+
+  keyIsOut: function (keyId) {
+    var i;
+    for (i = 0; i < this.keyMoves.length; i++) {
+      if (String(this.keyMoves[i].keyId) === String(keyId) && !this.keyMoves[i].backTime) {
+        return this.keyMoves[i];
+      }
+    }
+    return null;
+  },
+
+  renderKeys: function () {
+    var box = document.getElementById('keysContainer');
+    var sum = document.getElementById('keySummary');
+    if (!box) return;
+    var self = this;
+    var out = this.keysOut();
+
+    if (sum) {
+      sum.innerHTML = '<span>' + this.keys.length + (this.keys.length === 1 ? ' key' : ' keys') + '</span>' +
+        (out.length ? '<span class="onsite-chip">' + out.length + ' out</span>'
+                    : '<span class="onsite-chip none">all in</span>');
+    }
+    if (!this.keys.length) {
+      box.innerHTML = '<div class="empty-state">No keys listed yet. Add the ones kept at the gate below.</div>';
+      this.fillKeyPicker();
+      return;
+    }
+
+    var rows = '', i;
+    var order = this.keys.slice().sort(function (a, b) {
+      return String(a.name).toLowerCase() < String(b.name).toLowerCase() ? -1 : 1;
+    });
+    for (i = 0; i < order.length; i++) {
+      var k = order[i];
+      var held = this.keyIsOut(k.id);
+      rows += '<tr><td>' + this.esc(k.name) +
+        (k.tag ? '<span class="cell-sub">' + this.esc(k.tag) + '</span>' : '') +
+        '</td><td>' + (held
+          ? '<span class="status-badge bad">Out</span><span class="cell-sub">' +
+            this.esc(this.holderLabel(held)) + '<span class="cell-sub">' +
+            this.esc(this.showDate(held.date)) + ' ' +
+            this.esc(this.showTime(held.outTime)) + '</span>'
+          : '<span class="status-badge ok">In</span>') +
+        '</td><td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editKeyAt(' + i + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteKeyAt(' + i + ')">X</button>' +
+        '</td></tr>';
+    }
+    box.innerHTML = '<table class="data-table"><thead><tr><th>Key</th><th>Where it is</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+    this.shownKeys = order;
+    this.fillKeyPicker();
+  },
+
+  shownKeys: [],
+
+  fillKeyPicker: function () {
+    var sel = document.getElementById('keyPick');
+    if (!sel) return;
+    var self = this;
+    var order = this.keys.slice().sort(function (a, b) {
+      return String(a.name).toLowerCase() < String(b.name).toLowerCase() ? -1 : 1;
+    });
+    sel.innerHTML = '<option value="">Choose a key</option>' + order.map(function (k) {
+      var held = self.keyIsOut(k.id);
+      return '<option value="' + self.esc(String(k.id)) + '">' + self.esc(k.name) +
+        (k.tag ? ' (' + self.esc(k.tag) + ')' : '') +
+        (held ? ' \u2014 out with ' + self.esc(self.holderLabel(held)) : '') + '</option>';
+    }).join('');
+  },
+
+  renderKeysOut: function () {
+    var box = document.getElementById('keysOutContainer');
+    if (!box) return;
+    var out = this.keysOut();
+    if (!out.length) {
+      box.innerHTML = '<div class="empty-state">Every key is in.</div>';
+      return;
+    }
+    var self = this;
+    box.innerHTML = '<table class="data-table"><tbody>' + out.map(function (m, i) {
+      return '<tr><td>' + self.esc(self.keyLabel(m.keyId)) +
+        '<span class="cell-sub">' + self.esc(self.holderLabel(m)) + '</span></td>' +
+        '<td>' + self.esc(self.showDate(m.date)) +
+        '<span class="cell-sub">' + self.esc(self.showTime(m.outTime)) + '</span></td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.returnKeyAt(' + i + ')">Returned</button>' +
+        '<button type="button" class="edit-btn" onclick="app.editKeyMoveAt(' + i + ')">Edit</button>' +
+        '</td></tr>';
+    }).join('') + '</tbody></table>';
+    this.shownKeysOut = out;
+  },
+
+  shownKeysOut: [],
+
+  editKeyAt: function (i) {
+    var k = this.shownKeys[i];
+    if (!k) return;
+    document.getElementById('keyEditId').value = String(k.id);
+    document.getElementById('keyName').value = k.name;
+    document.getElementById('keyTag').value = k.tag || '';
+    document.getElementById('keySubmit').textContent = 'Save changes';
+    document.getElementById('keyCancel').style.display = '';
+    document.getElementById('keyName').focus();
+  },
+
+  cancelKeyEdit: function () {
+    var f = document.getElementById('keyForm');
+    f.reset();
+    document.getElementById('keyEditId').value = '';
+    document.getElementById('keySubmit').textContent = 'Add key';
+    document.getElementById('keyCancel').style.display = 'none';
+  },
+
+  saveKey: function (e) {
+    e.preventDefault();
+    var name = document.getElementById('keyName').value.replace(/^\s+|\s+$/g, '');
+    var tag = document.getElementById('keyTag').value.replace(/^\s+|\s+$/g, '');
+    var editId = document.getElementById('keyEditId').value;
+    if (!name) { this.toast('Say what the key opens', 'error'); return; }
+
+    if (editId) {
+      var rec = this.keyById(editId);
+      if (!rec) { this.cancelKeyEdit(); return; }
+      rec.name = name; rec.tag = tag;
+      this.toast('Key updated');
+    } else {
+      var clash = null, i;
+      for (i = 0; i < this.keys.length; i++) {
+        if (String(this.keys[i].name).toLowerCase() === name.toLowerCase()) clash = this.keys[i];
+      }
+      if (clash) { this.toast('There is already a key for that', 'error'); return; }
+      this.keys.push({ id: this.nextId(), name: name, tag: tag });
+      this.toast(name + ' added');
+    }
+    this.cancelKeyEdit();
+    this.saveData();
+    this.renderKeys();
+    this.renderKeysOut();
+  },
+
+  deleteKeyAt: function (i) {
+    var k = this.shownKeys[i];
+    if (!k) return;
+    var held = this.keyIsOut(k.id);
+    /* A key still out is the one thing you cannot forget about, so removing
+       it from the register would hide exactly what needs chasing. */
+    if (held) {
+      this.toast('That key is out with ' + held.to + '. Mark it returned first.', 'error');
+      return;
+    }
+    var past = this.keyMoves.filter(function (m) { return String(m.keyId) === String(k.id); }).length;
+    if (!confirm('Remove ' + k.name + '?' +
+      (past ? '\n\n' + past + (past === 1 ? ' record' : ' records') + ' of it being issued will stay on the sheets.' : ''))) return;
+    this.keys = this.keys.filter(function (x) { return String(x.id) !== String(k.id); });
+    this.saveData();
+    this.renderKeys();
+    this.renderKeysOut();
+    this.toast(k.name + ' removed');
+  },
+
+  returnKeyAt: function (i) {
+    var m = this.shownKeysOut[i];
+    if (!m) return;
+    m.backTime = this.clockNow().replace(/\s*(am|pm)$/i, '');
+    if (!/^\d{2}:\d{2}$/.test(m.backTime)) {
+      var d = new Date();
+      m.backTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+    }
+    this.saveData();
+    this.renderKeys();
+    this.renderKeysOut();
+    this.renderHandover();
+    this.toast(this.keyLabel(m.keyId) + ' returned by ' + m.to);
+  },
+
+  editKeyMoveAt: function (i) {
+    var m = this.shownKeysOut[i];
+    if (!m) return;
+    document.getElementById('keyMoveEditId').value = String(m.id);
+    document.getElementById('keyPick').value = String(m.keyId);
+    document.getElementById('keyTo').value = m.to;
+    document.getElementById('keyToFrom').value = m.toFrom || '';
+    document.getElementById('keyOutTime').value = m.outTime;
+    document.getElementById('keyBackTime').value = m.backTime || '';
+    document.getElementById('keyMoveSubmit').textContent = 'Save changes';
+    document.getElementById('keyMoveCancel').style.display = '';
+  },
+
+  cancelKeyMoveEdit: function () {
+    var f = document.getElementById('keyMoveForm');
+    f.reset();
+    document.getElementById('keyMoveEditId').value = '';
+    document.getElementById('keyMoveSubmit').textContent = 'Record';
+    document.getElementById('keyMoveCancel').style.display = 'none';
+  },
+
+  saveKeyMove: function (e) {
+    e.preventDefault();
+    var keyId = document.getElementById('keyPick').value;
+    var to = document.getElementById('keyTo').value.replace(/^\s+|\s+$/g, '');
+    var toFrom = document.getElementById('keyToFrom').value.replace(/^\s+|\s+$/g, '');
+    var outTime = document.getElementById('keyOutTime').value;
+    var backTime = document.getElementById('keyBackTime').value;
+    var editId = document.getElementById('keyMoveEditId').value;
+
+    if (!keyId || !this.keyById(keyId)) { this.toast('Choose a key', 'error'); return; }
+    if (!to) { this.toast('Say who is taking it', 'error'); return; }
+    if (!outTime) { this.toast('Set the time it was issued', 'error'); return; }
+    if (backTime && backTime < outTime) {
+      if (!confirm('Returned ' + this.showTime(backTime) + ' is before issued ' +
+                   this.showTime(outTime) + '. Record it anyway?')) return;
+    }
+
+    if (editId) {
+      var rec = null, i;
+      for (i = 0; i < this.keyMoves.length; i++) if (String(this.keyMoves[i].id) === editId) rec = this.keyMoves[i];
+      if (!rec) { this.cancelKeyMoveEdit(); return; }
+      rec.keyId = keyId; rec.to = to; rec.toFrom = toFrom;
+      rec.outTime = outTime; rec.backTime = backTime;
+      this.toast('Updated');
+    } else {
+      /* One key, one holder. Issuing a key already out either means the
+         first return was never logged, or the wrong key was picked. */
+      var held = this.keyIsOut(keyId);
+      if (held && !backTime) {
+        this.toast(this.keyLabel(keyId) + ' is already out with ' + held.to +
+                   '. Mark it returned first.', 'error');
+        return;
+      }
+      this.keyMoves.push({ id: this.nextId(), date: this.viewDate, keyId: keyId,
+        to: to, toFrom: toFrom, outTime: outTime, backTime: backTime || '' });
+      this.toast(backTime ? this.keyLabel(keyId) + ' issued and returned'
+                          : this.keyLabel(keyId) + ' issued to ' + to);
+    }
+
+    this.cancelKeyMoveEdit();
+    this.saveData();
+    this.renderKeys();
+    this.renderKeysOut();
+    this.renderHandover();
+  },
+
+  /* ---------------- what is still outstanding ---------------- */
+
+  /* A key issued and never returned is the thing a handover most needs to
+     say, and the app already records both halves - it just never paired
+     them. Matched on what the entry says, since that is all there is. */
+  /* What the key is for, as written. Taking everything after the word
+     "key" swallows the rest of the sentence, so a return never matches
+     its issue and the wrong one gets cleared - stop at the words that
+     describe the act rather than the thing. */
+  keyWord: function (detail) {
+    var s = String(detail || '').toLowerCase().replace(/[.,;]/g, ' ');
+    var m = s.match(/\b(?:key|keys|fob|padlock)s?\s+(?:for|to)?\s*([\w\- ]{1,30})/);
+    var what = m ? m[1] : s;
+    what = what.split(/\b(?:issued|returned|handed|given|taken|back|out|in|to|from|by)\b/)[0];
+    what = what.replace(/^\s+|\s+$/g, '');
+    return what || s.slice(0, 24).replace(/^\s+|\s+$/g, '');
+  },
+
+  outstandingKeys: function (upTo) {
+    var limit = upTo ? this.stamp(upTo, '23:59') : Infinity;
+    var issued = [], i;
+    var all = this.incidents.slice().sort(function (a, b) {
+      return (a.date + a.time) < (b.date + b.time) ? -1 : 1;
+    });
+    for (i = 0; i < all.length; i++) {
+      var n = all[i];
+      var at = this.stamp(n.date, n.time);
+      if (at !== null && at > limit) continue;
+      if (n.type === 'Key issued') {
+        issued.push({ rec: n, what: this.keyWord(n.detail) });
+      } else if (n.type === 'Key returned') {
+        var want = this.keyWord(n.detail), q;
+        /* clear the oldest issue that matches, or the oldest of any */
+        var at2 = -1;
+        for (q = 0; q < issued.length; q++) if (issued[q].what === want) { at2 = q; break; }
+        /* Only clear an unmatched return if there is exactly one key out.
+           Guessing among several clears the wrong one, and a key wrongly
+           marked returned is worse than one wrongly still listed. */
+        if (at2 === -1 && issued.length === 1) at2 = 0;
+        if (at2 !== -1) issued.splice(at2, 1);
+      }
+    }
+    return issued.map(function (x) { return x.rec; });
+  },
+
+  /* Someone signed in and never out is the commonest error in any gate
+     log, and at present a visitor fourteen hours in looks exactly like
+     one who arrived ten minutes ago. */
+  LONG_STAY_HOURS: 12,
+
+  /* One rule, applied to whichever list and whichever field holds the
+     time. Written twice, the two would drift the day the threshold moved. */
+  longGone: function (list, field) {
+    var now = Date.now(), out = [], i;
+    for (i = 0; i < list.length; i++) {
+      var at = this.stamp(list[i].date, list[i][field]);
+      if (at === null) continue;
+      var hrs = (now - at) / 3600000;
+      if (hrs >= this.LONG_STAY_HOURS) out.push({ rec: list[i], hours: Math.floor(hrs) });
+    }
+    return out.sort(function (a, b) { return b.hours - a.hours; });
+  },
+
+  overdueOnSite: function () { return this.longGone(this.openEntries(), 'entryTime'); },
+
+  overdueStaff: function () { return this.longGone(this.staffOffSite(), 'outTime'); },
+
+  /* Faults reported and not obviously dealt with. An entry with no end
+     time is still open, the same rule the rest of the app uses. */
+  OPEN_KINDS: ['Alarm activation', 'Fire or smoke', 'Accident or injury', 'Power failure',
+               'Gate or barrier fault', 'Equipment fault', 'Suspicious activity',
+               'Trespass', 'Theft', 'Damage or vandalism', 'Delivery issue',
+               'Paperwork or permit issue', 'Lost property'],
+
+  openIncidents: function (upTo) {
+    var limit = upTo ? this.stamp(upTo, '23:59') : Infinity;
+    var out = [], i;
+    for (i = 0; i < this.incidents.length; i++) {
+      var n = this.incidents[i];
+      var at = this.stamp(n.date, n.time);
+      if (at !== null && at > limit) continue;
+      if (this.OPEN_KINDS.indexOf(n.type) === -1) continue;
+      if (n.ended) continue;
+      out.push(n);
+    }
+    return out.sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
+  },
+
+  /* Everything a guard going off duty needs to hand over, gathered from
+     what is already recorded rather than asked for again. */
+  handover: function (upTo) {
+    var day = upTo || this.viewDate;
+    return {
+      onSite: this.openEntries(),
+      staffOff: this.staffOffSite(),
+      keys: this.keysOut(day),
+      legacyKeys: this.outstandingKeys(day),
+      openNotes: this.openIncidents(day),
+      overdue: this.overdueOnSite(),
+      overdueStaff: this.overdueStaff()
+    };
+  },
+
+  renderHandover: function () {
+    var box = document.getElementById('handoverContainer');
+    var sum = document.getElementById('handoverSummary');
+    if (!box) return;
+
+    var d = this.handover(this.viewDate);
+    var total = d.onSite.length + d.staffOff.length + d.keys.length +
+                d.legacyKeys.length + d.openNotes.length;
+
+    if (sum) {
+      sum.innerHTML = total
+        ? '<span>' + total + (total === 1 ? ' thing outstanding' : ' things outstanding') + '</span>' +
+          ((d.overdue.length + d.overdueStaff.length)
+            ? '<span class="onsite-chip bad">' + (d.overdue.length + d.overdueStaff.length) + ' overdue</span>' : '')
+        : '<span>Nothing outstanding</span>';
+    }
+    if (!total) {
+      box.innerHTML = '<div class="empty-state">Nothing outstanding. Everyone is signed out, ' +
+        'no keys are out and no notes are open.</div>';
+      return;
+    }
+
+    var self = this;
+    function block(title, rows, note) {
+      if (!rows.length) return '';
+      return '<h3 class="form-title">' + self.esc(title) + ' &middot; ' + rows.length + '</h3>' +
+        '<table class="data-table"><tbody>' + rows.join('') + '</tbody></table>' +
+        (note ? '<p class="field-hint">' + note + '</p>' : '');
+    }
+    function hoursLine(h) {
+      return '<span class="cell-sub carried">' + h + (h === 1 ? ' hour' : ' hours') + ' ago</span>';
+    }
+
+    var lateBy = {};
+    d.overdue.forEach(function (o) { lateBy['v' + o.rec.id] = o.hours; });
+    d.overdueStaff.forEach(function (o) { lateBy['s' + o.rec.id] = o.hours; });
+
+    var html = '';
+    html += block('Still on site', d.onSite.map(function (v) {
+      return '<tr><td>' + self.esc(v.company) +
+        (v.rep ? '<span class="cell-sub">' + self.esc(v.rep) + '</span>' : '') +
+        '</td><td>' + self.esc(self.showTime(v.entryTime)) +
+        (lateBy['v' + v.id] ? hoursLine(lateBy['v' + v.id]) : '') + '</td></tr>';
+    }), 'Anyone marked in red has been on site longer than ' + this.LONG_STAY_HOURS +
+        ' hours, which usually means a sign out was missed.');
+
+    html += block('Staff off site', d.staffOff.map(function (m) {
+      return '<tr><td>' + self.esc(m.name) +
+        (m.reason ? '<span class="cell-sub">' + self.esc(m.reason) + '</span>' : '') +
+        '</td><td>' + self.esc(self.showTime(m.outTime)) +
+        (lateBy['s' + m.id] ? hoursLine(lateBy['s' + m.id]) : '') + '</td></tr>';
+    }));
+
+    html += block('Keys not returned', d.keys.map(function (m) {
+      return '<tr><td>' + self.esc(self.keyLabel(m.keyId)) +
+        '<span class="cell-sub">' + self.esc(self.holderLabel(m)) + '</span></td><td>' +
+        self.esc(self.showDate(m.date)) + '<span class="cell-sub">' +
+        self.esc(self.showTime(m.outTime)) + '</span></td></tr>';
+    }));
+
+    /* Notes typed before there was a register. Shown so nothing already
+       recorded goes quiet, but nothing new lands here. */
+    html += block('Older key notes', d.legacyKeys.map(function (n) {
+      return '<tr><td>' + self.esc(n.detail) + '</td><td>' +
+        self.esc(self.showDate(n.date)) + '<span class="cell-sub">' +
+        self.esc(self.showTime(n.time)) + '</span></td></tr>';
+    }), 'Recorded as incidents before the key register existed, and matched on their wording.');
+
+    html += block('Still open', d.openNotes.map(function (n) {
+      return '<tr><td>' + self.esc(n.type) +
+        '<span class="cell-sub">' + self.esc(n.detail) + '</span></td><td>' +
+        self.esc(self.showDate(n.date)) + '<span class="cell-sub">' +
+        self.esc(self.showTime(n.time)) + '</span></td></tr>';
+    }), 'Anything logged without an end time. Add one to clear it from here.');
+
+    box.innerHTML = html;
   },
 
   /* ---------------- the guard register ---------------- */
@@ -5680,7 +6583,7 @@ var app = {
       data.guards.length + (data.guards.length === 1 ? ' guard' : ' guards') + '</span>';
 
     if (!data.guards.length) {
-      box.innerHTML = '<div class="empty-state">Nobody rostered in this period</div>';
+      box.innerHTML = '<div class="empty-state">Nobody rostered in this period. Shifts added to the roster will show here.</div>';
       return;
     }
 
@@ -5759,7 +6662,7 @@ var app = {
         names += '<i><b class="guard-dot" style="background:' +
           this.guardColour(on[q].rec.guard).hex + '"></b>' +
           this.esc(this.shortName(on[q].rec.guard)) + ' ' +
-          (on[q].carried ? 'cont.' : this.esc(on[q].rec.start)) + '</i>';
+          (on[q].carried ? 'cont.' : this.esc(this.showTime(on[q].rec.start))) + '</i>';
       }
       if (on.length > 3) names += '<i>+' + (on.length - 3) + ' more</i>';
       html += '<button type="button" class="cal-day' +
@@ -5843,7 +6746,7 @@ var app = {
       list.length + (list.length === 1 ? ' shift' : ' shifts') + '</span>';
 
     if (!list.length) {
-      box.innerHTML = '<div class="empty-state">Nobody rostered for this day</div>';
+      box.innerHTML = '<div class="empty-state">Nobody rostered for this day. Add a shift below.</div>';
       return;
     }
 
@@ -5854,8 +6757,8 @@ var app = {
         (s.date !== this.rosterPick
           ? '<span class="cell-sub carried">on since ' + this.showDate(s.date) + '</span>' : '') +
         '</td>' +
-        '<td>' + this.esc(s.start) + '</td>' +
-        '<td>' + this.esc(s.end) + this.spanNote(s) + '</td>' +
+        '<td>' + this.esc(this.showTime(s.start)) + '</td>' +
+        '<td>' + this.esc(this.showTime(s.end)) + this.spanNote(s) + '</td>' +
         '<td>' + this.esc(this.lengthText(this.shiftLen(s))) + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.editRosterShift(' + s.id + ')">Edit</button>' +
@@ -6095,7 +6998,7 @@ var app = {
     document.getElementById('rosterEditStart').value = rec.start;
     document.getElementById('rosterEditEnd').value = rec.end;
     document.getElementById('rosterEditTitle').textContent =
-      this.showDate(rec.date) + ' \u00b7 ' + rec.start + ' to ' + rec.end;
+      this.showDate(rec.date) + ' \u00b7 ' + this.showTime(rec.start) + ' to ' + this.showTime(rec.end);
     document.getElementById('rosterEditForm').style.display = 'block';
     this.showShiftLength('rosterEdit');
     document.getElementById('rosterEditGuard').focus();
@@ -6128,7 +7031,7 @@ var app = {
     var mins = this.typedMinutes('rosterEdit', start, end);
     if (mins === null) return;
     var clash = this.overlapsAnother(rec.date, start, mins, rec.id);
-    if (clash && !confirm('That overlaps ' + clash.guard + ' on ' + clash.start + ' to ' +
+    if (clash && !confirm('That overlaps ' + clash.guard + ' on ' + this.showTime(clash.start) + ' to ' +
         clash.end + '. Keep both?')) return;
 
     var wasGuard = rec.guard;
@@ -6381,7 +7284,7 @@ var app = {
     var handover = mode === 'handover';
     document.getElementById('changeTitle').textContent = handover
       ? 'Hand over ' + rec.guard + "'s shift"
-      : 'Swap ' + rec.guard + ' out of ' + rec.start + ' to ' + rec.end;
+      : 'Swap ' + rec.guard + ' out of ' + this.showTime(rec.start) + ' to ' + this.showTime(rec.end);
     document.getElementById('changeGuardLabel').textContent = handover ? 'Handing over to' : 'Covered by';
     document.getElementById('changeSubmit').textContent = handover ? 'Hand over' : 'Swap guard';
     document.getElementById('changeHint').textContent = handover
@@ -6530,8 +7433,8 @@ var app = {
         (s.date !== this.viewDate
           ? '<span class="cell-sub carried">on since ' + this.showDate(s.date) + '</span>' : '') +
         '</td>' +
-        '<td>' + this.esc(s.start) + '</td>' +
-        '<td>' + this.esc(s.end) + this.spanNote(s) + '</td>' +
+        '<td>' + this.esc(this.showTime(s.start)) + '</td>' +
+        '<td>' + this.esc(this.showTime(s.end)) + this.spanNote(s) + '</td>' +
         '<td>' + this.esc(this.lengthText(this.shiftRealMins(s))) + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.swapShift(' + s.id + ')">Swap</button>' +
@@ -6570,7 +7473,7 @@ var app = {
 
     var box = document.getElementById('musterOnSite');
     if (!onSite.length) {
-      box.innerHTML = '<div class="empty-state">Nobody is signed in</div>';
+      box.innerHTML = '<div class="empty-state">Nobody is signed in at the moment.</div>';
     } else {
       var rows = '';
       for (i = 0; i < onSite.length; i++) {
@@ -6580,7 +7483,7 @@ var app = {
           (v.date !== this.currentDate
             ? '<span class="cell-sub carried">in on ' + this.showDate(v.date) + '</span>' : '') +
           '</td><td>' + this.esc(v.vehicle || '-') + '</td>' +
-          '<td>' + this.esc(v.entryTime) + '</td>' +
+          '<td>' + this.esc(this.showTime(v.entryTime)) + '</td>' +
           '<td><button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Sign out</button></td></tr>';
       }
       box.innerHTML = '<table class="data-table"><thead><tr>' +
@@ -6590,7 +7493,7 @@ var app = {
 
     var awayBox = document.getElementById('musterAway');
     if (!away.length) {
-      awayBox.innerHTML = '<div class="empty-state">All staff are on site</div>';
+      awayBox.innerHTML = '<div class="empty-state">All staff are on site at the moment.</div>';
       return;
     }
     var arows = '';
@@ -6600,7 +7503,7 @@ var app = {
         (m.date !== this.currentDate
           ? '<span class="cell-sub carried">out on ' + this.showDate(m.date) + '</span>' : '') +
         '</td><td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
-        '<td>' + this.esc(m.outTime) + '</td>' +
+        '<td>' + this.esc(this.showTime(m.outTime)) + '</td>' +
         '<td>' + this.esc(m.reason) + '</td>' +
         '<td><button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button></td></tr>';
     }
@@ -6998,7 +7901,7 @@ var app = {
       spanDays: over,
       shiftId: sh.id,
       guard: sh.guard,
-      label: this.showDate(sh.date) + ' \u00b7 ' + sh.start + ' to ' + sh.end +
+      label: this.showDate(sh.date) + ' \u00b7 ' + this.showTime(sh.start) + ' to ' + this.showTime(sh.end) +
         (over ? ' (+' + over + ' day' + (over === 1 ? '' : 's') + ')' : ''),
       slug: null
     };
@@ -7222,8 +8125,10 @@ var app = {
     });
     var onSiteAtExport = this.stillOnSite(todays).length;
     var hours = winStart
-      ? winStart + ' to ' + winEnd + ((range && range.guard) ? '  \u00b7  ' + range.guard : '')
-      : document.getElementById('startTime').value + ' to ' + document.getElementById('endTime').value;
+      ? this.showTime(winStart) + ' to ' + this.showTime(winEnd) +
+        ((range && range.guard) ? '  \u00b7  ' + range.guard : '')
+      : this.showTime(document.getElementById('startTime').value) + ' to ' +
+        this.showTime(document.getElementById('endTime').value);
 
     /* group by day, keeping only days that saw movement */
     var byDay = {}, dayKeys = [], di;
@@ -7361,7 +8266,7 @@ var app = {
       for (sIdx = 0; sIdx < shiftList.length; sIdx++) {
         var s2 = shiftList[sIdx];
         var over2 = this.spanDays(s2);
-        var line = s2.guard + '   \u00b7   ' + s2.start + ' to ' + s2.end +
+        var line = s2.guard + '   \u00b7   ' + self.showTime(s2.start) + ' to ' + self.showTime(s2.end) +
           (over2 ? ' +' + over2 + ' day' + (over2 === 1 ? '' : 's') : '') +
           '   \u00b7   ' + this.lengthText(this.shiftRealMins(s2)) +
           (s2.date !== fromKey ? '   \u00b7   on since ' + this.showDate(s2.date) : '');
@@ -7566,7 +8471,7 @@ var app = {
           var numCell = mono
             ? { t: String(r.seq || '') + (r.flag ? '-' + markFor(r.flag) : ''), b: !!r.flag }
             : { t: String(r.seq || ''), fill: numFill, c: [1, 1, 1], b: true };
-          var when = r.time + (r.until ? ' - ' + r.until : '');
+          var when = self0.showTime(r.time) + (r.until ? ' - ' + self0.showTime(r.until) : '');
           var line = (mono ? [] : [{ t: '', fill: KIND_BAND[r.tag] }]).concat(sheetSpans
             ? [numCell, self0.showDayMonth(r.date), when, r.what, r.detail]
             : [numCell, when, r.what, r.detail]);
@@ -7877,9 +8782,9 @@ var app = {
           fill: n2.flag ? hexToRgb(FLAG_HEX[n2.flag]) : null,
           c: n2.flag ? [1, 1, 1] : null, b: !!n2.flag };
         incRows.push(sheetSpans
-          ? [numCell2, this.showDate(n2.date), n2.time + (n2.ended ? ' - ' + n2.ended : ''),
+          ? [numCell2, this.showDate(n2.date), this.showTime(n2.time) + (n2.ended ? ' - ' + this.showTime(n2.ended) : ''),
              n2.type, n2.detail]
-          : [numCell2, n2.time + (n2.ended ? ' - ' + n2.ended : ''), n2.type, n2.detail]);
+          : [numCell2, this.showTime(n2.time) + (n2.ended ? ' - ' + this.showTime(n2.ended) : ''), n2.type, n2.detail]);
       }
       table(sheetSpans
         ? [{ label: '#', w: 24 }, { label: 'Date', w: 70 }, { label: 'Time', w: 78 },
@@ -8064,6 +8969,8 @@ var app = {
       incidents: incList,
       irregulars: this.irregulars,
       guards: this.guards,
+      keys: this.keys,
+      keyMoves: this.keyMoves,
       /* without these a restored sheet has coloured rows and nothing
          saying what the colours mean */
       flagNames: this.flagLabels()
@@ -8239,6 +9146,12 @@ var app = {
     try { on = localStorage.getItem('sat-night') === '1'; } catch (e) {}
     if (on) document.body.classList.add('night');
     else document.body.classList.remove('night');
+    /* the element behind the body too, or the part of a short page the
+       body does not fill keeps the other theme's colour */
+    if (document.documentElement) {
+      if (on) document.documentElement.classList.add('night');
+      else document.documentElement.classList.remove('night');
+    }
     var btn = document.getElementById('nightToggle');
     if (btn) btn.textContent = on ? 'Switch to day mode' : 'Switch to night mode';
     var meta = document.getElementById('themeColor');
@@ -8467,6 +9380,8 @@ var app = {
       irregulars: this.irregulars,
       incidents: this.incidents,
       guards: this.guards,
+      keys: this.keys,
+      keyMoves: this.keyMoves,
       flagNames: this.flagLabels()
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -8591,7 +9506,7 @@ var app = {
       if (took) this.setFlagLabels(mine);
     }
     var lists = ['visitors', 'contractors', 'regularVisitors', 'staff',
-                 'staffMovements', 'siteVehicles', 'shifts', 'irregulars', 'incidents', 'guards'];
+                 'staffMovements', 'siteVehicles', 'shifts', 'irregulars', 'incidents', 'guards', 'keys', 'keyMoves'];
     for (i = 0; i < lists.length; i++) {
       if (d[lists[i]] === undefined) continue;
       if (!Array.isArray(d[lists[i]])) { d[lists[i]] = []; continue; }
