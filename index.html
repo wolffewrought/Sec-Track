@@ -196,6 +196,14 @@ body.night .rep-empty{color:#94a3b8}
 .head-btn{flex:0 0 auto;padding:.4rem .85rem;font-size:.82rem;align-self:center}
 body.night .head-row h2{border-bottom-color:#334155}
 .fold{padding:0;overflow:hidden}
+.fold-row{display:flex;align-items:stretch}
+.fold-row .fold-head{flex:1;min-width:0}
+.licence-only{display:none}
+body.licences .licence-only{display:block}
+.move-btn{flex:0 0 auto;width:2.1rem;border:none;background:none;color:#94a3b8;font-size:.8rem;cursor:pointer;padding:0}
+.move-btn:active{color:#2563eb}
+.move-btn[disabled]{opacity:.25;cursor:default}
+body.night .move-btn{color:#64748b}
 .fold-head{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:.95rem 1rem;font-family:inherit;font-size:1rem;font-weight:700;color:#1e293b;text-align:left;cursor:pointer}
 .fold-head span{flex:1;min-width:0}
 .fold-arrow{width:.55rem;height:.55rem;border-right:2px solid #64748b;border-bottom:2px solid #64748b;transform:rotate(45deg);margin:-.2rem .15rem 0 .5rem;flex:0 0 auto;transition:transform .15s}
@@ -324,7 +332,10 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <div class="form-group">
 <label for="repInput">Representative</label>
-<input type="text" id="repInput" maxlength="60" placeholder="Driver or visitor name (optional)">
+<div class="autocomplete-wrapper">
+<input type="text" id="repInput" maxlength="60" placeholder="Driver or visitor name (optional)" autocomplete="off">
+<div class="autocomplete-list" id="repList"></div>
+</div>
 <div id="inductionNote" class="induction-note" role="status" aria-live="polite" style="display:none"></div>
 </div>
 <div class="form-group" id="vehiclePickRow" style="display:none">
@@ -333,7 +344,10 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <div class="form-group">
 <label for="vehicleInput">Vehicle registration</label>
-<input type="text" id="vehicleInput" maxlength="20" placeholder="AB21 XYZ">
+<div class="autocomplete-wrapper">
+<input type="text" id="vehicleInput" maxlength="20" placeholder="Registration" autocomplete="off">
+<div class="autocomplete-list" id="vehicleList"></div>
+</div>
 </div>
 <div class="form-group">
 <label for="reasonInput">Reason for site visit</label>
@@ -384,7 +398,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <div class="form-group" id="staffVehicleRow">
 <label for="staffVehicleInput">Vehicle registration</label>
-<input type="text" id="staffVehicleInput" maxlength="20" placeholder="AB21 XYZ">
+<input type="text" id="staffVehicleInput" maxlength="20" placeholder="Registration">
 </div>
 <div class="form-group">
 <label for="staffReasonInput">Reason or destination</label>
@@ -608,8 +622,14 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div id="roster" class="tab-content">
-<div class="section">
-<h2>Shift roster</h2>
+<div class="subtab-nav" role="tablist">
+<button type="button" id="btnSubRoster" class="subtab active" role="tab" aria-selected="true">Roster</button>
+<button type="button" id="btnSubGuards" class="subtab" role="tab" aria-selected="false">Guards</button>
+</div>
+<div id="subRoster" class="subpane active">
+<div class="section fold open" id="fold_rostercalendar">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_rostercalendar" aria-expanded="true" aria-controls="foldBody_rostercalendar"><span>Shift roster</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_rostercalendar" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_rostercalendar" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_rostercalendar">
 <div class="sheet-bar">
 <button type="button" class="button button-secondary" id="rosterPrev">&#8249; Prev</button>
 <div id="rosterMonthLabel" class="roster-month"></div>
@@ -618,9 +638,11 @@ body.night .act-kind{color:#94a3b8}
 </div>
 <div id="rosterGrid"></div>
 </div>
+</div>
 
-<div class="section">
-<h2>Planned shifts</h2>
+<div class="section fold" id="fold_plannedshifts">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_plannedshifts" aria-expanded="false" aria-controls="foldBody_plannedshifts"><span>Planned shifts</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_plannedshifts" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_plannedshifts" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_plannedshifts">
 <div id="rosterDayLabel" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="rosterDayList"></div>
 <form id="rosterEditForm" style="display:none">
@@ -658,16 +680,20 @@ body.night .act-kind{color:#94a3b8}
 <p class="field-hint">Changing the hours here is how an eight hour shift becomes a twelve.</p>
 </form>
 </div>
+</div>
 
-<div class="section">
-<h2>Guard hours</h2>
+<div class="section fold" id="fold_guardhours">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guardhours" aria-expanded="false" aria-controls="foldBody_guardhours"><span>Guard hours</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guardhours" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guardhours" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_guardhours">
 <div id="periodLabel" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="guardHours"></div>
 <p class="field-hint">A shift counts wholly in the period and week its <strong>start</strong> falls in, so a night shift beginning on the first day of a period belongs to that period entire.</p>
 </div>
+</div>
 
-<div class="section">
-<h2>Cover a guard</h2>
+<div class="section fold" id="fold_coverguard">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_coverguard" aria-expanded="false" aria-controls="foldBody_coverguard"><span>Cover a guard</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_coverguard" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_coverguard" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_coverguard">
 <form id="coverForm" autocomplete="off">
 <div class="form-group">
 <label for="coverFrom">Guard who is off</label>
@@ -699,9 +725,11 @@ body.night .act-kind{color:#94a3b8}
 <p class="field-hint">Hands every shift in that range over to the covering guard. Use it when someone calls in sick for a run of days.</p>
 </form>
 </div>
+</div>
 
-<div class="section">
-<h2>Add to the roster</h2>
+<div class="section fold" id="fold_addtoroster">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_addtoroster" aria-expanded="false" aria-controls="foldBody_addtoroster"><span>Add to the roster</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_addtoroster" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_addtoroster" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_addtoroster">
 <form id="rosterForm" autocomplete="off">
 <div class="form-group">
 <label for="rosterGuard">Guard</label>
@@ -713,11 +741,11 @@ body.night .act-kind{color:#94a3b8}
 <div class="grid-2">
 <div class="form-group">
 <label for="rosterStart">From</label>
-<div class="time-row"><input type="time" id="rosterStart" required><button type="button" class="button button-secondary now-btn" data-time="rosterStart">Now</button></div>
+<div class="time-row"><input type="time" id="rosterStart" required><button type="button" id="now_rosterStart" class="button button-secondary now-btn">Now</button></div>
 </div>
 <div class="form-group">
 <label for="rosterEnd">To</label>
-<div class="time-row"><input type="time" id="rosterEnd" required><button type="button" class="button button-secondary now-btn" data-time="rosterEnd">Now</button></div>
+<div class="time-row"><input type="time" id="rosterEnd" required><button type="button" id="now_rosterEnd" class="button button-secondary now-btn">Now</button></div>
 </div>
 </div>
 <div class="grid-2">
@@ -747,11 +775,77 @@ body.night .act-kind{color:#94a3b8}
 <div class="action-row">
 <button type="submit" class="button button-primary">Add shifts</button>
 <button type="button" class="button button-secondary" id="rosterClearMonth">Clear this month</button>
+<button type="button" class="button button-secondary" id="resetRosterOrderBtn">Sections back in alphabetical order</button>
 </div>
 </form>
 </div>
 </div>
 
+</div>
+<div id="subGuards" class="subpane">
+
+<div class="section">
+<h2>Guards</h2>
+<div id="guardsSummary" class="sheet-summary" role="status" aria-live="polite"></div>
+<div id="guardsContainer"></div>
+<p class="field-hint">Every name used on a shift appears here. Renaming one updates every shift it appears on, and its colour follows.</p>
+</div>
+
+<div class="section">
+<h2>Add a guard</h2>
+<form id="guardForm">
+<input type="hidden" id="guardEditId">
+<div class="form-group">
+<label for="guardName">Name</label>
+<input type="text" id="guardName" maxlength="60" autocomplete="off" required>
+</div>
+<div class="form-group">
+<label for="guardPhone">Phone</label>
+<input type="tel" id="guardPhone" maxlength="30" autocomplete="off" placeholder="Optional, for arranging cover">
+</div>
+<div class="form-group licence-only" id="licenceFields">
+<label for="guardLicenceNo" id="guardLicenceLabel">Licence number</label>
+<input type="text" id="guardLicenceNo" maxlength="40" autocomplete="off" placeholder="Optional">
+</div>
+<div class="form-group licence-only" id="licenceExpiryField">
+<label for="guardLicenceExp">Expires</label>
+<input type="date" id="guardLicenceExp">
+</div>
+<div class="form-group">
+<label for="guardColourPick">Colour</label>
+<div class="len-row">
+<input type="color" id="guardColourPick" class="colour-input">
+<button type="button" class="button button-secondary" id="guardColourAuto">Automatic</button>
+</div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary" id="guardSubmit">Add guard</button>
+<button type="button" class="button button-secondary" id="guardCancel" style="display:none">Cancel</button>
+</div>
+</form>
+</div>
+
+<div class="section">
+<h2>Merge two guards</h2>
+<p class="field-hint">A name typed slightly differently becomes a second guard with its own hours. Merging moves every shift across and removes the duplicate, keeping the history intact.</p>
+<div class="grid-2">
+<div class="form-group">
+<label for="mergeFrom">Merge this one</label>
+<select id="mergeFrom"></select>
+</div>
+<div class="form-group">
+<label for="mergeInto">into this one</label>
+<select id="mergeInto"></select>
+</div>
+</div>
+<div class="action-row">
+<button type="button" class="button button-primary" id="mergeGuardsBtn">Merge</button>
+</div>
+</div>
+
+</div>
+
+</div>
 <div id="database" class="tab-content">
 <div class="subtab-nav" role="tablist">
 <button type="button" id="btnSubContractors" class="subtab active" role="tab" aria-selected="true">Contractors</button>
@@ -867,7 +961,7 @@ body.night .act-kind{color:#94a3b8}
 
 <div id="settings" class="tab-content">
 <div class="section fold" id="fold_siteaccesshours">
-<button type="button" class="fold-head" id="foldBtn_siteaccesshours" aria-expanded="false" aria-controls="foldBody_siteaccesshours"><span>Site Access Hours</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_siteaccesshours" aria-expanded="false" aria-controls="foldBody_siteaccesshours"><span>Site access hours</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_siteaccesshours" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_siteaccesshours" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_siteaccesshours">
 <div class="grid-2">
 <div class="form-group">
@@ -883,7 +977,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_sheetstyle">
-<button type="button" class="fold-head" id="foldBtn_sheetstyle" aria-expanded="false" aria-controls="foldBody_sheetstyle"><span>Sheet style</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_sheetstyle" aria-expanded="false" aria-controls="foldBody_sheetstyle"><span>Sheet style</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_sheetstyle" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_sheetstyle" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_sheetstyle">
 <div class="form-group">
 <label for="sheetStyle">How exported sheets are printed</label>
@@ -898,7 +992,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_hoursperiod">
-<button type="button" class="fold-head" id="foldBtn_hoursperiod" aria-expanded="false" aria-controls="foldBody_hoursperiod"><span>Hours period</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_hoursperiod" aria-expanded="false" aria-controls="foldBody_hoursperiod"><span>Hours period</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_hoursperiod" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_hoursperiod" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_hoursperiod">
 <div class="form-group">
 <label for="periodDay">Each period starts on day</label>
@@ -908,8 +1002,35 @@ body.night .act-kind{color:#94a3b8}
 </div>
 </div>
 
+<div class="section fold" id="fold_region">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_region" aria-expanded="false" aria-controls="foldBody_region"><span>Region</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_region" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_region" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_region">
+<div class="form-group">
+<label for="paperSize">Paper size</label>
+<select id="paperSize"><option value="a4">A4</option><option value="letter">US Letter</option></select>
+</div>
+<div class="form-group">
+<label for="weekStart">Weeks start on</label>
+<select id="weekStart"><option value="1">Monday</option><option value="0">Sunday</option></select>
+</div>
+<p class="field-hint">Paper size changes the sheets. Week start changes the roster calendar, the guard hours breakdown and the week numbers on period reports.</p>
+</div>
+</div>
+
+<div class="section fold" id="fold_guardlicences">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guardlicences" aria-expanded="false" aria-controls="foldBody_guardlicences"><span>Guard licences</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guardlicences" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guardlicences" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_guardlicences">
+<label class="check-row"><input type="checkbox" id="licencesOn"> Record a licence and expiry date for each guard</label>
+<div class="form-group">
+<label for="licenceLabel">What to call it</label>
+<input type="text" id="licenceLabel" maxlength="40" placeholder="Licence">
+</div>
+<p class="field-hint">Off by default, since the body that issues these differs by country. In the UK you would call it an SIA licence.</p>
+</div>
+</div>
+
 <div class="section fold" id="fold_signing">
-<button type="button" class="fold-head" id="foldBtn_signing" aria-expanded="false" aria-controls="foldBody_signing"><span>Signing</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_signing" aria-expanded="false" aria-controls="foldBody_signing"><span>Signing</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_signing" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_signing" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_signing">
 <div class="form-group">
 <label for="signMode">How the signature line reads</label>
@@ -924,7 +1045,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_dateformat">
-<button type="button" class="fold-head" id="foldBtn_dateformat" aria-expanded="false" aria-controls="foldBody_dateformat"><span>Date format</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_dateformat" aria-expanded="false" aria-controls="foldBody_dateformat"><span>Date format</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_dateformat" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_dateformat" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_dateformat">
 <div class="form-group">
 <label for="dateFormat">How dates are shown</label>
@@ -938,7 +1059,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_unknowncompanies">
-<button type="button" class="fold-head" id="foldBtn_unknowncompanies" aria-expanded="false" aria-controls="foldBody_unknowncompanies"><span>Unknown companies</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_unknowncompanies" aria-expanded="false" aria-controls="foldBody_unknowncompanies"><span>Unknown companies</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_unknowncompanies" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_unknowncompanies" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_unknowncompanies">
 <label class="check-row"><input type="checkbox" id="learnEnabled" checked> Keep a record of companies that are not on any list</label>
 <p class="field-hint">A company logged that is on neither the contractor nor regular visitor list is held under Irregular visitors, on the Regular Visitors tab. Nothing interrupts the gate; classify them when there is time.</p>
@@ -946,7 +1067,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_export">
-<button type="button" class="fold-head" id="foldBtn_export" aria-expanded="false" aria-controls="foldBody_export"><span>Export</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_export" aria-expanded="false" aria-controls="foldBody_export"><span>Export</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_export" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_export" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_export">
 <div id="backupNote" class="induction-note" role="status" aria-live="polite" style="display:none"></div>
 <div class="form-group">
@@ -986,7 +1107,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_rowcolours">
-<button type="button" class="fold-head" id="foldBtn_rowcolours" aria-expanded="false" aria-controls="foldBody_rowcolours"><span>Row colours</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_rowcolours" aria-expanded="false" aria-controls="foldBody_rowcolours"><span>Row colours</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_rowcolours" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_rowcolours" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_rowcolours">
 <p class="text-muted" style="margin-top:0">Tap the number beside any entry to colour it. Name the colours here and the meanings print on the reports.</p>
 <div id="flagEditor"></div>
@@ -994,7 +1115,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_periodreport">
-<button type="button" class="fold-head" id="foldBtn_periodreport" aria-expanded="false" aria-controls="foldBody_periodreport"><span>Period report</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_periodreport" aria-expanded="false" aria-controls="foldBody_periodreport"><span>Period report</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_periodreport" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_periodreport" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_periodreport">
 <div class="form-group">
 <label for="periodType">Cover</label>
@@ -1029,7 +1150,7 @@ body.night .act-kind{color:#94a3b8}
 </div>
 
 <div class="section fold" id="fold_data">
-<button type="button" class="fold-head" id="foldBtn_data" aria-expanded="false" aria-controls="foldBody_data"><span>Data</span><i class="fold-arrow"></i></button>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_data" aria-expanded="false" aria-controls="foldBody_data"><span>Data</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_data" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_data" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_data">
 <p class="text-muted" id="storageNote" style="margin-top:0"></p>
 <div class="action-row">
@@ -1046,6 +1167,7 @@ body.night .act-kind{color:#94a3b8}
 <p class="text-muted" id="buildStamp" style="margin-top:.75rem"></p>
 <div class="action-row">
 <button type="button" class="button button-secondary" id="forceUpdateBtn">Check for a new version</button>
+<button type="button" class="button button-secondary" id="resetOrderBtn">Settings back in alphabetical order</button>
 </div>
 </div>
 </div>
@@ -1091,7 +1213,10 @@ body.night .act-kind{color:#94a3b8}
  * read it back to restore the records.
  * --------------------------------------------------------------- */
 var PDFKit = (function () {
-  var PW = 595.28, PH = 841.89;
+  /* A4 unless told otherwise. Letter is 22mm shorter, and anything that
+     assumes A4's height runs straight off the bottom of an American page. */
+  var SIZES = { a4: [595.28, 841.89], letter: [612, 792] };
+  var PW = SIZES.a4[0], PH = SIZES.a4[1];
   var MARK_A = 'SAT-BACKUP-V1-BEGIN';
   var MARK_B = 'SAT-BACKUP-V1-END';
 
@@ -1314,10 +1439,21 @@ var PDFKit = (function () {
     return bytes;
   };
 
-  return {
+  /* Named, so changing the page size can update what callers already
+     hold rather than handing them stale numbers. */
+  function setPageSize(name) {
+    var s = SIZES[String(name || '').toLowerCase()] || SIZES.a4;
+    PW = s[0]; PH = s[1];
+    api.PW = PW; api.PH = PH; api.FLOOR = PH - 50;
+  }
+
+  var api = {
     Doc: Doc,
     PW: PW,
     PH: PH,
+    FLOOR: PH - 50,
+    SIZES: SIZES,
+    setPageSize: setPageSize,
     width: width,
     fit: fit,
     normalize: normalize,
@@ -1328,6 +1464,8 @@ var PDFKit = (function () {
     extractPayload: extractPayload,
     bytesToBinary: bytesToBinary
   };
+
+  return api;
 })();
 
 /* ---------------------------------------------------------------
@@ -1455,7 +1593,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v100';
+var BUILD = 'sat-v111';
 
 var app = {
   visitors: [],
@@ -1523,8 +1661,7 @@ var app = {
       /* set the opening sub-tab from the one place that defines it, rather
          than trusting the classes in the markup to stay in step */
       self.syncStickyOffset();
-      var gs = ['entry', 'day', 'db'], gi;
-      for (gi = 0; gi < gs.length; gi++) self.activateSub(gs[gi], self.subPage[gs[gi]]);
+      for (var gi in self.SUBTABS) self.activateSub(gi, self.subPage[gi]);
 
       /* stated here rather than left to the class in the markup, so the
          opening view and the code cannot drift apart */
@@ -1750,6 +1887,7 @@ var app = {
           self.siteVehicles = d.siteVehicles || [];
           self.shifts = d.shifts || [];
           self.irregulars = d.irregulars || [];
+      self.guards = d.guards || [];
           self.incidents = d.incidents || [];
         }
         self.migrate();
@@ -1871,6 +2009,7 @@ var app = {
       }
     }
     if (!this.irregulars) this.irregulars = [];
+    this.syncGuards();
     if (!this.incidents) this.incidents = [];
     for (i = 0; i < this.incidents.length; i++) {
       if (this.incidents[i].flag === undefined) this.incidents[i].flag = 0;
@@ -1943,7 +2082,8 @@ var app = {
       siteVehicles: this.siteVehicles,
       shifts: this.shifts,
       irregulars: this.irregulars,
-      incidents: this.incidents
+      incidents: this.incidents,
+      guards: this.guards
     }, function () {
       self.toast('Could not save - export a backup and clear older movements', 'error');
     });
@@ -1994,6 +2134,23 @@ var app = {
       self.updateInductionNote();
     });
     document.getElementById('repInput').addEventListener('input', function () { self.updateInductionNote(); });
+
+    /* every box offers the same picker, narrowed by the others */
+    for (k = 0; k < self.ENTRY_FIELDS.length; k++) {
+      if (self.ENTRY_FIELDS[k].key === 'company') continue;   /* has its own richer list */
+      (function (spec) {
+        var el = document.getElementById(spec.input);
+        if (!el) return;
+        el.addEventListener('input', function () { self.showFieldSuggestions(spec.key); });
+        el.addEventListener('focus', function () { self.showFieldSuggestions(spec.key); });
+        el.addEventListener('blur', function () {
+          setTimeout(function () {
+            var l = document.getElementById(spec.list);
+            if (l) l.classList.remove('active');
+          }, 200);
+        });
+      })(self.ENTRY_FIELDS[k]);
+    }
     document.getElementById('vehicleSelect').addEventListener('change', function (ev) {
       if (ev.target.value) document.getElementById('vehicleInput').value = ev.target.value;
     });
@@ -2064,16 +2221,34 @@ var app = {
 
     document.getElementById('settingsBtn').addEventListener('click', function () { self.activateTab('settings'); });
 
-    for (k = 0; k < self.FOLDS.length; k++) {
+    for (k = 0; k < self.foldList().length; k++) {
       (function (slug) {
         var btn = document.getElementById('foldBtn_' + slug);
         if (btn) btn.addEventListener('click', function () { self.toggleFold(slug); });
-      })(self.FOLDS[k]);
+      })(self.foldList()[k]);
     }
     self.applyFolds();
 
-    var groups = ['entry', 'day', 'db'], g, k;
-    for (g = 0; g < groups.length; g++) {
+    for (var grp in self.FOLD_GROUPS) {
+      (function (group) {
+        var slugs = self.FOLD_GROUPS[group];
+        for (var q = 0; q < slugs.length; q++) {
+          (function (slug) {
+            var up = document.getElementById('up_' + slug);
+            var down = document.getElementById('down_' + slug);
+            if (up) up.addEventListener('click', function () { self.moveFold(slug, -1); });
+            if (down) down.addEventListener('click', function () { self.moveFold(slug, 1); });
+          })(slugs[q]);
+        }
+        self.applyFoldOrder(group);
+      })(grp);
+    }
+
+    /* Read from SUBTABS itself. This was a second hardcoded list of the
+       same groups, and adding one to the other left the Guards tab drawn,
+       styled and completely unable to open. */
+    var g, k;
+    for (var grpName in self.SUBTABS) {
       (function (group) {
         var list = self.SUBTABS[group];
         for (k = 0; k < list.length; k++) {
@@ -2082,13 +2257,13 @@ var app = {
             if (b) b.addEventListener('click', function () { self.activateSub(group, paneId); });
           })(list[k][0], list[k][1]);
         }
-      })(groups[g]);
+      })(grpName);
     }
 
     var times = ['entryTime', 'exitTime', 'staffOutTime', 'staffBackTime',
                  'incidentTime', 'incidentEnd', 'shiftStart', 'shiftEnd',
                  'rosterStart', 'rosterEnd', 'rosterEditStart', 'rosterEditEnd', 'changeTime',
-                 'opFrom', 'opTo'];
+                 'blockFrom', 'blockTo'];
     for (k = 0; k < times.length; k++) {
       (function (fieldId) {
         var b = document.getElementById('now_' + fieldId);
@@ -2110,6 +2285,49 @@ var app = {
       self.renderRoster();
     });
     document.getElementById('rosterClearMonth').addEventListener('click', function () { self.clearRosterMonth(); });
+    document.getElementById('resetRosterOrderBtn').addEventListener('click', function () { self.resetFoldOrder('roster'); });
+    document.getElementById('guardForm').addEventListener('submit', function (e) { self.saveGuard(e); });
+    document.getElementById('guardCancel').addEventListener('click', function () { self.cancelGuardEdit(); });
+    document.getElementById('guardColourAuto').addEventListener('click', function () {
+      var n = document.getElementById('guardName').value;
+      if (!n) { self.toast('Name the guard first', 'error'); return; }
+      self.setGuardColour(n, null);
+      document.getElementById('guardColourPick').value = self.guardHex(n);
+    });
+    document.getElementById('mergeGuardsBtn').addEventListener('click', function () { self.doMergeGuards(); });
+
+    var ps = document.getElementById('paperSize');
+    var ws = document.getElementById('weekStart');
+    ps.value = self.paperSize();
+    ws.value = String(self.weekStartsOn());
+    ps.addEventListener('change', function () {
+      self.setPaperSize(ps.value);
+      self.toast('Sheets will print on ' + (ps.value === 'letter' ? 'US Letter' : 'A4'));
+    });
+    ws.addEventListener('change', function () {
+      self.setWeekStart(ws.value);
+      self.renderDayPicker();
+      self.renderRoster();
+      self.toast('Weeks now start on ' + (ws.value === '0' ? 'Sunday' : 'Monday'));
+    });
+    PDFKit.setPageSize(self.paperSize());
+
+    var lOn = document.getElementById('licencesOn');
+    var lLbl = document.getElementById('licenceLabel');
+    lOn.checked = self.licencesOn();
+    lLbl.value = self.licenceLabel() === 'Licence' ? '' : self.licenceLabel();
+    lOn.addEventListener('change', function () {
+      self.setLicencesOn(lOn.checked);
+      self.applyLicenceMode();
+      self.renderGuards();
+      self.toast(lOn.checked ? self.licenceLabel() + ' tracking on' : 'Licence tracking off');
+    });
+    lLbl.addEventListener('change', function () {
+      self.setLicenceLabel(lLbl.value);
+      self.applyLicenceMode();
+      self.renderGuards();
+    });
+    self.applyLicenceMode();
     for (k = 0; k < self.LENGTH_FORMS.length; k++) {
       (function (key, startId, endId) {
         var setBtn = document.getElementById('lenSet_' + key);
@@ -2272,6 +2490,7 @@ var app = {
     });
 
     document.getElementById('nightToggle').addEventListener('click', function () { self.toggleNightMode(); });
+    document.getElementById('resetOrderBtn').addEventListener('click', function () { self.resetFoldOrder('settings'); });
     document.getElementById('forceUpdateBtn').addEventListener('click', function () { self.forceUpdate(); });
     document.getElementById('pruneBtn').addEventListener('click', function () { self.pruneOld(); });
     document.getElementById('clearTodayBtn').addEventListener('click', function () { self.clearToday(); });
@@ -2280,7 +2499,6 @@ var app = {
 
   /* The home screen shortcuts point at #tracker and #archive, so the tab
      named in the address has to actually open. */
-  FOLDS: ['siteaccesshours', 'sheetstyle', 'hoursperiod', 'signing', 'dateformat', 'unknowncompanies', 'export', 'rowcolours', 'periodreport', 'data'],
 
   TABS: ['tracker', 'sheet', 'roster', 'database', 'settings'],
 
@@ -2289,10 +2507,11 @@ var app = {
   SUBTABS: {
     entry: [['btnSubVisitor', 'subVisitor'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubIncident', 'subIncident']],
     day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubMuster', 'subMuster']],
-    db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubStaffList', 'subStaffList']]
+    db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubStaffList', 'subStaffList']],
+    roster: [['btnSubRoster', 'subRoster'], ['btnSubGuards', 'subGuards']]
   },
 
-  subPage: { entry: 'subVisitor', day: 'subSheet', db: 'subContractors' },
+  subPage: { entry: 'subVisitor', day: 'subSheet', db: 'subContractors', roster: 'subRoster' },
 
   activateSub: function (group, paneId) {
     var list = this.SUBTABS[group], i, found = false;
@@ -2388,19 +2607,118 @@ var app = {
      the moment the device opens. */
   /* Each section opens and closes on its own; what is open is remembered,
      so a setting being adjusted repeatedly is not re-opened every time. */
+  /* Two groups of sections, ordered the same way by the same code. Two
+     copies of this would drift the moment one gained a section. */
+  FOLD_GROUPS: {
+    settings: ['siteaccesshours', 'sheetstyle', 'hoursperiod', 'signing', 'dateformat',
+               'unknowncompanies', 'export', 'rowcolours', 'periodreport', 'data',
+               'guardlicences', 'region'],
+    roster: ['rostercalendar', 'plannedshifts', 'guardhours', 'coverguard', 'addtoroster']
+  },
+
+  /* Alphabetical until somebody decides otherwise, then their order.
+     Read from the headings themselves so renaming a section re-sorts it
+     rather than leaving a list of slugs to keep in step by hand. */
+  settingsTitle: function (slug) {
+    var btn = document.getElementById('foldBtn_' + slug);
+    if (!btn) return slug;
+    var span = (btn.innerHTML || '').match(/<span>([^<]*)<\/span>/);
+    return span ? span[1] : slug;
+  },
+
+  /* Derived, never listed a second time. Kept as its own array and the
+     two would drift the first time a section was added to one and not the
+     other, and whatever was left out would quietly stop working. */
+  foldList: function () {
+    var out = [];
+    for (var g in this.FOLD_GROUPS) out = out.concat(this.FOLD_GROUPS[g]);
+    return out;
+  },
+
+  groupOf: function (slug) {
+    for (var g in this.FOLD_GROUPS) {
+      if (this.FOLD_GROUPS[g].indexOf(slug) !== -1) return g;
+    }
+    return null;
+  },
+
+  foldOrder: function (group) {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('sat-order-' + group) || 'null'); } catch (e) {}
+    var self = this;
+    var known = (this.FOLD_GROUPS[group] || []).slice();
+    var out = [];
+    if (Array.isArray(saved)) {
+      for (var i = 0; i < saved.length; i++) {
+        if (known.indexOf(saved[i]) !== -1 && out.indexOf(saved[i]) === -1) out.push(saved[i]);
+      }
+    }
+    /* anything added since, or never moved, falls in alphabetically */
+    var rest = known.filter(function (s) { return out.indexOf(s) === -1; });
+    rest.sort(function (a, b) {
+      return self.settingsTitle(a).toLowerCase() < self.settingsTitle(b).toLowerCase() ? -1 : 1;
+    });
+    return out.concat(rest);
+  },
+
+  moveFold: function (slug, by) {
+    var group = this.groupOf(slug);
+    if (!group) return;
+    var order = this.foldOrder(group);
+    var at = order.indexOf(slug);
+    if (at === -1) return;
+    var to = at + by;
+    if (to < 0 || to >= order.length) return;
+    order.splice(to, 0, order.splice(at, 1)[0]);
+    try { localStorage.setItem('sat-order-' + group, JSON.stringify(order)); } catch (e) {}
+    this.applyFoldOrder(group);
+    this.toast(this.settingsTitle(slug) + ' moved ' + (by < 0 ? 'up' : 'down'));
+  },
+
+  resetFoldOrder: function (group) {
+    try { localStorage.removeItem('sat-order-' + group); } catch (e) {}
+    this.applyFoldOrder(group);
+    this.toast((group === 'roster' ? 'Roster' : 'Settings') + ' back in alphabetical order');
+  },
+
+  applyLicenceMode: function () {
+    var on = this.licencesOn();
+    if (on) document.body.classList.add('licences');
+    else document.body.classList.remove('licences');
+    var lbl = document.getElementById('guardLicenceLabel');
+    if (lbl) lbl.textContent = this.licenceLabel() + ' number';
+  },
+
+  applyFoldOrder: function (group) {
+    var order = this.foldOrder(group), i;
+    var first = document.getElementById('fold_' + order[0]);
+    var parent = first && first.parentNode;
+    if (!parent) return;
+    for (i = 0; i < order.length; i++) {
+      var sec = document.getElementById('fold_' + order[i]);
+      if (sec) parent.appendChild(sec);          /* appending moves it to the end */
+    }
+    for (i = 0; i < order.length; i++) {
+      var up = document.getElementById('up_' + order[i]);
+      var down = document.getElementById('down_' + order[i]);
+      if (up) { if (i === 0) up.setAttribute('disabled', 'disabled'); else up.removeAttribute('disabled'); }
+      if (down) { if (i === order.length - 1) down.setAttribute('disabled', 'disabled'); else down.removeAttribute('disabled'); }
+    }
+  },
+
   openFolds: function () {
     try {
       var v = JSON.parse(localStorage.getItem('sat-folds') || 'null');
-      if (!Array.isArray(v)) return [];
+      if (!Array.isArray(v)) return ['rostercalendar'];
       var self = this;
-      return v.filter(function (s) { return self.FOLDS.indexOf(s) !== -1; });
-    } catch (e) { return []; }
+      return v.filter(function (s) { return self.foldList().indexOf(s) !== -1; });
+    } catch (e) { return ['rostercalendar']; }
   },
 
   toggleFold: function (slug) {
     /* checked here rather than relying on the lookup failing, so a bad
        name can never reach the stored list */
-    if (this.FOLDS.indexOf(slug) === -1) return;
+    if (this.foldList().indexOf(slug) === -1) return;
     var sec = document.getElementById('fold_' + slug);
     var btn = document.getElementById('foldBtn_' + slug);
     if (!sec || !btn) return;
@@ -2417,8 +2735,8 @@ var app = {
 
   applyFolds: function () {
     var open = this.openFolds(), i;
-    for (i = 0; i < this.FOLDS.length; i++) {
-      var slug = this.FOLDS[i];
+    for (i = 0; i < this.foldList().length; i++) {
+      var slug = this.foldList()[i];
       var sec = document.getElementById('fold_' + slug);
       var btn = document.getElementById('foldBtn_' + slug);
       if (!sec || !btn) continue;
@@ -2503,6 +2821,123 @@ var app = {
     return bits.join(', ');
   },
 
+  ENTRY_FIELDS: [
+    { key: 'company', input: 'companyInput', list: 'companyList' },
+    { key: 'rep', input: 'repInput', list: 'repList' },
+    { key: 'vehicle', input: 'vehicleInput', list: 'vehicleList' }
+  ],
+
+  /* Whatever is already in the other two boxes narrows what this one can
+     offer. A guard who starts with a registration should not then be shown
+     every company on site, and one who starts with a company should not be
+     offered somebody else's driver. */
+  narrowedPool: function (field) {
+    var pool = this.suggestionPool(), out = [], i, f;
+    var ctx = [];
+    for (f = 0; f < this.ENTRY_FIELDS.length; f++) {
+      var spec = this.ENTRY_FIELDS[f];
+      if (spec.key === field) continue;
+      var el = document.getElementById(spec.input);
+      var v = el ? el.value.replace(/^\s+|\s+$/g, '').toLowerCase() : '';
+      if (v) ctx.push([spec.key, v]);
+    }
+    /* A pool vehicle has no representative against it, so a blank has to
+       act as a wildcard or it would never be offered. But a wildcard must
+       not cross companies: naming a driver at one firm should not surface
+       another firm's pool van. So work out which companies the context is
+       consistent with first, and hold every entry to that. */
+    var allowed = null;
+    if (ctx.length) {
+      allowed = {};
+      for (i = 0; i < pool.length; i++) {
+        var p = pool[i], fits = true;
+        for (var q = 0; q < ctx.length && fits; q++) {
+          var val = String(p[ctx[q][0]] || '').toLowerCase();
+          if (!val || val.indexOf(ctx[q][1]) === -1) fits = false;
+        }
+        if (fits) allowed[String(p.company).toLowerCase()] = 1;
+      }
+      if (!Object.keys(allowed).length) allowed = null;   /* nothing matched, do not hide everything */
+    }
+
+    for (i = 0; i < pool.length; i++) {
+      var e = pool[i], ok = true;
+      if (allowed && !allowed[String(e.company).toLowerCase()]) continue;
+      for (var c = 0; c < ctx.length && ok; c++) {
+        var have = String(e[ctx[c][0]] || '').toLowerCase();
+        if (have && have.indexOf(ctx[c][1]) === -1) ok = false;
+      }
+      if (ok) out.push(e);
+    }
+    return out;
+  },
+
+  /* One picker serving all three boxes, so it does not matter which the
+     guard reaches for first. */
+  showFieldSuggestions: function (field) {
+    var spec = null, i;
+    for (i = 0; i < this.ENTRY_FIELDS.length; i++) {
+      if (this.ENTRY_FIELDS[i].key === field) spec = this.ENTRY_FIELDS[i];
+    }
+    if (!spec) return;
+    var box = document.getElementById(spec.input);
+    var list = document.getElementById(spec.list);
+    if (!box || !list) return;
+
+    var q = box.value.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var pool = this.narrowedPool(field);
+    var seen = {}, rows = [];
+
+    for (i = 0; i < pool.length && rows.length < 10; i++) {
+      var e = pool[i];
+      var mine = String(e[field] || '');
+      if (!mine) continue;
+      /* typing in any box searches every field, because a guard may have
+         a registration in front of them and no idea of the company */
+      if (q && mine.toLowerCase().indexOf(q) === -1 &&
+          String(e.company || '').toLowerCase().indexOf(q) === -1 &&
+          String(e.rep || '').toLowerCase().indexOf(q) === -1 &&
+          String(e.vehicle || '').toLowerCase().indexOf(q) === -1) continue;
+      /* Two people can share a name. Collapsing on the name alone hides
+         all but one of them, which is worse than showing nothing: the
+         guard picks the first John Smith offered and the sheet records
+         the wrong company. Keep one line per name per company. */
+      var k = (mine + '|' + (e.company || '')).toLowerCase();
+      if (seen[k]) continue;
+      seen[k] = 1;
+      rows.push(e);
+    }
+
+    list.innerHTML = '';
+    if (!rows.length) { list.classList.remove('active'); return; }
+
+    var self = this;
+    for (i = 0; i < rows.length; i++) {
+      (function (entry) {
+        var item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        var others = [];
+        if (field !== 'company' && entry.company) others.push(entry.company);
+        if (field !== 'rep' && entry.rep) others.push(entry.rep);
+        if (field !== 'vehicle' && entry.vehicle) others.push(entry.vehicle);
+        item.innerHTML = self.esc(entry[field]) +
+          (others.length ? ' <span class="ac-reg">' + self.esc(others.join(' \u00b7 ')) + '</span>' : '');
+        item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+        item.addEventListener('click', function () {
+          if (entry.company) document.getElementById('companyInput').value = entry.company;
+          if (entry.rep) document.getElementById('repInput').value = entry.rep;
+          if (entry.vehicle) document.getElementById('vehicleInput').value = entry.vehicle;
+          list.classList.remove('active');
+          self.hideSuggestions();
+          self.refreshPickers();
+          self.updateInductionNote();
+        });
+        list.appendChild(item);
+      })(rows[i]);
+    }
+    list.classList.add('active');
+  },
+
   showSuggestions: function () {
     var q = document.getElementById('companyInput').value.replace(/^\s+|\s+$/g, '').toLowerCase();
     var list = document.getElementById('companyList');
@@ -2513,7 +2948,8 @@ var app = {
     for (i = 0; i < pool.length && matches.length < 10; i++) {
       if (!q ||
           pool[i].company.toLowerCase().indexOf(q) !== -1 ||
-          (pool[i].rep && pool[i].rep.toLowerCase().indexOf(q) !== -1)) {
+          (pool[i].rep && pool[i].rep.toLowerCase().indexOf(q) !== -1) ||
+          (pool[i].vehicle && pool[i].vehicle.toLowerCase().indexOf(q) !== -1)) {
         matches.push(pool[i]);
       }
     }
@@ -3239,23 +3675,28 @@ var app = {
      renewal booked before anyone is turned away at the gate. */
   EXPIRY_WARN_DAYS: 30,
 
-  inductionEntries: function (c) {
-    var out = [], i, d, today = new Date();
+  /* One reading of an expiry date, so an induction and a licence cannot
+     end up disagreeing about what "expiring soon" means. */
+  expiryStatus: function (dateStr, asOf) {
+    var today = asOf ? this.parseLocalDate(asOf) : new Date();
+    if (!today) today = new Date();
     today.setHours(0, 0, 0, 0);
+    if (!dateStr) return { date: '', valid: false, missing: true, soon: false, days: null };
+    var dt = this.parseLocalDate(dateStr);
+    if (!dt) return { date: dateStr, valid: false, missing: true, soon: false, days: null };
+    dt.setHours(0, 0, 0, 0);
+    var days = Math.round((dt.getTime() - today.getTime()) / 86400000);
+    return {
+      date: dateStr, missing: false, days: days,
+      valid: days >= 0,
+      soon: days >= 0 && days <= this.EXPIRY_WARN_DAYS
+    };
+  },
 
+  inductionEntries: function (c) {
+    var out = [], i, d;
     var self = this;
-    function status(dateStr) {
-      if (!dateStr) return { date: '', valid: false, missing: true, soon: false, days: null };
-      var dt = self.parseLocalDate(dateStr);
-      if (!dt) return { date: dateStr, valid: false, missing: true, soon: false, days: null };
-      dt.setHours(0, 0, 0, 0);
-      var days = Math.round((dt.getTime() - today.getTime()) / 86400000);
-      return {
-        date: dateStr, missing: false, days: days,
-        valid: days >= 0,
-        soon: days >= 0 && days <= self.EXPIRY_WARN_DAYS
-      };
-    }
+    function status(dateStr) { return self.expiryStatus(dateStr); }
 
     for (i = 0; i < (c.reps || []).length; i++) {
       d = c.reps[i].inductionDate || '';
@@ -4678,10 +5119,365 @@ var app = {
   editingRosterId: null,
   rosterDays: [],
 
-  DAY_NAMES: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  ALL_DAYS: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+
+  /* Monday in most of the world, Sunday across the Americas. A rota week
+     split down the middle is worse than either choice. */
+  weekStartsOn: function () {
+    var v = NaN;
+    try { v = parseInt(localStorage.getItem('sat-week-start'), 10); } catch (e) {}
+    return v === 0 ? 0 : 1;
+  },
+
+  setWeekStart: function (n) {
+    try { localStorage.setItem('sat-week-start', String(parseInt(n, 10) === 0 ? 0 : 1)); } catch (e) {}
+  },
+
+  dayNames: function () {
+    var s = this.weekStartsOn();
+    return this.ALL_DAYS.slice(s).concat(this.ALL_DAYS.slice(0, s));
+  },
+
+  /* How far a day sits into its week, given where that week starts. */
+  weekOffset: function (d) {
+    return (d.getDay() - this.weekStartsOn() + 7) % 7;
+  },
+
+  paperSize: function () {
+    var v = '';
+    try { v = localStorage.getItem('sat-paper') || ''; } catch (e) {}
+    return v === 'letter' ? 'letter' : 'a4';
+  },
+
+  setPaperSize: function (v) {
+    try { localStorage.setItem('sat-paper', v === 'letter' ? 'letter' : 'a4'); } catch (e) {}
+    PDFKit.setPageSize(this.paperSize());
+  },
 
   dateKey: function (d) {
     return d.getFullYear() + '-' + this.pad2(d.getMonth() + 1) + '-' + this.pad2(d.getDate());
+  },
+
+  /* Licences are a local matter: the UK has the SIA, elsewhere it is a
+     different body or none at all. Off unless switched on, and named by
+     whoever switched it on. */
+  licencesOn: function () {
+    try { return localStorage.getItem('sat-licences') === '1'; } catch (e) { return false; }
+  },
+
+  setLicencesOn: function (on) {
+    try { localStorage.setItem('sat-licences', on ? '1' : '0'); } catch (e) {}
+  },
+
+  licenceLabel: function () {
+    var v = '';
+    try { v = localStorage.getItem('sat-licence-label') || ''; } catch (e) {}
+    return v.replace(/^\s+|\s+$/g, '') || 'Licence';
+  },
+
+  setLicenceLabel: function (s) {
+    s = String(s || '').replace(/^\s+|\s+$/g, '').slice(0, 40);
+    try { localStorage.setItem('sat-licence-label', s); } catch (e) {}
+  },
+
+  licenceStanding: function (guard, asOf) {
+    var g = typeof guard === 'string' ? this.guardByName(guard) : guard;
+    if (!g) return this.expiryStatus('', asOf);
+    return this.expiryStatus(g.licenceExpiry || '', asOf);
+  },
+
+  /* A licence that lapses part way through a rostered shift is the case
+     worth catching, and it is invisible unless something looks for it. */
+  licenceLapsedShifts: function (name) {
+    var g = this.guardByName(name);
+    if (!g || !g.licenceExpiry) return [];
+    var out = [], i;
+    for (i = 0; i < this.shifts.length; i++) {
+      var s = this.shifts[i];
+      if (String(s.guard).toLowerCase() !== String(name).toLowerCase()) continue;
+      var st = this.expiryStatus(g.licenceExpiry, s.date);
+      if (!st.valid) out.push(s);
+    }
+    return out;
+  },
+
+  /* ---------------- the guard register ---------------- */
+
+  guards: [],
+
+  /* Every name that has ever been on a shift is a guard, whether anyone
+     added them deliberately or not. Building the register from the shifts
+     means it can never disagree with the roster. */
+  syncGuards: function () {
+    var seen = {}, i;
+    if (!Array.isArray(this.guards)) this.guards = [];
+    for (i = 0; i < this.guards.length; i++) {
+      seen[String(this.guards[i].name).toLowerCase()] = 1;
+    }
+    for (i = 0; i < this.shifts.length; i++) {
+      var n = String(this.shifts[i].guard || '').replace(/^\s+|\s+$/g, '');
+      if (!n) continue;
+      if (seen[n.toLowerCase()]) continue;
+      seen[n.toLowerCase()] = 1;
+      this.guards.push({ id: this.nextId(), name: n, phone: '' });
+    }
+  },
+
+  guardByName: function (name) {
+    var k = String(name || '').toLowerCase().replace(/^\s+|\s+$/g, ''), i;
+    for (i = 0; i < this.guards.length; i++) {
+      if (String(this.guards[i].name).toLowerCase() === k) return this.guards[i];
+    }
+    return null;
+  },
+
+  shiftsForGuard: function (name) {
+    var k = String(name || '').toLowerCase(), out = [], i;
+    for (i = 0; i < this.shifts.length; i++) {
+      if (String(this.shifts[i].guard).toLowerCase() === k) out.push(this.shifts[i]);
+    }
+    return out;
+  },
+
+  /* A rename has to reach every shift and carry the colour with it, or the
+     guard turns a different colour on the roster and their old shifts stay
+     under the old name as a second person. */
+  renameGuard: function (from, to) {
+    from = String(from || '').replace(/^\s+|\s+$/g, '');
+    to = String(to || '').replace(/^\s+|\s+$/g, '');
+    if (!from || !to || from === to) return 0;
+
+    var clash = this.guardByName(to);
+    if (clash && String(clash.name).toLowerCase() !== from.toLowerCase()) return -1;
+
+    var hex = this.guardHex(from);
+    var overrides = this.guardOverrides();
+    var had = Object.prototype.hasOwnProperty.call(overrides, from.toLowerCase());
+
+    var n = 0, i;
+    for (i = 0; i < this.shifts.length; i++) {
+      if (String(this.shifts[i].guard).toLowerCase() === from.toLowerCase()) {
+        this.shifts[i].guard = to;
+        n++;
+      }
+    }
+    var rec = this.guardByName(from);
+    if (rec) rec.name = to;
+    if (had) { this.setGuardColour(from, null); this.setGuardColour(to, hex); }
+    return n;
+  },
+
+  /* Folding a mistyped name into the right one, keeping the shifts. */
+  mergeGuards: function (from, into) {
+    from = String(from || '');
+    into = String(into || '');
+    if (!from || !into || from.toLowerCase() === into.toLowerCase()) return 0;
+    var n = 0, i;
+    for (i = 0; i < this.shifts.length; i++) {
+      if (String(this.shifts[i].guard).toLowerCase() === from.toLowerCase()) {
+        this.shifts[i].guard = into;
+        n++;
+      }
+    }
+    this.guards = this.guards.filter(function (g) {
+      return String(g.name).toLowerCase() !== from.toLowerCase();
+    });
+    this.setGuardColour(from, null);
+    return n;
+  },
+
+  removeGuard: function (name) {
+    var before = this.shifts.length;
+    this.shifts = this.shifts.filter(function (s) {
+      return String(s.guard).toLowerCase() !== String(name).toLowerCase();
+    });
+    this.guards = this.guards.filter(function (g) {
+      return String(g.name).toLowerCase() !== String(name).toLowerCase();
+    });
+    this.setGuardColour(name, null);
+    return before - this.shifts.length;
+  },
+
+  renderGuards: function () {
+    var box = document.getElementById('guardsContainer');
+    var sum = document.getElementById('guardsSummary');
+    if (!box) return;
+    this.syncGuards();
+
+    var self = this;
+    var licOn = this.licencesOn();
+    var order = this.guards.slice().sort(function (a, b) {
+      return String(a.name).toLowerCase() < String(b.name).toLowerCase() ? -1 : 1;
+    });
+
+    if (sum) {
+      var bad = 0, warn = 0;
+      if (licOn) {
+        for (var z = 0; z < order.length; z++) {
+          var s2 = this.licenceStanding(order[z]);
+          if (!s2.missing && !s2.valid) bad++;
+          else if (s2.soon) warn++;
+        }
+      }
+      sum.innerHTML = '<span>' + order.length + (order.length === 1 ? ' guard' : ' guards') + '</span>' +
+        (bad ? '<span class="onsite-chip bad">' + bad + ' expired</span>' : '') +
+        (warn ? '<span class="onsite-chip soon">' + warn + ' expiring</span>' : '');
+    }
+    if (!order.length) {
+      box.innerHTML = '<div class="empty-state">No guards yet. Add one, or roster a shift and the name will appear here.</div>';
+      this.fillMergePickers();
+      return;
+    }
+
+    var rows = '', i;
+    for (i = 0; i < order.length; i++) {
+      var g = order[i];
+      var mine = this.shiftsForGuard(g.name);
+      var mins = 0, q;
+      for (q = 0; q < mine.length; q++) mins += this.shiftRealMins(mine[q]);
+      var lic = '';
+      if (licOn) {
+        var st = this.licenceStanding(g);
+        var lapsed = this.licenceLapsedShifts(g.name).length;
+        if (st.missing) lic = '<span class="status-badge none">Not recorded</span>';
+        else if (!st.valid) lic = '<span class="status-badge bad">Expired ' + this.showDate(st.date) + '</span>';
+        else if (st.soon) lic = '<span class="status-badge soon">Expires ' + this.showDate(st.date) + '</span>';
+        else lic = '<span class="status-badge ok">Valid to ' + this.showDate(st.date) + '</span>';
+        if (g.licenceNo) lic += '<span class="cell-sub">' + this.esc(g.licenceNo) + '</span>';
+        /* the case worth catching: rostered for a shift after it lapses */
+        if (lapsed) lic += '<span class="cell-sub carried">' + lapsed +
+          (lapsed === 1 ? ' shift' : ' shifts') + ' rostered after it expires</span>';
+      }
+
+      rows += '<tr><td>' + this.guardDot(g.name) + this.esc(g.name) +
+        (g.phone ? '<span class="cell-sub">' + this.esc(g.phone) + '</span>' : '') +
+        '</td>' + (licOn ? '<td>' + lic + '</td>' : '') +
+        '<td>' + mine.length + (mine.length === 1 ? ' shift' : ' shifts') +
+        (mins ? '<span class="cell-sub">' + this.esc(this.lengthText(mins)) + '</span>' : '') +
+        '</td><td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editGuardAt(' + i + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteGuardAt(' + i + ')">X</button>' +
+        '</td></tr>';
+    }
+    box.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th>Guard</th>' + (licOn ? '<th>' + this.esc(this.licenceLabel()) + '</th>' : '') +
+      '<th>Rostered</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    this.shownGuardList = order;
+    this.fillMergePickers();
+  },
+
+  fillMergePickers: function () {
+    var from = document.getElementById('mergeFrom');
+    var into = document.getElementById('mergeInto');
+    if (!from || !into) return;
+    var opts = '<option value="">Choose a guard</option>', i;
+    var order = this.guards.slice().sort(function (a, b) {
+      return String(a.name).toLowerCase() < String(b.name).toLowerCase() ? -1 : 1;
+    });
+    for (i = 0; i < order.length; i++) {
+      opts += '<option value="' + this.esc(order[i].name) + '">' + this.esc(order[i].name) + '</option>';
+    }
+    from.innerHTML = opts;
+    into.innerHTML = opts;
+  },
+
+  shownGuardList: [],
+
+  editGuardAt: function (i) {
+    var g = this.shownGuardList[i];
+    if (!g) return;
+    document.getElementById('guardEditId').value = String(g.id);
+    document.getElementById('guardName').value = g.name;
+    document.getElementById('guardPhone').value = g.phone || '';
+    document.getElementById('guardLicenceNo').value = g.licenceNo || '';
+    document.getElementById('guardLicenceExp').value = g.licenceExpiry || '';
+    document.getElementById('guardColourPick').value = this.guardHex(g.name);
+    document.getElementById('guardSubmit').textContent = 'Save changes';
+    document.getElementById('guardCancel').style.display = '';
+    document.getElementById('guardName').focus();
+  },
+
+  cancelGuardEdit: function () {
+    var f = document.getElementById('guardForm');
+    f.reset();
+    document.getElementById('guardEditId').value = '';
+    document.getElementById('guardSubmit').textContent = 'Add guard';
+    document.getElementById('guardCancel').style.display = 'none';
+  },
+
+  saveGuard: function (e) {
+    e.preventDefault();
+    var name = document.getElementById('guardName').value.replace(/^\s+|\s+$/g, '');
+    var phone = document.getElementById('guardPhone').value.replace(/^\s+|\s+$/g, '');
+    var hex = document.getElementById('guardColourPick').value;
+    var editId = document.getElementById('guardEditId').value;
+    if (!name) { this.toast('Give the guard a name', 'error'); return; }
+
+    if (editId) {
+      var rec = null, i;
+      for (i = 0; i < this.guards.length; i++) if (String(this.guards[i].id) === editId) rec = this.guards[i];
+      if (!rec) { this.cancelGuardEdit(); return; }
+      if (rec.name !== name) {
+        var moved = this.renameGuard(rec.name, name);
+        if (moved === -1) { this.toast('There is already a guard by that name. Merge them instead.', 'error'); return; }
+        this.toast(moved ? 'Renamed, and ' + moved + (moved === 1 ? ' shift' : ' shifts') + ' updated' : 'Renamed');
+      }
+      rec.phone = phone;
+      rec.licenceNo = document.getElementById('guardLicenceNo').value.replace(/^\s+|\s+$/g, '');
+      rec.licenceExpiry = document.getElementById('guardLicenceExp').value || '';
+      if (hex) this.setGuardColour(name, hex);
+    } else {
+      if (this.guardByName(name)) { this.toast('That guard is already listed', 'error'); return; }
+      this.guards.push({ id: this.nextId(), name: name, phone: phone,
+        licenceNo: document.getElementById('guardLicenceNo').value.replace(/^\s+|\s+$/g, ''),
+        licenceExpiry: document.getElementById('guardLicenceExp').value || '' });
+      if (hex) this.setGuardColour(name, hex);
+      this.toast(name + ' added');
+    }
+
+    this.cancelGuardEdit();
+    this.saveData();
+    this.renderGuards();
+    this.renderRoster();
+    this.renderShifts();
+  },
+
+  deleteGuardAt: function (i) {
+    var g = this.shownGuardList[i];
+    if (!g) return;
+    var n = this.shiftsForGuard(g.name).length;
+    /* Their shifts are the record of who was on duty, so say plainly what
+       is about to go rather than asking a bland are you sure. */
+    var msg = n
+      ? 'Remove ' + g.name + ' and delete ' + n + (n === 1 ? ' shift' : ' shifts') +
+        ' from the roster?\n\nThat removes the record of who was on duty for ' +
+        (n === 1 ? 'that shift' : 'those shifts') +
+        '. To keep the history, merge them into another guard instead.'
+      : 'Remove ' + g.name + '? They have no shifts.';
+    if (!confirm(msg)) return;
+    var gone = this.removeGuard(g.name);
+    this.saveData();
+    this.renderGuards();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast(g.name + ' removed' + (gone ? ' with ' + gone + (gone === 1 ? ' shift' : ' shifts') : ''));
+  },
+
+  doMergeGuards: function () {
+    var from = document.getElementById('mergeFrom').value;
+    var into = document.getElementById('mergeInto').value;
+    if (!from || !into) { this.toast('Choose both guards', 'error'); return; }
+    if (from.toLowerCase() === into.toLowerCase()) { this.toast('Those are the same guard', 'error'); return; }
+    var n = this.shiftsForGuard(from).length;
+    if (!confirm('Move ' + n + (n === 1 ? ' shift' : ' shifts') + ' from ' + from +
+                 ' to ' + into + ' and remove ' + from + '?')) return;
+    var moved = this.mergeGuards(from, into);
+    this.saveData();
+    this.renderGuards();
+    this.renderRoster();
+    this.renderShifts();
+    this.toast(from + ' merged into ' + into +
+      (moved ? ', ' + moved + (moved === 1 ? ' shift' : ' shifts') + ' moved' : ''));
   },
 
   /* ---------------- guard colours ---------------- */
@@ -4931,7 +5727,7 @@ var app = {
     document.getElementById('rosterMonthLabel').textContent = label;
 
     /* weeks run Monday to Sunday */
-    var lead = (first.getDay() + 6) % 7;
+    var lead = this.weekOffset(first);
     var days = new Date(this.rosterYear, this.rosterMonth + 1, 0).getDate();
     /* a shift appears on every day it actually covers, not just the one it
        started on, so a 36 hour watch is visible across the week */
@@ -4950,7 +5746,8 @@ var app = {
     }
 
     var html = '';
-    for (i = 0; i < 7; i++) html += '<div class="cal-head">' + this.DAY_NAMES[i] + '</div>';
+    var dayLabels = this.dayNames();
+    for (i = 0; i < 7; i++) html += '<div class="cal-head">' + dayLabels[i] + '</div>';
     for (i = 0; i < lead; i++) html += '<div class="cal-day blank"></div>';
 
     for (i = 1; i <= days; i++) {
@@ -4975,18 +5772,25 @@ var app = {
     this.renderRosterDay();
     this.renderDayPicker();
     this.renderGuardHours();
+    this.renderGuards();
   },
 
   renderDayPicker: function () {
     var box = document.getElementById('rosterDays');
-    if (!box || box.children.length) return;
+    if (!box) return;
+    box.innerHTML = '';                       /* rebuilt when the week start moves */
     var self = this;
+    var start = this.weekStartsOn();
+    var labels = this.dayNames();
     for (var i = 0; i < 7; i++) {
-      (function (idx) {
+      (function (pos) {
+        /* the real weekday is stored, never the position on screen, or
+           changing the week start would silently reassign every rota */
+        var idx = (pos + start) % 7;
         var b = document.createElement('button');
         b.type = 'button';
-        b.className = 'day-pick';
-        b.textContent = self.DAY_NAMES[idx];
+        b.className = 'day-pick' + (self.rosterDays.indexOf(idx) !== -1 ? ' on' : '');
+        b.textContent = labels[pos];
         b.addEventListener('click', function () {
           var at = self.rosterDays.indexOf(idx);
           if (at === -1) { self.rosterDays.push(idx); b.className = 'day-pick on'; }
@@ -5415,7 +6219,7 @@ var app = {
 
     var added = 0, skipped = 0, cur = new Date(a.getTime());
     while (cur.getTime() <= b.getTime()) {
-      var wd = (cur.getDay() + 6) % 7;
+      var wd = cur.getDay();
       if (!this.rosterDays.length || this.rosterDays.indexOf(wd) !== -1) {
         var key = this.dateKey(cur);
         var clash = false, existing = this.shiftsFor(key), q;
@@ -5604,7 +6408,12 @@ var app = {
 
   applyShiftChange: function (e) {
     e.preventDefault();
-    if (this.changingShiftId === null) return;
+    /* Refusing without saying so leaves someone pressing a button that
+       looks like it works. */
+    if (this.changingShiftId === null) {
+      this.toast('Choose a shift to swap or hand over first', 'error');
+      return;
+    }
 
     var who = document.getElementById('changeGuard').value.replace(/^\s+|\s+$/g, '');
     if (!who) { this.toast('Name the guard taking over', 'error'); return; }
@@ -5810,7 +6619,7 @@ var app = {
     var LINE = mono ? [0.72, 0.72, 0.72] : [0.80, 0.84, 0.88];
     var INK = mono ? [0, 0, 0] : [0.06, 0.09, 0.15];
     var RED = mono ? [0, 0, 0] : [0.73, 0.11, 0.11];
-    var M = 40, RIGHT = PDFKit.PW - 40, FLOOR = 792;
+    var M = 40, RIGHT = PDFKit.PW - 40, FLOOR = PDFKit.FLOOR;
     var doc = new PDFKit.Doc();
     var y = 0, i;
     var self = this;
@@ -6211,7 +7020,7 @@ var app = {
   weekStart: function (day) {
     var d = this.parseLocalDate(day) || new Date();
     d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    d.setDate(d.getDate() - this.weekOffset(d));
     return d;
   },
 
@@ -6320,7 +7129,7 @@ var app = {
       return [1 - (1 - rgb[0]) * amount, 1 - (1 - rgb[1]) * amount, 1 - (1 - rgb[2]) * amount];
     }
 
-    var M = 40, RIGHT = PDFKit.PW - 40, TOP = 52, FLOOR = 792;
+    var M = 40, RIGHT = PDFKit.PW - 40, TOP = 52, FLOOR = PDFKit.FLOOR;
     var doc = new PDFKit.Doc();
     var y = 0;
 
@@ -7254,6 +8063,7 @@ var app = {
       shifts: shiftList,
       incidents: incList,
       irregulars: this.irregulars,
+      guards: this.guards,
       /* without these a restored sheet has coloured rows and nothing
          saying what the colours mean */
       flagNames: this.flagLabels()
@@ -7656,6 +8466,7 @@ var app = {
       shifts: this.shifts,
       irregulars: this.irregulars,
       incidents: this.incidents,
+      guards: this.guards,
       flagNames: this.flagLabels()
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -7780,7 +8591,7 @@ var app = {
       if (took) this.setFlagLabels(mine);
     }
     var lists = ['visitors', 'contractors', 'regularVisitors', 'staff',
-                 'staffMovements', 'siteVehicles', 'shifts', 'irregulars', 'incidents'];
+                 'staffMovements', 'siteVehicles', 'shifts', 'irregulars', 'incidents', 'guards'];
     for (i = 0; i < lists.length; i++) {
       if (d[lists[i]] === undefined) continue;
       if (!Array.isArray(d[lists[i]])) { d[lists[i]] = []; continue; }
@@ -7854,6 +8665,16 @@ var app = {
         if (sDup) continue;
         this.staffMovements.push(this.adopt(sMove));
         report.movements++;
+      }
+    }
+
+    if (Array.isArray(d.guards)) {
+      for (i = 0; i < d.guards.length; i++) {
+        var ing = d.guards[i];
+        if (!ing || !ing.name) continue;
+        var mine = this.guardByName(ing.name);
+        if (!mine) this.guards.push({ id: this.nextId(), name: ing.name, phone: ing.phone || '' });
+        else if (!mine.phone && ing.phone) mine.phone = ing.phone;
       }
     }
 

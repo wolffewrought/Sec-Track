@@ -63,6 +63,7 @@ function makeDom(opts) {
       setSelectionRange(s, en) { e.selectionStart = s; e.selectionEnd = en; },
       getBoundingClientRect() { return { top: 0, left: 0, width: 320, height: 40 }; },
       click() { e.fire('click'); },
+      _submits: null,          /* set for a submit button inside a form */
 
       querySelector(sel) { return e.querySelectorAll(sel)[0] || null; },
       querySelectorAll(sel) {
@@ -84,6 +85,10 @@ function makeDom(opts) {
           stopPropagation() {}
         }, extra || {});
         (e._handlers[type] || []).forEach(fn => fn(ev));
+        /* A submit button inside a form submits it. Without this, every
+           save button in the app looks like it does nothing, because the
+           handler is on the form and nothing ever reaches it. */
+        if (type === 'click' && e._submits) e._submits.fire('submit');
         return ev;
       }
     };
@@ -121,9 +126,48 @@ function makeDom(opts) {
     const cls = (openTag.match(/class="([^"]+)"/) || [])[1];
     if (cls) e.className = cls;
     for (const a of openTag.matchAll(/([\w-]+)="([^"]*)"/g)) e._attrs[a[1]] = a[2];
+    /* Carry the markup's own content across. Without it anything that
+       reads its own headings back - to sort them, to label something -
+       sees nothing, and a test of that behaviour cannot run at all. */
+    if (!/\/>$/.test(openTag)) {
+      const tagName = (openTag.match(/^<([a-zA-Z][\w-]*)/) || [, ''])[1];
+      if (tagName && !/^(input|img|br|hr|meta|link|source)$/i.test(tagName)) {
+        const from = source.indexOf('>', at) + 1;
+        let depth = 1, k = from;
+        const open = new RegExp('<' + tagName + '[\\s>]', 'i');
+        const close = new RegExp('</' + tagName + '>', 'i');
+        while (k < source.length && depth > 0) {
+          const nextOpen = source.slice(k).search(open);
+          const nextClose = source.slice(k).search(close);
+          if (nextClose === -1) break;
+          if (nextOpen !== -1 && nextOpen < nextClose) { depth++; k += nextOpen + 1; }
+          else { depth--; if (depth === 0) break; k += nextClose + 1; }
+        }
+        const endAt = k + source.slice(k).search(close);
+        if (endAt > from && endAt - from < 20000) {
+          e.innerHTML = source.slice(from, endAt);
+          e._bornWith = e.innerHTML;                   /* what the page gave it */
+          e.textContent = e.innerHTML.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        }
+      }
+    }
+
     if (/type="checkbox"/.test(openTag)) e.checked = /\bchecked\b/.test(openTag);
     if (/value="([^"]*)"/.test(openTag)) e.value = (openTag.match(/value="([^"]*)"/) || [, ''])[1];
     registry[id] = e;
+  }
+
+  /* which form each submit button belongs to, read from the markup since
+     the shim does not build a real tree */
+  for (const fm of source.matchAll(/<form\b[^>]*\sid="([^"]+)"[^>]*>([\s\S]*?)<\/form>/g)) {
+    const form = registry[fm[1]];
+    if (!form) continue;
+    for (const bm of fm[2].matchAll(/<button\b([^>]*)>/g)) {
+      const attrs = bm[1];
+      if (!/type="submit"/.test(attrs)) continue;
+      const bid = (attrs.match(/id="([^"]+)"/) || [])[1];
+      if (bid && registry[bid]) registry[bid]._submits = form;
+    }
   }
 
   const body = el('body');
@@ -145,7 +189,7 @@ function makeDom(opts) {
     body, head,
     documentElement: el('html'),
     getElementById: id => registry[id] || (registry[id] = el('div', id)),
-    createElement: tag => el(tag),
+    createElement: tag => { dom.made++; return el(tag); },
     createTextNode: t => ({ textContent: t }),
     createDocumentFragment: () => el('div'),
     querySelector(sel) { return document.querySelectorAll(sel)[0] || null; },
@@ -182,7 +226,8 @@ function makeDom(opts) {
     getComputedStyle: () => ({ getPropertyValue: () => '' })
   };
 
-  return { document, window: win, localStorage, listeners, timers, registry, byClass, el };
+  const dom = { document, window: win, localStorage, listeners, timers, registry, byClass, el, made: 0 };
+  return dom;
 }
 
 /* ------------------------------------------------------------------ *
@@ -235,6 +280,164 @@ function boot(file, options) {
   return { sandbox, dom, thrown, html, file,
     id: i => dom.document.getElementById(i),
     app: sandbox.app || sandbox.App || null };
+}
+
+/* ------------------------------------------------------------------ *
+ * saying the same thing twice
+ * ------------------------------------------------------------------ */
+
+/* Drawing the same state twice should give the same result. When it does
+   not, something in the render is reaching outside its inputs - an unstable
+   sort, a random id, a clock read while building - and the symptom is a
+   list that reorders itself, or a document that differs from the one you
+   just looked at. */
+function drawsTheSame(file) {
+  const ctx = boot(file, { quiet: true });
+  const app = ctx.app;
+  if (!app) return { skipped: 'no app object to draw with' };
+
+  /* give it something to draw */
+  const html = ctx.html;
+  const plausible = t => ({ date: new Date().toISOString().slice(0, 10), time: '07:00',
+    number: '8', tel: '01234 567890', email: 'a@b.co' }[t] || 'Probe Co');
+  for (const m of html.matchAll(/<(?:input|select|textarea)[^>]*\sid="([^"]+)"/g)) {
+    try {
+      const e = ctx.id(m[1]);
+      const t = e.getAttribute('type') || 'text';
+      if (t === 'checkbox' || t === 'radio') e.checked = true; else e.value = plausible(t);
+      e.fire('input'); e.fire('change');
+    } catch (err) {}
+  }
+  for (const m of html.matchAll(/<form[^>]*\sid="([^"]+)"/g)) {
+    try { ctx.id(m[1]).fire('submit'); } catch (err) {}
+  }
+
+  const renders = Object.keys(app).filter(k => /^render[A-Z]/.test(k) && typeof app[k] === 'function');
+  const unstable = [];
+  for (const r of renders) {
+    let a, b;
+    try { app[r](); a = snapshotDom(ctx); app[r](); b = snapshotDom(ctx); }
+    catch (e) { continue; }
+    if (a !== b) unstable.push(r);
+  }
+  return { checked: renders.length, unstable };
+}
+
+function snapshotDom(ctx) {
+  const parts = [];
+  for (const id in ctx.dom.registry) {
+    const v = ctx.dom.registry[id].innerHTML || '';
+    if (v) parts.push(id + '=' + v);
+  }
+  return parts.join('\u0001');
+}
+
+/* A document built from the same records twice should be the same
+   document. Anything that differs is either a clock reading, which is
+   fine, or something that will not reproduce, which is not. */
+function buildsTheSame(file) {
+  const ctx = boot(file, { quiet: true });
+  const app = ctx.app;
+  const maker = ['buildPdf', 'buildDoc', 'buildReport', 'render', 'toPdf']
+    .find(k => app && typeof app[k] === 'function');
+  if (!maker) return { skipped: 'nothing here builds a document' };
+
+  let one, two;
+  try {
+    one = Buffer.from(app[maker]()).toString('latin1');
+    two = Buffer.from(app[maker]()).toString('latin1');
+  } catch (e) { return { skipped: 'the builder needs more than a bare call' }; }
+
+  if (one === two) return { same: true, bytes: one.length };
+
+  /* A timestamp in the file is expected. Stripping only the plain text
+     ones misses any that have been encoded on the way in, and reports a
+     document that differs by two milliseconds as non-reproducible. */
+  const strip = s => s
+    .replace(/[A-Za-z0-9+/=]{40,}/g, run => {
+      try {
+        const text = Buffer.from(run, 'base64').toString('utf8');
+        if (!/[ -~]{20}/.test(text)) return run;          /* not text, leave it */
+        return text.replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z?/g, 'T');
+      } catch (e) { return run; }
+    })
+    .replace(/D:\d{14}/g, 'D:0')
+    .replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z?/g, 'T')
+    .replace(/\d{2}:\d{2}(:\d{2})?/g, '0');
+  return { same: false, onlyTiming: strip(one) === strip(two), bytes: one.length };
+}
+
+/* ------------------------------------------------------------------ *
+ * controls that do nothing
+ * ------------------------------------------------------------------ */
+
+/* Pressing every button only finds the ones that throw. A button wired to
+   nothing is silent: it looks right, it responds to touch, and it does
+   nothing at all. Four of those shipped in this app for twenty builds
+   because every probe here asked "did it break" and none asked "did it
+   do anything". */
+function traceOf(ctx) {
+  const parts = [];
+  const app = ctx.app;
+  if (app) {
+    for (const k of Object.keys(app)) {
+      const v = app[k];
+      if (Array.isArray(v)) parts.push(k + ':' + v.length);
+      else if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+        parts.push(k + '=' + String(v).slice(0, 40));
+      }
+    }
+  }
+  for (const id in ctx.dom.registry) {
+    const e = ctx.dom.registry[id];
+    parts.push(id + '#' + (e.innerHTML || '').length + '/' + (e.value || '') +
+      '/' + (e.className || '') + '/' + (e.textContent || '').length +
+      '/' + ((e.style && e.style.display) || ''));
+  }
+  const ls = ctx.sandbox.localStorage;
+  for (let i = 0; i < ls.length; i++) {
+    const k = ls.key(i);
+    parts.push('~' + k + '=' + String(ls.getItem(k)).length);
+  }
+  /* A refusal is a response: the app puts a message on screen, and that
+     message is a new element. Counting only what existed at boot makes
+     every properly guarded button look dead. */
+  parts.push('made=' + ctx.dom.made);
+  parts.push('body=' + ctx.dom.document.body.children.length);
+  return parts.join('|');
+}
+
+function silentControls(file) {
+  const html = fs.readFileSync(file, 'utf8');
+  const ids = [...html.matchAll(/<button[^>]*\sid="([^"]+)"/g)].map(m => m[1]);
+  const silent = [];
+
+  let excused = 0;
+  for (const id of ids) {
+    /* a fresh app each time, so one button cannot mask another */
+    const ctx = boot(file, { quiet: true });
+    let before, after;
+    const el = ctx.id(id);
+
+    /* Some controls are meant to be inert where they stand: one the app
+       has disabled, and a tab for the view already showing. Reporting
+       those buries the ones that are actually wired to nothing. */
+    if (el.disabled || el.hasAttribute('disabled') ||
+        (el.classList && (el.classList.contains('active') || el.classList.contains('on')))) {
+      excused++;
+      continue;
+    }
+
+    try {
+      before = traceOf(ctx);
+      el.fire('click');
+      after = traceOf(ctx);
+      /* disabled by the app during its own startup, which is the same thing */
+      if (ctx.id(id).disabled) { excused++; continue; }
+    } catch (e) { continue; }          /* throwing is another probe's business */
+    if (before === after) silent.push(id);
+  }
+  return { checked: ids.length, silent, excused };
 }
 
 /* ------------------------------------------------------------------ *
@@ -469,9 +672,14 @@ function violations(app, before, ctx) {
 function deepViolations(ctx) {
   const out = [];
 
+  /* Only markup the app has written since it started. The page's own
+     content is full of ids by design, and counting those reports the
+     document itself as a fault. */
   const ids = [];
   for (const id in ctx.dom.registry) {
-    const inner = ctx.dom.registry[id].innerHTML || '';
+    const el = ctx.dom.registry[id];
+    const inner = el.innerHTML || '';
+    if (inner === (el._bornWith || '')) continue;      /* untouched since boot */
     for (const m of inner.matchAll(/\sid="([^"]+)"/g)) ids.push(m[1]);
   }
   const dupe = ids.find((v, i) => ids.indexOf(v) !== i);
@@ -844,6 +1052,32 @@ function run(file, opts) {
   if (badDates.length) bad(`booting on ${AWKWARD.length} awkward dates`, badDates.join(' | '));
   else ok(`booting on ${AWKWARD.length} awkward dates`, 'leap days, clock changes and year ends');
 
+  /* drawing the same thing twice should give the same thing */
+  const stable = drawsTheSame(file);
+  if (stable.skipped) results.push(['    ', 'drawing twice', stable.skipped]);
+  else if (stable.unstable.length) {
+    bad('drawing the same state twice', 'gives a different result, so something in the render reads outside its inputs: ' +
+      stable.unstable.join(', '));
+  } else ok(`drawing all ${stable.checked} views twice`, 'the same state gives the same result');
+
+  const doc = buildsTheSame(file);
+  if (doc.skipped) results.push(['    ', 'building a document twice', doc.skipped]);
+  else if (doc.same) ok('building the same document twice', `identical, ${Math.round(doc.bytes / 1024)} KB`);
+  else if (doc.onlyTiming) ok('building the same document twice', 'identical but for the timestamp');
+  else bad('building the same document twice', 'the two differ by more than the time of day');
+
+  /* a control that responds to touch and changes nothing */
+  const quiet = silentControls(file);
+  if (quiet.silent.length) {
+    results.push(['thin', `${quiet.silent.length} of ${quiet.checked} buttons changed nothing when pressed` +
+      (quiet.excused ? ` (${quiet.excused} disabled or already active, not counted)` : ''),
+      'worth checking each is meant to: ' + quiet.silent.slice(0, 10).join(', ') +
+      (quiet.silent.length > 10 ? ` and ${quiet.silent.length - 10} more` : '')]);
+  } else {
+    ok(`all ${quiet.checked - quiet.excused} live buttons changed something when pressed`,
+      quiet.excused ? `${quiet.excused} disabled or already active, not counted` : 'none is wired to nothing');
+  }
+
   /* the one property everything else rests on */
   const rt = survivesRestart(file);
   if (rt.skipped) results.push(['    ', 'surviving a restart', rt.skipped]);
@@ -879,7 +1113,9 @@ function run(file, opts) {
   const generated = new Set();
   for (const id in ctx.dom.registry) {
     const inner = ctx.dom.registry[id].innerHTML || '';
-    for (const m of inner.matchAll(/on[a-z]+="([^"]+)"/g)) generated.add(m[1]);
+    /* a boundary, or "aria-controls=" matches as "ontrols=" and every
+       panel id gets called as if it were code */
+    for (const m of inner.matchAll(/\son[a-z]+="([^"]+)"/g)) generated.add(m[1]);
   }
   const brokeGen = [];
   for (const expr of generated) {
@@ -952,7 +1188,7 @@ function countHandlers(dom) {
   return n;
 }
 
-module.exports = { boot, makeDom, monkey, atDate, replay, replayCovered, shrink, planActions, instrument, coverage, explore, snapshot, violations, deepViolations, survivesRestart, fingerprint };
+module.exports = { boot, makeDom, monkey, atDate, replay, replayCovered, shrink, planActions, instrument, coverage, explore, snapshot, violations, deepViolations, survivesRestart, fingerprint, silentControls, traceOf, drawsTheSame, buildsTheSame };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);
