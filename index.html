@@ -1839,7 +1839,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v141';
+var BUILD = 'sat-v143';
 
 var app = {
   visitors: [],
@@ -4266,6 +4266,11 @@ var app = {
       return;
     }
 
+    if (this.logPage === 'activity') {
+      this.renderActivity(container, needle);
+      return;
+    }
+
     var onContractors = this.logPage === 'contractors';
     var src = onContractors ? split.contractors : split.general;
 
@@ -5473,8 +5478,42 @@ var app = {
     });
   },
 
-  renderDayLog: function (container, needle) {
-    var rows = this.dayLogFor(this.viewDate), i;
+  /* The shift a page should be read through when none has been chosen:
+     the one covering now if the sheet is today, otherwise the last one
+     that ran on the day being viewed. */
+  currentShift: function () {
+    var on = this.shiftsTouching(this.viewDate), i;
+    if (!on.length) return null;
+    if (this.viewDate === this.currentDate) {
+      var now = Date.now();
+      for (i = 0; i < on.length; i++) {
+        if (now >= this.shiftFrom(on[i]) && now <= this.shiftTo(on[i])) return on[i];
+      }
+    }
+    return on[on.length - 1];
+  },
+
+  /* Activity answers "what has happened on this shift", so it is read
+     through one whether or not a chip has been tapped. The other pages
+     stay on the day, which is what they are for. */
+  activityShift: function () {
+    var chosen = this.filterShift();
+    if (chosen) return chosen;
+    return this.currentShift();
+  },
+
+  activityRows: function () {
+    var sh = this.activityShift();
+    if (!sh) return { shift: null, rows: this.dayLogFor(this.viewDate) };
+    var was = this.shiftFilter;
+    this.shiftFilter = String(sh.id);
+    var rows = this.dayLogFor(this.viewDate);
+    this.shiftFilter = was;
+    return { shift: sh, rows: rows };
+  },
+
+  renderActivity: function (container, needle) {
+    var got = this.activityRows(), rows = got.rows, i;
 
     if (needle) {
       var kept = [];
@@ -5484,15 +5523,30 @@ var app = {
       rows = kept;
     }
 
+    var head = '';
+    if (got.shift) {
+      head = '<p class="field-hint" style="margin:0 0 .5rem">Showing ' +
+        this.esc(got.shift.guard) + '\u2019s shift, ' +
+        this.esc(this.showTime(got.shift.start)) + ' to ' + this.esc(this.showTime(got.shift.end)) +
+        '. Tap a shift above to read another, or Whole day for everything.</p>';
+    } else {
+      head = '<p class="field-hint" style="margin:0 0 .5rem">Nobody is rostered on this day, so this is everything recorded.</p>';
+    }
+
     if (!rows.length) {
-      container.innerHTML = '<div class="empty-state">' +
-        (needle ? 'Nothing matches that filter' : 'Nothing logged for this day') + '</div>';
+      container.innerHTML = head + '<div class="empty-state">Nothing recorded on this shift yet.</div>';
       this.renderFlagLegend();
       return;
     }
+    container.innerHTML = head + this.dayLogTable(rows);
+  },
 
+  /* One table, drawn once. Activity and Daily show the same rows through
+     different windows, and drawing it twice is how the two would come to
+     disagree about what a row looks like. */
+  dayLogTable: function (rows) {
     var idx = this.dayIndex();
-    var body = '';
+    var body = '', i;
 
     for (i = 0; i < rows.length; i++) {
       var r = rows[i];
@@ -5513,14 +5567,34 @@ var app = {
         '</tr>';
     }
 
-    container.innerHTML = '<table class="data-table"><thead><tr>' +
+    return '<table class="data-table"><thead><tr>' +
       '<th class="band"></th><th class="num">#</th><th>Time</th><th>What</th><th>Details</th>' +
       '</tr></thead><tbody>' + body + '</tbody></table>' +
       '<div class="kind-key">' +
       '<span><i class="kind-band kind-visitor"></i>Visitor</span>' +
       '<span><i class="kind-band kind-staff"></i>Staff</span>' +
       '<span><i class="kind-band kind-incident"></i>Incident</span></div>';
+  },
 
+  renderDayLog: function (container, needle) {
+    var rows = this.dayLogFor(this.viewDate), i;
+
+    if (needle) {
+      var kept = [];
+      for (i = 0; i < rows.length; i++) {
+        if (this.matches(needle, [rows[i].label, rows[i].detail, rows[i].time])) kept.push(rows[i]);
+      }
+      rows = kept;
+    }
+
+    if (!rows.length) {
+      container.innerHTML = '<div class="empty-state">' +
+        (needle ? 'Nothing matches that filter' : 'Nothing logged for this day') + '</div>';
+      this.renderFlagLegend();
+      return;
+    }
+
+    container.innerHTML = this.dayLogTable(rows);
     this.renderFlagLegend();
   },
 
@@ -8215,7 +8289,17 @@ var app = {
   changingShiftId: null,
 
   swapShift: function (id) { this.openShiftChange(id, 'swap'); },
-  handOverShift: function (id) { this.openShiftChange(id, 'handover'); },
+  handOverShift: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) if (this.shifts[i].id === id) rec = this.shifts[i];
+    /* the button is not drawn on a finished shift, but a stale screen or
+       a shortcut could still reach this */
+    if (rec && this.shiftTo(rec) <= Date.now()) {
+      this.toast('That shift has already ended, so there is nothing to hand over', 'error');
+      return;
+    }
+    this.openShiftChange(id, 'handover');
+  },
 
   openShiftChange: function (id, mode) {
     var rec = null, i;
@@ -8382,8 +8466,13 @@ var app = {
         '<td class="time-cell">' + this.esc(this.showTime(s.end)) + this.spanNote(s) + '</td>' +
         '<td>' + this.esc(this.lengthText(this.shiftRealMins(s))) + '</td>' +
         '<td class="row-actions">' +
+        /* A shift that has finished cannot be handed over: there is nothing
+           left of it to give to anybody. Swapping it still makes sense -
+           that is correcting the record of who actually worked it. */
+        (this.shiftTo(s) > Date.now()
+          ? '<button type="button" class="edit-btn" onclick="app.handOverShift(' + s.id + ')">Hand over</button>'
+          : '') +
         '<button type="button" class="edit-btn" onclick="app.swapShift(' + s.id + ')">Swap</button>' +
-        '<button type="button" class="edit-btn" onclick="app.handOverShift(' + s.id + ')">Hand over</button>' +
         '<button type="button" class="edit-btn" onclick="app.editShift(' + s.id + ')">Edit</button>' +
         '<button type="button" class="delete-btn" onclick="app.deleteShift(' + s.id + ')">X</button>' +
         '</td></tr>';
