@@ -28,7 +28,12 @@ body{background:#f1f5f9;padding-bottom:calc(3rem + env(safe-area-inset-bottom,0p
 .cog svg{pointer-events:none;display:block}
 .header .cog + .cog{margin-left:.4rem}
 .cog:active{background:#2563eb}
-.subtab-nav{display:flex;gap:.35rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem;margin-bottom:1rem}
+.subtab-nav{display:flex;gap:.35rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem;margin-bottom:1rem;position:sticky;z-index:40;box-shadow:0 .35rem 0 0 #f1f5f9}
+body.night .subtab-nav{box-shadow:0 .35rem 0 0 #0b1220}
+.page-switch{box-shadow:0 .35rem 0 0 #fff}
+body.night .page-switch{box-shadow:0 .35rem 0 0 #111c2e}
+.sheet-fold{padding:.35rem 0}
+.head-row .fold-head{flex:1;min-width:0}
 .subtab{flex:1;min-width:0;padding:.6rem .4rem;border:none;background:transparent;color:#475569;font-family:inherit;font-weight:600;font-size:.85rem;border-radius:.375rem;cursor:pointer}
 .subtab.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .subpane{display:none}
@@ -271,7 +276,7 @@ body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
 #vehicleInput,#staffVehicleInput,#visitorVehicle,#staffOwnVehicles,#siteVehicles,.rep-vehicles{text-transform:uppercase}
 .filter-box{width:100%;padding:.6rem .75rem;margin-bottom:.75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.95rem;background:#fff;color:#0f172a}
 .filter-box:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem}
+.page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem;position:sticky;z-index:30}
 .page-btn{flex:1;min-width:0;padding:.55rem .35rem;border:none;background:transparent;color:#475569;font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
 .page-btn.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .page-btn span{display:block;font-weight:500;font-size:.7rem;color:#64748b;margin-top:.1rem}
@@ -301,7 +306,17 @@ body.night .act-kind{color:#94a3b8}
 .flag-picker-title{font-weight:700;margin-bottom:.75rem;color:#1e293b}
 .swatch{display:flex;align-items:center;gap:.6rem;width:100%;padding:.6rem .5rem;border:none;background:none;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:.9rem;color:#0f172a;text-align:left}
 .swatch b{width:1.4rem;height:1.4rem;border-radius:.3rem;flex:0 0 auto;border:1px solid rgba(0,0,0,.1)}
-.flag-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
+/* Wrapping, so a third control drops to its own line rather than being
+   squeezed to nothing on a narrow screen. */
+.flag-row{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.75rem}
+.flag-row input[type=text]{flex:1 1 8rem}
+.remove-flag{flex:0 0 auto;min-height:2.6rem;padding:.4rem .9rem;font-size:.85rem}
+/* Named with the element as well, or ".flag-row input" outranks it and
+   the swatch stretches like a text box - squeezing whatever follows it
+   out of the row, which is why the X could not be reached. */
+.flag-row input.flag-swatch{width:2.6rem;height:2.6rem;flex:0 0 auto;padding:0;border:1px solid #cbd5e1;border-radius:.375rem;background:none;cursor:pointer}
+
+body.night .flag-row input.flag-swatch{border-color:#334155}
 .flag-row b{width:1.4rem;height:1.4rem;border-radius:.3rem;flex:0 0 auto}
 .flag-row input{flex:1;min-width:0;padding:.5rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.9rem}
 </style>
@@ -526,8 +541,18 @@ body.night .act-kind{color:#94a3b8}
 <option value="Equipment fault">Equipment fault</option>
 <option value="Lost property">Lost property</option>
 </optgroup>
+<optgroup label="Yours" id="ownTypes"></optgroup>
 <option value="Other">Other</option>
+<option value="__new">Something else, and remember it&hellip;</option>
 </select>
+</div>
+<div class="form-group" id="newTypeRow" style="display:none">
+<label for="newTypeName">Call it</label>
+<div class="len-row">
+<input type="text" id="newTypeName" maxlength="40" autocomplete="off" placeholder="Whatever fits, e.g. Gritting">
+<button type="button" class="button button-secondary" id="newTypeAdd">Add</button>
+</div>
+<p class="field-hint">Kept for next time, and listed under Yours.</p>
 </div>
 <div class="form-group">
 <label for="incidentDetail">Details</label>
@@ -555,11 +580,12 @@ body.night .act-kind{color:#94a3b8}
 
 <div id="sheet" class="tab-content">
 <div id="sheetDateBar">
-<div class="section">
+<div class="section fold open" id="fold_sheetdate">
 <div class="head-row">
-<h2>Sheet date</h2>
+<button type="button" class="fold-head sheet-fold" id="foldBtn_sheetdate" aria-expanded="true" aria-controls="foldBody_sheetdate"><span id="sheetFoldLabel">Sheet date</span><i class="fold-arrow"></i></button>
 <button type="button" class="button button-primary head-btn" id="quickExportBtn">Export</button>
 </div>
+<div class="fold-body" id="foldBody_sheetdate">
 <div class="sheet-bar">
 <button type="button" class="button button-secondary" id="prevDay">&#8249; Prev</button>
 <input type="date" id="sheetDate" aria-label="Date of the sheet being viewed">
@@ -567,7 +593,6 @@ body.night .act-kind{color:#94a3b8}
 <button type="button" class="button button-secondary" id="todayBtn">Today</button>
 </div>
 <div class="sheet-date-read" id="sheetDateRead" role="status" aria-live="polite"></div>
-<div style="display:none">
 </div>
 <div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
 </div>
@@ -579,6 +604,12 @@ body.night .act-kind{color:#94a3b8}
 <button type="button" id="btnSubMuster" class="subtab" role="tab" aria-selected="false">Muster</button>
 </div>
 <div id="subSheet" class="subpane active">
+<div class="page-switch" role="tablist">
+<button type="button" id="pageActivity" class="page-btn" role="tab">Activity</button>
+<button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
+<button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
+</div>
+
 
 
 <div class="section">
@@ -587,11 +618,6 @@ body.night .act-kind{color:#94a3b8}
 <input type="search" id="sheetSearch" aria-label="Search this day's log" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
 <label class="check-row"><input type="checkbox" id="searchAllDays"> Search every day, not just this one</label>
 <div id="historyResults"></div>
-<div class="page-switch" role="tablist">
-<button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
-<button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
-<button type="button" id="pageActivity" class="page-btn" role="tab">Activity</button>
-</div>
 <div id="flagLegend" class="flag-legend"></div>
 <div id="logContainer"></div>
 </div>
@@ -1108,6 +1134,14 @@ body.night .act-kind{color:#94a3b8}
 </div>
 </div>
 
+<div class="section fold" id="fold_owntypes">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_owntypes" aria-expanded="false" aria-controls="foldBody_owntypes"><span>Your incident categories</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_owntypes" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_owntypes" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_owntypes">
+<div id="ownTypesList"></div>
+<p class="field-hint">Added from the incident form when you choose &ldquo;Something else&rdquo;. Removing one here leaves any occurrence already filed under it exactly as it is.</p>
+</div>
+</div>
+
 <div class="section fold" id="fold_region">
 <div class="fold-row"><button type="button" class="fold-head" id="foldBtn_region" aria-expanded="false" aria-controls="foldBody_region"><span>Region</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_region" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_region" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_region">
@@ -1229,6 +1263,10 @@ body.night .act-kind{color:#94a3b8}
 <div class="fold-body" id="foldBody_rowcolours">
 <p class="text-muted" style="margin-top:0">Tap the number beside any entry to colour it. Name the colours here and the meanings print on the reports.</p>
 <div id="flagEditor"></div>
+<div class="action-row">
+<button type="button" class="button button-primary" id="addFlagColour">Add another colour</button>
+<button type="button" class="button button-secondary" id="resetFlagColours">Back to the recommended colours</button>
+</div>
 </div>
 </div>
 
@@ -1711,7 +1749,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v124';
+var BUILD = 'sat-v132';
 
 var app = {
   visitors: [],
@@ -1911,6 +1949,17 @@ var app = {
     /* The picker is a native control and always shows the browser's own
        format, whatever the app is set to. It cannot be restyled, so the
        date is written out underneath it in the chosen order instead. */
+    var foldLabel = document.getElementById('sheetFoldLabel');
+    if (foldLabel) {
+      var fd = this.parseLocalDate(this.viewDate);
+      /* folded away, this is the only thing left saying which day is on
+         screen, so it carries the date rather than a heading */
+      foldLabel.textContent = fd
+        ? 'Sheet date   \u00b7   ' + this.showDate(this.viewDate) +
+          (this.viewDate === this.currentDate ? '   \u00b7   today' : '')
+        : 'Sheet date';
+    }
+
     var read = document.getElementById('sheetDateRead');
     if (read) {
       var d = this.parseLocalDate(this.viewDate);
@@ -2145,7 +2194,8 @@ var app = {
   flagLabels: function () {
     var out = [], i, stored = null;
     try { stored = JSON.parse(localStorage.getItem('sat-flags') || 'null'); } catch (e) {}
-    for (i = 0; i < this.FLAGS.length; i++) {
+    var n = this.FLAGS.length + this.extraFlags().length;
+    for (i = 0; i < n; i++) {
       out.push((stored && stored[i]) ? String(stored[i]) : '');
     }
     return out;
@@ -2155,16 +2205,144 @@ var app = {
     try { localStorage.setItem('sat-flags', JSON.stringify(labels)); } catch (e) {}
   },
 
+  /* The six that come with the app are a recommendation, not a rule: red
+     for a problem, amber for a caution, and so on. A site that means
+     something else by them should be able to say so. */
+  /* Six is what the app suggests, not a limit. Extra ones are kept apart
+     from the recommended set so the originals stay where they are and a
+     record already marked with one keeps its colour. */
+  extraFlags: function () {
+    var v = null;
+    try { v = JSON.parse(localStorage.getItem('sat-extra-flags') || 'null'); } catch (e) {}
+    if (!Array.isArray(v)) return [];
+    return v.filter(function (f) {
+      return f && typeof f.id === 'number' && f.id > 6 && /^#[0-9a-fA-F]{6}$/.test(f.hex || '');
+    }).map(function (f) { return { id: f.id, hex: String(f.hex).toLowerCase() }; });
+  },
+
+  saveExtraFlags: function (list) {
+    try { localStorage.setItem('sat-extra-flags', JSON.stringify(list)); } catch (e) {}
+  },
+
+  /* The recommended six, coloured as chosen, then any that were added. */
+  allFlags: function () {
+    var chosen = this.flagHexes(), out = [], i;
+    for (i = 0; i < this.FLAGS.length; i++) {
+      out.push({ id: this.FLAGS[i].id, hex: chosen[i] });
+    }
+    return out.concat(this.extraFlags());
+  },
+
+  addFlag: function (hex) {
+    hex = String(hex || '').toLowerCase();
+    if (!/^#[0-9a-f]{6}$/.test(hex)) return false;
+    var extra = this.extraFlags(), i, next = 7;
+    for (i = 0; i < extra.length; i++) if (extra[i].id >= next) next = extra[i].id + 1;
+    if (this.allFlags().length >= 24) return 'full';
+    extra.push({ id: next, hex: hex });
+    this.saveExtraFlags(extra);
+    return next;
+  },
+
+  removeFlag: function (id) {
+    if (id <= 6) return false;                 /* the recommended set stays */
+    this.saveExtraFlags(this.extraFlags().filter(function (f) { return f.id !== id; }));
+    return true;
+  },
+
+  flagsInUse: function (id) {
+    var n = 0, lists = [this.visitors, this.staffMovements, this.incidents], k, i;
+    for (k = 0; k < lists.length; k++) {
+      for (i = 0; i < lists[k].length; i++) if (lists[k][i].flag === id) n++;
+    }
+    return n;
+  },
+
+  flagHexes: function () {
+    var v = null;
+    try { v = JSON.parse(localStorage.getItem('sat-flag-hexes') || 'null'); } catch (e) {}
+    var out = [], i;
+    for (i = 0; i < this.FLAGS.length; i++) {
+      var chosen = (v && typeof v[i] === 'string') ? v[i] : '';
+      out.push(/^#[0-9a-fA-F]{6}$/.test(chosen) ? chosen.toLowerCase() : this.FLAGS[i].hex);
+    }
+    return out;
+  },
+
+  flagHex: function (id) {
+    var all = this.allFlags(), i;
+    for (i = 0; i < all.length; i++) if (all[i].id === id) return all[i].hex;
+    return this.FLAGS[0].hex;
+  },
+
+  /* One way to recolour, whichever list the colour lives in. Two would
+     mean an added colour behaved differently from a recommended one. */
+  setAnyFlagHex: function (id, idx, hex) {
+    if (id <= 6) return this.setFlagHex(idx, hex);
+    if (!/^#[0-9a-fA-F]{6}$/.test(String(hex))) return false;
+    var extra = this.extraFlags(), i;
+    for (i = 0; i < extra.length; i++) {
+      if (extra[i].id === id) { extra[i].hex = String(hex).toLowerCase(); this.saveExtraFlags(extra); return true; }
+    }
+    return false;
+  },
+
+  setFlagHex: function (idx, hex) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(String(hex))) return false;
+    var all = this.flagHexes();
+    all[idx] = String(hex).toLowerCase();
+    try { localStorage.setItem('sat-flag-hexes', JSON.stringify(all)); } catch (e) {}
+    return true;
+  },
+
+  resetFlagHexes: function () {
+    try { localStorage.removeItem('sat-flag-hexes'); } catch (e) {}
+  },
+
+  /* Named by what it looks like, so a legend still reads sensibly after
+     someone has changed one. Comparing against the six built in names
+     would call a re-coloured swatch by the colour it used to be. */
+  colourName: function (hex) {
+    var m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(String(hex));
+    if (!m) return 'Colour';
+    var r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var l = (max + min) / 510;
+    /* how much colour there is, not how far the channels sit apart: a
+       muted slate has a wide spread and almost no colour in it */
+    var sat = max === min ? 0 : (max - min) / (l < 0.5 ? (max + min) : (510 - max - min));
+    if (sat < 0.28) return l > 0.78 ? 'White' : (l < 0.2 ? 'Black' : 'Grey');
+    var hue;
+    if (max === r) hue = ((g - b) / (max - min) + 6) % 6;
+    else if (max === g) hue = (b - r) / (max - min) + 2;
+    else hue = (r - g) / (max - min) + 4;
+    hue *= 60;
+    var names = [[14, 'Red'], [30, 'Orange'], [50, 'Amber'], [68, 'Yellow'], [160, 'Green'],
+                 [200, 'Teal'], [255, 'Blue'], [290, 'Purple'], [340, 'Pink'], [360, 'Red']];
+    for (var k = 0; k < names.length; k++) if (hue <= names[k][0]) return names[k][1];
+    return 'Colour';
+  },
+
   flagById: function (id) {
-    for (var i = 0; i < this.FLAGS.length; i++) if (this.FLAGS[i].id === id) return this.FLAGS[i];
+    var all = this.allFlags();
+    for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
     return null;
   },
 
+  /* Found by where it sits in the list, not by its id. Ids stop being
+     contiguous the moment one is removed and another added, and reading
+     labels[id - 1] would then hand a colour the name of a different one. */
+  flagIndex: function (id) {
+    var all = this.allFlags(), i;
+    for (i = 0; i < all.length; i++) if (all[i].id === id) return i;
+    return -1;
+  },
+
   flagName: function (id) {
-    var f = this.flagById(id);
-    if (!f) return '';
+    var at = this.flagIndex(id);
+    if (at === -1) return '';
     var labels = this.flagLabels();
-    return labels[id - 1] || f.name;
+    return labels[at] || this.colourName(this.allFlags()[at].hex);
   },
 
   splitRegs: function (s) {
@@ -2447,6 +2625,50 @@ var app = {
       self.renderArchive();
     });
 
+    (function () {
+      var sel = document.getElementById('incidentType');
+      var row = document.getElementById('newTypeRow');
+      var box = document.getElementById('newTypeName');
+      var add = document.getElementById('newTypeAdd');
+
+      sel.addEventListener('change', function () {
+        var making = sel.value === '__new';
+        row.style.display = making ? 'block' : 'none';
+        if (making) box.focus();
+      });
+
+      var commit = function () {
+        var name = box.value.replace(/^\s+|\s+$/g, '');
+        if (!name) { self.toast('Give the category a name', 'error'); return; }
+        var r = self.addOwnType(name);
+        if (r === 'already') {
+          /* already there, so just use it rather than refusing */
+          self.renderOwnTypes();
+          sel.value = name;
+          row.style.display = 'none';
+          box.value = '';
+          self.toast('That one already exists, so it is selected');
+          return;
+        }
+        if (!r) { self.toast('That name cannot be used', 'error'); return; }
+        self.renderOwnTypes();
+        self.renderOwnTypeList();
+        sel.value = name;
+        row.style.display = 'none';
+        box.value = '';
+        self.toast(name + ' added, and kept for next time');
+      };
+      add.addEventListener('click', commit);
+      box.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { if (ev.preventDefault) ev.preventDefault(); commit(); }
+      });
+      /* typed and then tapped away from, the same as every other field */
+      box.addEventListener('blur', function () { if (box.value.replace(/^\s+|\s+$/g, '')) commit(); });
+
+      self.renderOwnTypes();
+      self.renderOwnTypeList();
+    })();
+
     document.getElementById('incidentForm').addEventListener('submit', function (e) { self.recordIncident(e); });
     document.getElementById('incidentNowBtn').addEventListener('click', function () {
       var d = new Date();
@@ -2592,6 +2814,32 @@ var app = {
       self.setGuardColour(n, null);
       document.getElementById('guardColourPick').value = self.guardHex(n);
     });
+    document.getElementById('addFlagColour').addEventListener('click', function () {
+      /* somewhere clear of the six already there, so it is obviously new */
+      var spread = ['#0891b2', '#c2410c', '#4d7c0f', '#be185d', '#0369a1', '#a16207',
+                    '#15803d', '#6d28d9', '#b91c1c', '#1e40af'];
+      var taken = self.allFlags().map(function (f) { return f.hex; }), pick = '', i;
+      for (i = 0; i < spread.length; i++) {
+        if (taken.indexOf(spread[i]) === -1) { pick = spread[i]; break; }
+      }
+      if (!pick) pick = '#64748b';
+      var r = self.addFlag(pick);
+      if (r === 'full') { self.toast('That is as many colours as the app will hold', 'error'); return; }
+      if (!r) { self.toast('Could not add that colour', 'error'); return; }
+      self.renderFlagEditor();
+      self.toast('Colour added, tap the square to change it');
+    });
+
+    document.getElementById('resetFlagColours').addEventListener('click', function () {
+      self.resetFlagHexes();
+      self.renderFlagEditor();
+      self.renderFlagLegend();
+      self.renderLog();
+      self.renderStaffMovements();
+      self.renderIncidents();
+      self.toast('Back to the recommended colours');
+    });
+
     document.getElementById('mergeGuardsBtn').addEventListener('click', function () { self.doMergeGuards(); });
 
     var ps = document.getElementById('paperSize');
@@ -2907,6 +3155,9 @@ var app = {
     window.scrollTo(0, 0);
     if (name === 'settings') { this.renderStorageNote(); this.renderBackupNote(); }
     if (name === 'roster') this.renderRoster();
+    /* which sub tab bar is visible has just changed, and the bars below
+       stack on its measured height */
+    this.syncStickyOffset();
   },
 
   /* Some things worth a home screen shortcut are sub-tabs rather than
@@ -2953,8 +3204,9 @@ var app = {
   FOLD_GROUPS: {
     settings: ['siteaccesshours', 'sheetstyle', 'hoursperiod', 'signing', 'dateformat',
                'unknowncompanies', 'export', 'rowcolours', 'periodreport', 'data',
-               'guardlicences', 'region'],
-    roster: ['rostercalendar', 'plannedshifts', 'guardhours', 'coverguard', 'addtoroster']
+               'guardlicences', 'region', 'owntypes'],
+    roster: ['rostercalendar', 'plannedshifts', 'guardhours', 'coverguard', 'addtoroster'],
+    day: ['sheetdate']
   },
 
   /* Alphabetical until somebody decides otherwise, then their order.
@@ -3050,10 +3302,10 @@ var app = {
   openFolds: function () {
     try {
       var v = JSON.parse(localStorage.getItem('sat-folds') || 'null');
-      if (!Array.isArray(v)) return ['rostercalendar'];
+      if (!Array.isArray(v)) return ['rostercalendar', 'sheetdate'];
       var self = this;
       return v.filter(function (s) { return self.foldList().indexOf(s) !== -1; });
-    } catch (e) { return ['rostercalendar']; }
+    } catch (e) { return ['rostercalendar', 'sheetdate']; }
   },
 
   toggleFold: function (slug) {
@@ -3072,6 +3324,8 @@ var app = {
     if (open && at === -1) list.push(slug);
     if (!open && at !== -1) list.splice(at, 1);
     try { localStorage.setItem('sat-folds', JSON.stringify(list)); } catch (e) {}
+    /* the bars below stack on measured heights, and this just changed one */
+    this.syncStickyOffset();
   },
 
   applyFolds: function () {
@@ -3087,12 +3341,35 @@ var app = {
     }
   },
 
+  /* Four bars stack down the top of the screen: the header, the tabs, the
+     sub tabs, and the occurrence pills. Each has to sit below the real
+     height of the ones above it - measured, never guessed, because the
+     header grows on a phone with a cutout and again when a fold opens. */
   syncStickyOffset: function () {
     var hdr = document.getElementById('appHeader');
     var nav = document.getElementById('tabNav');
     if (!hdr || !nav) return;
-    var hh = hdr.offsetHeight;
-    if (hh) nav.style.top = hh + 'px';
+
+    var top = hdr.offsetHeight || 0;
+    if (!top) return;
+    nav.style.top = top + 'px';
+    top += nav.offsetHeight || 0;
+
+    var subs = document.querySelectorAll('.subtab-nav'), i;
+    for (i = 0; i < subs.length; i++) subs[i].style.top = top + 'px';
+
+    /* The pills sit below whichever sub tab bar is on screen. Measuring the
+       first one measures a hidden pane's bar, which reports zero height -
+       so the pills were given the sub tabs' own offset and sat behind
+       them, looking exactly like a bar that would not stick. Take the
+       tallest, since a hidden one contributes nothing. */
+    var subH = 0;
+    for (i = 0; i < subs.length; i++) {
+      var hh = subs[i].offsetHeight || 0;
+      if (hh > subH) subH = hh;
+    }
+    var pills = document.querySelectorAll('.page-switch');
+    for (i = 0; i < pills.length; i++) pills[i].style.top = (top + subH) + 'px';
   },
 
   setCurrentTime: function () {
@@ -5110,6 +5387,122 @@ var app = {
 
   /* ---------------- incidents ---------------- */
 
+  /* The twenty five that come with the app cover a gatehouse, but no list
+     covers every site. Anything typed here is kept and offered from then
+     on, so a category used once does not have to be typed again. */
+  ownTypes: function () {
+    var v = null;
+    try { v = JSON.parse(localStorage.getItem('sat-own-types') || 'null'); } catch (e) {}
+    if (!Array.isArray(v)) return [];
+    return v.filter(function (x) { return typeof x === 'string' && x; });
+  },
+
+  addOwnType: function (name) {
+    name = String(name || '').replace(/^\s+|\s+$/g, '').slice(0, 40);
+    if (!name) return false;
+    if (name.toLowerCase() === '__new') return false;
+    var mine = this.ownTypes(), i;
+    /* a category the app already offers does not need adding again */
+    var built = this.builtInTypes();
+    for (i = 0; i < built.length; i++) {
+      if (built[i].toLowerCase() === name.toLowerCase()) return 'already';
+    }
+    for (i = 0; i < mine.length; i++) {
+      if (mine[i].toLowerCase() === name.toLowerCase()) return 'already';
+    }
+    mine.push(name);
+    mine.sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+    try { localStorage.setItem('sat-own-types', JSON.stringify(mine)); } catch (e) {}
+    return true;
+  },
+
+  renderOwnTypeList: function () {
+    var box = document.getElementById('ownTypesList');
+    if (!box) return;
+    var mine = this.ownTypes(), i;
+    if (!mine.length) {
+      box.innerHTML = '<div class="empty-state">None yet. Add one from the incident form ' +
+        'when none of the categories fit.</div>';
+      return;
+    }
+    var rows = '';
+    for (i = 0; i < mine.length; i++) {
+      var used = 0, q;
+      for (q = 0; q < this.incidents.length; q++) {
+        if (String(this.incidents[q].type).toLowerCase() === mine[i].toLowerCase()) used++;
+      }
+      rows += '<tr><td>' + this.esc(mine[i]) +
+        '<span class="cell-sub">' + (used ? 'used ' + used + (used === 1 ? ' time' : ' times') : 'not used yet') +
+        '</span></td><td class="row-actions">' +
+        '<button type="button" class="delete-btn" onclick="app.deleteOwnTypeAt(' + i + ')">X</button>' +
+        '</td></tr>';
+    }
+    box.innerHTML = '<table class="data-table"><tbody>' + rows + '</tbody></table>';
+    this.shownOwnTypes = mine;
+  },
+
+  shownOwnTypes: [],
+
+  deleteOwnTypeAt: function (i) {
+    var name = this.shownOwnTypes[i];
+    if (!name) return;
+    var used = 0, q;
+    for (q = 0; q < this.incidents.length; q++) {
+      if (String(this.incidents[q].type).toLowerCase() === name.toLowerCase()) used++;
+    }
+    if (!confirm('Remove ' + name + ' from the list?' + (used
+      ? '\n\n' + used + (used === 1 ? ' occurrence stays' : ' occurrences stay') +
+        ' filed under it. Only the choice goes.'
+      : ''))) return;
+    this.removeOwnType(name);
+    this.renderOwnTypes();
+    this.renderOwnTypeList();
+    this.toast(name + ' removed from the list');
+  },
+
+  removeOwnType: function (name) {
+    var mine = this.ownTypes().filter(function (x) {
+      return x.toLowerCase() !== String(name).toLowerCase();
+    });
+    try { localStorage.setItem('sat-own-types', JSON.stringify(mine)); } catch (e) {}
+  },
+
+  /* Stated here rather than read back out of the page, so it is the same
+     list whether or not the markup has been drawn. */
+  BUILT_IN_TYPES: ['Patrol', 'Check call', 'Phone call', 'Radio call', 'Welfare check',
+    'Handover note', 'Refused entry', 'Escort', 'Key issued', 'Key returned',
+    'Paperwork or permit issue', 'Delivery issue', 'Alarm activation', 'Fire or smoke',
+    'Accident or injury', 'Suspicious activity', 'Trespass', 'Theft',
+    'Damage or vandalism', 'Power failure', 'Weather', 'Gate or barrier fault',
+    'Equipment fault', 'Lost property', 'Other'],
+
+  builtInTypes: function () { return this.BUILT_IN_TYPES.slice(); },
+
+  renderOwnTypes: function () {
+    var group = document.getElementById('ownTypes');
+    if (!group) return;
+    /* anything already on a record, whether it was added deliberately or
+       arrived from another device, so editing that entry can still show
+       what it says */
+    var mine = this.ownTypes(), seen = {}, i;
+    for (i = 0; i < mine.length; i++) seen[mine[i].toLowerCase()] = 1;
+    var built = this.builtInTypes();
+    for (i = 0; i < built.length; i++) seen[built[i].toLowerCase()] = 1;
+    for (i = 0; i < this.incidents.length; i++) {
+      var t = String(this.incidents[i].type || '').replace(/^\s+|\s+$/g, '');
+      if (!t || seen[t.toLowerCase()]) continue;
+      seen[t.toLowerCase()] = 1;
+      mine.push(t);
+    }
+    mine.sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+    var html = '';
+    for (i = 0; i < mine.length; i++) {
+      html += '<option value="' + this.esc(mine[i]) + '">' + this.esc(mine[i]) + '</option>';
+    }
+    group.innerHTML = html;
+    group.style.display = mine.length ? '' : 'none';
+  },
+
   incidentsFor: function (date) { return this.onDay(this.incidents, date, 'time'); },
 
   recordIncident: function (e) {
@@ -5118,6 +5511,19 @@ var app = {
     var detail = document.getElementById('incidentDetail').value.replace(/^\s+|\s+$/g, '');
     var time = document.getElementById('incidentTime').value;
     var ended = document.getElementById('incidentEnd').value;
+
+    /* left on the placeholder, or a name typed and never added: use it
+       rather than filing an occurrence under "__new" */
+    if (type === '__new') {
+      var typed = document.getElementById('newTypeName').value.replace(/^\s+|\s+$/g, '');
+      if (!typed) { this.toast('Name the new category, or pick one from the list', 'error'); return; }
+      this.addOwnType(typed);
+      this.renderOwnTypes();
+      document.getElementById('incidentType').value = typed;
+      document.getElementById('newTypeRow').style.display = 'none';
+      document.getElementById('newTypeName').value = '';
+      type = typed;
+    }
 
     if (!type || !detail || !time) { this.toast('Add what happened, the detail and a time', 'error'); return; }
 
@@ -6083,10 +6489,15 @@ var app = {
 
   /* Faults reported and not obviously dealt with. An entry with no end
      time is still open, the same rule the rest of the app uses. */
-  OPEN_KINDS: ['Alarm activation', 'Fire or smoke', 'Accident or injury', 'Power failure',
-               'Gate or barrier fault', 'Equipment fault', 'Suspicious activity',
-               'Trespass', 'Theft', 'Damage or vandalism', 'Delivery issue',
-               'Paperwork or permit issue', 'Lost property'],
+  /* Listing what can be outstanding meant a category you invented could
+     never be, however plainly it needed chasing. Listing what cannot is a
+     shorter list and covers anything added later without being touched. */
+  ROUTINE_TYPES: ['Patrol', 'Check call', 'Phone call', 'Radio call', 'Welfare check',
+                  'Handover note', 'Escort', 'Key issued', 'Key returned', 'Refused entry'],
+
+  canBeOpen: function (type) {
+    return this.ROUTINE_TYPES.indexOf(String(type)) === -1;
+  },
 
   openIncidents: function (upTo) {
     var limit = upTo ? this.stamp(upTo, '23:59') : Infinity;
@@ -6095,7 +6506,7 @@ var app = {
       var n = this.incidents[i];
       var at = this.stamp(n.date, n.time);
       if (at !== null && at > limit) continue;
-      if (this.OPEN_KINDS.indexOf(n.type) === -1) continue;
+      if (!this.canBeOpen(n.type)) continue;
       if (n.ended) continue;
       out.push(n);
     }
@@ -7804,7 +8215,7 @@ var app = {
 
   numCell: function (entry, seq, kind, otherDay) {
     var f = this.flagById(entry.flag);
-    var style = f ? ' style="background:' + f.hex + '"' : '';
+    var style = f ? ' style="background:' + this.flagHex(f.id) + '"' : '';
     var colour = f ? this.esc(this.flagName(entry.flag)) : 'No colour';
     /* Numbering is per day, so a row carried over from an earlier day can
        otherwise show the same number as today's first entry. Mark it. */
@@ -7839,8 +8250,9 @@ var app = {
     }
 
     row('', 'No colour', 0);
-    for (var i = 0; i < this.FLAGS.length; i++) {
-      row(this.FLAGS[i].hex, labels[i] || this.FLAGS[i].name, this.FLAGS[i].id);
+    var picks = this.allFlags();
+    for (var i = 0; i < picks.length; i++) {
+      row(picks[i].hex, labels[i] || this.colourName(picks[i].hex), picks[i].id);
     }
 
     document.getElementById('flagPickerTitle').textContent =
@@ -7885,10 +8297,11 @@ var app = {
     }
 
     var html = '';
-    for (i = 0; i < this.FLAGS.length; i++) {
-      if (!used[this.FLAGS[i].id]) continue;
-      html += '<span><i style="background:' + this.FLAGS[i].hex + '"></i>' +
-        this.esc(labels[i] || this.FLAGS[i].name) + '</span>';
+    var marks = this.allFlags();
+    for (i = 0; i < marks.length; i++) {
+      if (!used[marks[i].id]) continue;
+      html += '<span><i style="background:' + marks[i].hex + '"></i>' +
+        this.esc(labels[i] || this.colourName(this.flagHexes()[i])) + '</span>';
     }
     el.innerHTML = html;
   },
@@ -7900,16 +8313,33 @@ var app = {
     var self = this;
     box.innerHTML = '';
 
-    for (var i = 0; i < this.FLAGS.length; i++) {
+    var editing = this.allFlags();
+    for (var i = 0; i < editing.length; i++) {
       (function (idx) {
         var row = document.createElement('div');
         row.className = 'flag-row';
-        var dot = document.createElement('b');
-        dot.style.background = self.FLAGS[idx].hex;
+        var dot = document.createElement('input');
+        dot.type = 'color';
+        dot.className = 'flag-swatch';
+        dot.value = editing[idx].hex;
+        dot.setAttribute('aria-label', 'Colour ' + (idx + 1));
+        /* Samsung Internet raises change and never input on these, so
+           listening for input alone would look like a picker that does
+           nothing at all. */
+        var recolour = function () {
+          if (!self.setAnyFlagHex(editing[idx].id, idx, dot.value)) return;
+          input.placeholder = self.colourName(dot.value) + ' - what does it mean?';
+          self.renderFlagLegend();
+          self.renderLog();
+          self.renderStaffMovements();
+          self.renderIncidents();
+        };
+        dot.addEventListener('change', recolour);
+        dot.addEventListener('input', recolour);
         var input = document.createElement('input');
         input.type = 'text';
         input.maxLength = 40;
-        input.placeholder = self.FLAGS[idx].name + ' - what does it mean?';
+        input.placeholder = self.colourName(editing[idx].hex) + ' - what does it mean?';
         input.value = labels[idx] || '';
         input.addEventListener('change', function () {
           var current = self.flagLabels();
@@ -7922,6 +8352,32 @@ var app = {
         });
         row.appendChild(dot);
         row.appendChild(input);
+
+        /* only one that was added can be taken away; the recommended six
+           stay, so a record marked with one always has its colour */
+        if (editing[idx].id > 6) {
+          var drop = document.createElement('button');
+          drop.type = 'button';
+          /* A bare X beside two full-width boxes is a target of a few
+             pixels once the row is tight. Say what it does, and give it
+             room of its own. */
+          drop.className = 'button button-secondary remove-flag';
+          drop.textContent = 'Remove';
+          drop.setAttribute('aria-label', 'Remove this colour');
+          drop.addEventListener('click', function () {
+            var used = self.flagsInUse(editing[idx].id);
+            /* nothing is marked with it, so there is nothing to warn about */
+            if (used && !confirm('Remove this colour?\n\n' + used +
+              (used === 1 ? ' entry is' : ' entries are') +
+              ' marked with it and will keep it. Only the choice goes.')) return;
+            self.removeFlag(editing[idx].id);
+            self.renderFlagEditor();
+            self.renderFlagLegend();
+            self.toast('Colour removed from the list');
+          });
+          row.appendChild(drop);
+        }
+
         box.appendChild(row);
       })(i);
     }
@@ -8484,8 +8940,11 @@ var app = {
     }
 
     /* ---- visitor movements ---- */
+    /* the colours as chosen, not as they came out of the box, or the paper
+       disagrees with the screen it was printed from */
     var FLAG_HEX = {};
-    for (var fh = 0; fh < this.FLAGS.length; fh++) FLAG_HEX[this.FLAGS[fh].id] = this.FLAGS[fh].hex;
+    var everyFlag = this.allFlags();
+    for (var fh = 0; fh < everyFlag.length; fh++) FLAG_HEX[everyFlag[fh].id] = everyFlag[fh].hex;
     function hexToRgb(h) {
       return [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
     }
@@ -8905,11 +9364,12 @@ var app = {
     for (uf = 0; uf < staffList.length; uf++) if (staffList[uf].flag) usedFlags[staffList[uf].flag] = 1;
     for (uf = 0; uf < incList.length; uf++) if (incList[uf].flag) usedFlags[incList[uf].flag] = 1;
     var flagRows = [];
-    for (uf = 0; uf < this.FLAGS.length; uf++) {
-      if (!usedFlags[this.FLAGS[uf].id]) continue;
+    var sheetMarks = this.allFlags();
+    for (uf = 0; uf < sheetMarks.length; uf++) {
+      if (!usedFlags[sheetMarks[uf].id]) continue;
       flagRows.push(mono
-        ? [{ t: markFor(this.FLAGS[uf].id), b: true }, this.flagName(this.FLAGS[uf].id)]
-        : [{ t: '  ', fill: hexToRgb(this.FLAGS[uf].hex) }, this.flagName(this.FLAGS[uf].id)]);
+        ? [{ t: markFor(sheetMarks[uf].id), b: true }, this.flagName(sheetMarks[uf].id)]
+        : [{ t: '  ', fill: hexToRgb(sheetMarks[uf].hex) }, this.flagName(sheetMarks[uf].id)]);
     }
     if (flagRows.length && !logSheet && !splitSheet) {
       heading(mono ? 'Marks used' : 'Colour key');
