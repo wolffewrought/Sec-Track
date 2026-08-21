@@ -15,107 +15,113 @@
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<style>
+<style>:root{--accent-deep:#1d4ed8;--accent-pale:#dbeafe;--accent:#2563eb;--bad-deep:#b91c1c;--bad:#dc2626;--chip:#eef2f7;--good:#16a34a;--header:#1e293b;--ink-soft:#334155;--ink:#0f172a;--line-firm:#cbd5e1;--line:#e2e8f0;--muted-soft:#94a3b8;--muted:#64748b;--page-soft:#f8fafc;--page:#f1f5f9;--slate:#475569;--surface:#fff;--warn:#d97706}
+body.night{--accent-deep:#93c5fd;--accent-pale:#16243a;--accent:#3b82f6;--bad-deep:#dc2626;--bad:#f87171;--chip:#16243a;--good:#4ade80;--header:#0f172a;--ink-soft:#cbd5e1;--ink:#e2e8f0;--line-firm:#334155;--line:#1e2d45;--muted-soft:#64748b;--muted:#94a3b8;--page-soft:#0f1a2c;--page:#0b1220;--slate:#64748b;--surface:#111c2e;--warn:#fbbf24}
+
 *{margin:0;padding:0;box-sizing:border-box}
-html{background:#f1f5f9;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
-body{background:#f1f5f9;padding-bottom:calc(3rem + env(safe-area-inset-bottom,0px))}
+html{background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
+body{background:var(--page);padding-bottom:calc(3rem + env(safe-area-inset-bottom,0px))}
 /* On Android 15 and newer the web view fills the whole screen, so the
    header would sit under the status bar and camera cutout. These insets
    are zero in a normal browser tab, so the hosted version is unchanged. */
 .header-text{flex:1;min-width:0}
 .cog{background:rgba(255,255,255,.12);border:none;color:#fff;width:2.6rem;height:2.6rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0}
-.cog.active{background:#2563eb}
+.cog.active{background:var(--accent)}
 .cog svg{pointer-events:none;display:block}
 .header .cog + .cog{margin-left:.4rem}
-.cog:active{background:#2563eb}
-.subtab-nav{display:flex;gap:.35rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem;margin-bottom:1rem;position:sticky;z-index:40;box-shadow:0 .35rem 0 0 #f1f5f9}
-body.night .subtab-nav{box-shadow:0 .35rem 0 0 #0b1220}
-.page-switch{box-shadow:0 .35rem 0 0 #fff}
-body.night .page-switch{box-shadow:0 .35rem 0 0 #111c2e}
+.muster-btn{flex:0 0 auto;margin-left:auto;margin-right:.5rem;background:var(--bad);color:#fff;border:none;border-radius:.375rem;padding:.5rem .9rem;font-family:inherit;font-size:.85rem;font-weight:700;letter-spacing:.02em;cursor:pointer;min-height:2.4rem}
+.muster-btn:active{background:var(--bad-deep)}
+.muster-btn.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--bad)}
+body.night .muster-btn.on{box-shadow:0 0 0 2px var(--page),0 0 0 4px var(--bad)}
+.cog:active{background:var(--accent)}
+.subtab-nav{display:flex;gap:.35rem;background:var(--line);padding:.25rem;border-radius:.5rem;margin-bottom:1rem;position:sticky;z-index:40;box-shadow:0 .35rem 0 0 var(--page)}
+body.night .subtab-nav{box-shadow:0 .35rem 0 0 var(--page)}
+.page-switch{box-shadow:0 .35rem 0 0 var(--surface)}
+body.night .page-switch{box-shadow:0 .35rem 0 0 var(--surface)}
 .sheet-fold{padding:.35rem 0}
 .head-row .fold-head{flex:1;min-width:0}
-.subtab{flex:1;min-width:0;padding:.6rem .4rem;border:none;background:transparent;color:#475569;font-family:inherit;font-weight:600;font-size:.85rem;border-radius:.375rem;cursor:pointer}
-.subtab.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.subtab{flex:1;min-width:0;padding:.6rem .4rem;border:none;background:transparent;color:var(--slate);font-family:inherit;font-weight:600;font-size:.85rem;border-radius:.375rem;cursor:pointer}
+.subtab.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .subpane{display:none}
 .subpane.active{display:block}
-body.night .subtab-nav{background:#1e2d45}
-body.night .subtab{color:#94a3b8}
-body.night .subtab.active{background:#0b1220;color:#e2e8f0}
+body.night .subtab-nav{background:var(--line)}
+body.night .subtab{color:var(--muted-soft)}
+body.night .subtab.active{background:var(--page);color:var(--ink)}
 body.night .cog{background:rgba(255,255,255,.1)}
 .len-row{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
-.len-now{font-weight:700;color:#1e293b;min-width:3.6rem;font-size:.9rem}
-body.night .len-now{color:#e2e8f0}
+.len-now{font-weight:700;color:var(--ink);min-width:3.6rem;font-size:.9rem}
+body.night .len-now{color:var(--ink)}
 .len-btn{padding:.45rem .7rem;font-size:.8rem;flex:0 0 auto}
-.len-input{width:5.5rem;flex:0 0 auto;padding:.5rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.95rem;background:#fff;color:#0f172a}
-body.night .len-input{background:#0b1220;border-color:#334155;color:#e2e8f0}
+.len-input{width:5.5rem;flex:0 0 auto;padding:.5rem .6rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:.95rem;background:var(--surface);color:var(--ink)}
+body.night .len-input{background:var(--page);border-color:var(--ink-soft);color:var(--ink)}
 .time-row{display:flex;gap:.4rem;align-items:stretch}
 .time-row input{flex:1;min-width:0}
 .now-btn{flex:0 0 auto;padding:.5rem .7rem;font-size:.8rem}
-.roster-month{flex:1;text-align:center;font-weight:700;color:#1e293b;font-size:.95rem}
-body.night .roster-month{color:#e2e8f0}
+.roster-month{flex:1;text-align:center;font-weight:700;color:var(--ink);font-size:.95rem}
+body.night .roster-month{color:var(--ink)}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:.2rem}
-.cal-head{text-align:center;font-size:.7rem;font-weight:700;color:#64748b;padding:.2rem 0}
-.cal-day{min-height:3.1rem;border:1px solid #e2e8f0;border-radius:.3rem;padding:.2rem;background:#fff;cursor:pointer;font-size:.72rem;text-align:left;font-family:inherit;color:#0f172a;overflow:hidden}
+.cal-head{text-align:center;font-size:.7rem;font-weight:700;color:var(--muted);padding:.2rem 0}
+.cal-day{min-height:3.1rem;border:1px solid var(--line);border-radius:.3rem;padding:.2rem;background:var(--surface);cursor:pointer;font-size:.72rem;text-align:left;font-family:inherit;color:var(--ink);overflow:hidden}
 .cal-day.blank{background:transparent;border-color:transparent;cursor:default}
-.cal-day.today{border-color:#2563eb;border-width:2px}
-.cal-day.chosen{background:#eff6ff;border-color:#2563eb}
+.cal-day.today{border-color:var(--accent);border-width:2px}
+.cal-day.chosen{background:#eff6ff;border-color:var(--accent)}
 .cal-day b{display:block;font-size:.8rem;margin-bottom:.1rem}
-.cal-day i{display:block;font-style:normal;color:#1d4ed8;font-weight:600;line-height:1.25}
-body.night .cal-day{background:#111c2e;border-color:#1e2d45;color:#e2e8f0}
-body.night .cal-day.chosen{background:#16243a}
-body.night .cal-day i{color:#93c5fd}
+.cal-day i{display:block;font-style:normal;color:var(--accent-deep);font-weight:600;line-height:1.25}
+body.night .cal-day{background:var(--surface);border-color:var(--line);color:var(--ink)}
+body.night .cal-day.chosen{background:var(--chip)}
+body.night .cal-day i{color:var(--accent-deep)}
 .day-picker{display:flex;flex-wrap:wrap;gap:.3rem}
-.day-pick{padding:.45rem .6rem;border:1px solid #cbd5e1;background:#fff;border-radius:.35rem;font-family:inherit;font-size:.8rem;font-weight:600;color:#475569;cursor:pointer}
-.day-pick.on{background:#2563eb;border-color:#2563eb;color:#fff}
-body.night .day-pick{background:#0b1220;border-color:#334155;color:#cbd5e1}
-.header{background:#1e293b;color:#fff;position:sticky;display:flex;align-items:center;gap:.75rem;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:calc(1rem + env(safe-area-inset-top,0px)) calc(1rem + env(safe-area-inset-right,0px)) 1rem calc(1rem + env(safe-area-inset-left,0px))}
+.day-pick{padding:.45rem .6rem;border:1px solid var(--line-firm);background:var(--surface);border-radius:.35rem;font-family:inherit;font-size:.8rem;font-weight:600;color:var(--slate);cursor:pointer}
+.day-pick.on{background:var(--accent);border-color:var(--accent);color:#fff}
+body.night .day-pick{background:var(--page);border-color:var(--ink-soft);color:var(--ink-soft)}
+.header{background:var(--header);color:#fff;position:sticky;display:flex;align-items:center;gap:.75rem;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:calc(1rem + env(safe-area-inset-top,0px)) calc(1rem + env(safe-area-inset-right,0px)) 1rem calc(1rem + env(safe-area-inset-left,0px))}
 .header h1{font-size:1.25rem;font-weight:600;margin-bottom:.25rem}
 .header-date{font-size:.875rem;opacity:.9}
-.tab-nav{display:flex;background:#fff;border-bottom:1px solid #cbd5e1;overflow-x:auto;position:sticky;top:calc(4.4rem + env(safe-area-inset-top,0px));z-index:50}
-.tab-nav button{flex:1;min-width:104px;padding:1rem .75rem;border:none;background:#fff;color:#475569;font-weight:500;font-size:.875rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
-.tab-nav button.active{color:#2563eb;border-bottom-color:#2563eb;background:#eff6ff}
+.tab-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--line-firm);overflow-x:auto;position:sticky;top:calc(4.4rem + env(safe-area-inset-top,0px));z-index:50}
+.tab-nav button{flex:1;min-width:104px;padding:1rem .75rem;border:none;background:var(--surface);color:var(--slate);font-weight:500;font-size:.875rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tab-nav button.active{color:var(--accent);border-bottom-color:var(--accent);background:#eff6ff}
 .container{max-width:900px;margin:0 auto;padding:1rem calc(1rem + env(safe-area-inset-right,0px)) 1rem calc(1rem + env(safe-area-inset-left,0px))}
 .tab-content{display:none}
 .tab-content.active{display:block}
-.section{background:#fff;padding:1.25rem;border-radius:.375rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.section h2{font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:#1e293b;border-bottom:2px solid #1e293b;padding-bottom:.75rem}
+.section{background:var(--surface);padding:1.25rem;border-radius:.375rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.section h2{font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:var(--ink);border-bottom:2px solid var(--header);padding-bottom:.75rem}
 .form-group{margin-bottom:1.25rem}
-.form-group label{display:block;font-weight:600;margin-bottom:.5rem;color:#334155;font-size:.875rem}
-.form-group input{width:100%;padding:.625rem .75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:1rem;background:#fff;color:#0f172a}
-.form-group input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.form-group label{display:block;font-weight:600;margin-bottom:.5rem;color:var(--ink-soft);font-size:.875rem}
+.form-group input{width:100%;padding:.625rem .75rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:1rem;background:var(--surface);color:var(--ink)}
+.form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 @media (max-width:640px){.grid-2{grid-template-columns:1fr}}
 .button{padding:.75rem 1.25rem;border:none;border-radius:.375rem;font-weight:600;font-size:.9rem;cursor:pointer}
-.button-primary{background:#2563eb;color:#fff}
-.button-primary:active{background:#1d4ed8}
-.button-secondary{background:#e2e8f0;color:#0f172a}
-.button-secondary:active{background:#cbd5e1}
-.button-danger{background:#dc2626;color:#fff}
-.button-danger:active{background:#b91c1c}
+.button-primary{background:var(--accent);color:#fff}
+.button-primary:active{background:var(--accent-deep)}
+.button-secondary{background:var(--line);color:var(--ink)}
+.button-secondary:active{background:var(--line-firm)}
+.button-danger{background:var(--bad);color:#fff}
+.button-danger:active{background:var(--bad-deep)}
 .action-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
 .action-row .button{flex:1;min-width:130px}
 .autocomplete-wrapper{position:relative}
-.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #cbd5e1;border-top:none;border-radius:0 0 .375rem .375rem;max-height:220px;overflow-y:auto;display:none;z-index:20;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line-firm);border-top:none;border-radius:0 0 .375rem .375rem;max-height:220px;overflow-y:auto;display:none;z-index:20;box-shadow:0 4px 6px rgba(0,0,0,.1)}
 .autocomplete-list.active{display:block}
-.autocomplete-item{padding:.75rem;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:.9rem}
+.autocomplete-item{padding:.75rem;cursor:pointer;border-bottom:1px solid var(--page);font-size:.9rem}
 .autocomplete-item:last-child{border-bottom:none}
-.autocomplete-item:active{background:#2563eb;color:#fff}
-.ac-reg{color:#64748b;font-size:.8rem}
-.data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:.375rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);font-size:.875rem}
-.data-table thead{background:#1e293b;color:#fff}
+.autocomplete-item:active{background:var(--accent);color:#fff}
+.ac-reg{color:var(--muted);font-size:.8rem}
+.data-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:.375rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);font-size:.875rem}
+.data-table thead{background:var(--header);color:#fff}
 .data-table th{padding:.75rem;text-align:left;font-weight:600}
-.data-table td{padding:.75rem;border-bottom:1px solid #e2e8f0;vertical-align:middle;overflow-wrap:anywhere;word-break:break-word}
+.data-table td{padding:.75rem;border-bottom:1px solid var(--line);vertical-align:middle;overflow-wrap:anywhere;word-break:break-word}
 .data-table tbody tr:last-child td{border-bottom:none}
 .status-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .625rem;border-radius:9999px;font-weight:600;font-size:.75rem;white-space:nowrap}
 .status-valid{background:#f0fdf4;color:#15803d}
-.status-needed{background:#fef2f2;color:#b91c1c}
+.status-needed{background:#fef2f2;color:var(--bad-deep)}
 .status-dot{width:.5rem;height:.5rem;border-radius:50%;display:inline-block}
-.empty-state{text-align:center;padding:2rem 1rem;color:#64748b}
-.delete-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:.25rem .5rem}
-.text-muted{color:#64748b;font-size:.875rem;margin-top:1rem}
-.toast{position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:.875rem 1.25rem;border-radius:.375rem;box-shadow:0 10px 15px rgba(0,0,0,.2);z-index:1000;font-size:.875rem;max-width:90vw;text-align:center}
+.empty-state{text-align:center;padding:2rem 1rem;color:var(--muted)}
+.delete-btn{background:none;border:none;color:var(--bad);cursor:pointer;font-size:1rem;padding:.25rem .5rem}
+.text-muted{color:var(--muted);font-size:.875rem;margin-top:1rem}
+.toast{position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:.875rem 1.25rem;border-radius:.375rem;box-shadow:0 10px 15px rgba(0,0,0,.2);z-index:1000;font-size:.875rem;max-width:90vw;text-align:center}
 .toast.success{background:#15803d}
-.toast.error{background:#b91c1c}
+.toast.error{background:var(--bad-deep)}
 @media (max-width:640px){
 .tab-nav button{font-size:.75rem;padding:.75rem .4rem;min-width:88px}
 .container{padding:.75rem calc(.75rem + env(safe-area-inset-right,0px)) .75rem calc(.75rem + env(safe-area-inset-left,0px))}
@@ -127,199 +133,242 @@ body.night .day-pick{background:#0b1220;border-color:#334155;color:#cbd5e1}
 .rep-row input{flex:1 1 100%}
 .rep-row .rep-remove{margin-left:auto}
 }
-.form-group select{width:100%;padding:.625rem .75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:1rem;background:#fff;color:#0f172a}
-.form-group select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-#repPickRow label,#vehiclePickRow label{color:#2563eb}
-.form-title{font-size:.95rem;font-weight:700;color:#2563eb;margin-bottom:.9rem}
+.form-group select{width:100%;padding:.625rem .75rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:1rem;background:var(--surface);color:var(--ink)}
+.form-group select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+#repPickRow label,#vehiclePickRow label{color:var(--accent)}
+.form-title{font-size:.95rem;font-weight:700;color:var(--accent);margin-bottom:.9rem}
 .rep-row{display:flex;gap:.4rem;margin-bottom:.5rem;align-items:center}
-.rep-row input{flex:1;min-width:0;padding:.55rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.9rem}
-.rep-row .rep-remove{flex:0 0 auto;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:.375rem;padding:.5rem .65rem;cursor:pointer;font-weight:700;line-height:1}
+.rep-row input{flex:1;min-width:0;padding:.55rem .6rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:.9rem}
+.rep-row .rep-remove{flex:0 0 auto;background:#fef2f2;border:1px solid #fecaca;color:var(--bad-deep);border-radius:.375rem;padding:.5rem .65rem;cursor:pointer;font-weight:700;line-height:1}
 .add-rep{font-size:.8rem;padding:.5rem .75rem}
-.rep-empty{color:#64748b;font-size:.85rem;margin-bottom:.5rem}
-.cell-sub{display:block;color:#64748b;font-size:.78rem;margin-top:.1rem}
+.rep-empty{color:var(--muted);font-size:.85rem;margin-bottom:.5rem}
+.cell-sub{display:block;color:var(--muted);font-size:.78rem;margin-top:.1rem}
+/* A time is short and must not be broken across lines. Every cell carries
+   overflow-wrap:anywhere so a long company name can fold, and that same
+   rule was snapping "14:30" in half whenever the column was tight. */
+.data-table td.time-cell{white-space:nowrap;overflow-wrap:normal;word-break:normal;width:1%}
+/* the second time in a cell reads as small print; at the same size the
+   pair reads as what it is, a span from one to the other */
+.time-cell .cell-sub{font-size:inherit;color:inherit;margin-top:.15rem}
 .cell-sub.carried{color:#b45309;font-weight:600}
 .row-actions{text-align:right;white-space:normal}
 .row-actions .edit-btn,.row-actions .delete-btn{white-space:nowrap;margin:.1rem 0 .1rem .25rem}
-.edit-btn{background:none;border:none;color:#2563eb;cursor:pointer;font-size:.8rem;font-weight:600;padding:.25rem .4rem}
-.field-hint{color:#64748b;font-size:.78rem;margin-top:.35rem}
+.edit-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.8rem;font-weight:600;padding:.25rem .4rem}
+.field-hint{color:var(--muted);font-size:.78rem;margin-top:.35rem}
 .induction-note{margin-top:.5rem;padding:.55rem .7rem;border-radius:.375rem;font-size:.82rem;font-weight:600}
 .induction-note.good{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
-.induction-note.bad{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.induction-note.bad{background:#fef2f2;color:var(--bad-deep);border:1px solid #fecaca}
 .rep-row input.rep-date{flex:0 0 9.5rem}
-.group-start td{border-top:2px solid #cbd5e1}
+.group-start td{border-top:2px solid var(--line-firm)}
 .sheet-bar{display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap;align-items:center}
-.sheet-bar input[type=date]{flex:1 1 8rem;min-width:8rem;padding:.5rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.9rem;background:#fff;color:#0f172a}
+.sheet-bar input[type=date]{flex:1 1 8rem;min-width:8rem;padding:.5rem .6rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:.9rem;background:var(--surface);color:var(--ink)}
 .sheet-bar .button{flex:0 0 auto;padding:.5rem .7rem;font-size:.78rem}
-.sheet-summary{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;font-size:.85rem;color:#475569}
-.onsite-chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:9999px;padding:.35rem .75rem;font-weight:600;cursor:pointer;font-size:.8rem}
-.onsite-chip.active{background:#2563eb;color:#fff;border-color:#2563eb}
-.onsite-chip.none{background:#f1f5f9;border-color:#e2e8f0;color:#5b6879;cursor:default}
-tr.on-site td.num{box-shadow:inset 3px 0 0 #2563eb}
+.sheet-summary{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;font-size:.85rem;color:var(--slate)}
+.onsite-chip{background:#eff6ff;border:1px solid #bfdbfe;color:var(--accent-deep);border-radius:9999px;padding:.35rem .75rem;font-weight:600;cursor:pointer;font-size:.8rem}
+.onsite-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.onsite-chip.none{background:var(--page);border-color:var(--line);color:#5b6879;cursor:default}
+tr.on-site td.num{box-shadow:inset 3px 0 0 var(--accent)}
 .data-table td.num,.data-table th.num{width:2.6rem;text-align:center;padding:.4rem .2rem}
-.num-btn{width:2rem;height:2rem;border-radius:.3rem;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
+.num-btn{width:2rem;height:2rem;border-radius:.3rem;border:1px solid var(--line-firm);background:var(--page-soft);color:var(--ink-soft);font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
 .num-btn.flagged{border-color:transparent;color:#fff}
 .num-btn.carried{border-style:dashed;border-color:#b45309;opacity:.85}
 /* Night mode. Defining our own dark palette also stops Samsung Internet
    applying its forced-dark inversion, which mangles the status colours. */
-body.night{background:#0b1220;color:#e2e8f0}
+body.night{background:#0b1220;color:var(--ink)}
 /* The html element sits behind the body. Darkening only the body leaves
    whatever the body does not fill showing the light page underneath, which
    on a short tab is a pale block across the bottom of the screen. */
-html.night{background:#0b1220}
+html.night{background:var(--page)}
 html,body{min-height:100%}
 body{min-height:100vh}
-body.night .section{background:#111c2e;box-shadow:none;border:1px solid #1e2d45}
-body.night .section h2{color:#e2e8f0;border-bottom-color:#334155}
-body.night .tab-nav{background:#111c2e;border-bottom-color:#1e2d45}
-body.night .tab-nav button{background:#111c2e;color:#94a3b8}
-body.night .tab-nav button.active{color:#60a5fa;border-bottom-color:#60a5fa;background:#16243a}
-body.night .form-group label{color:#cbd5e1}
+body.night .section{background:var(--surface);box-shadow:none;border:1px solid var(--line)}
+body.night .section h2{color:var(--ink);border-bottom-color:var(--ink-soft)}
+body.night .tab-nav{background:var(--surface);border-bottom-color:var(--line)}
+body.night .tab-nav button{background:var(--surface);color:var(--muted-soft)}
+body.night .tab-nav button.active{color:#60a5fa;border-bottom-color:#60a5fa;background:var(--chip)}
+body.night .form-group label{color:var(--ink-soft)}
 body.night .form-group input,body.night .form-group select,body.night .filter-box,
-body.night .rep-row input,body.night .sheet-bar input[type=date]{background:#0b1220;color:#e2e8f0;border-color:#334155}
-body.night .form-group input::placeholder,body.night .filter-box::placeholder{color:#64748b}
-body.night .data-table{background:#111c2e;box-shadow:none}
-body.night .data-table thead{background:#1e2d45}
-body.night .data-table td{border-bottom-color:#1e2d45;color:#e2e8f0}
-body.night .button-secondary{background:#1e2d45;color:#e2e8f0}
-body.night .autocomplete-list{background:#111c2e;border-color:#334155}
-body.night .autocomplete-item{border-bottom-color:#1e2d45;color:#e2e8f0}
-body.night .empty-state,body.night .text-muted,body.night .field-hint,body.night .cell-sub{color:#94a3b8}
-body.night .page-switch{background:#1e2d45}
-body.night .page-btn{color:#94a3b8}
-body.night .page-btn.active{background:#0b1220;color:#e2e8f0}
-body.night .page-btn span{color:#64748b}
-body.night .num-btn{background:#0b1220;border-color:#334155;color:#cbd5e1}
-body.night .onsite-chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
-body.night .onsite-chip.none{background:#1e2d45;border-color:#334155;color:#94a3b8}
-body.night .sheet-summary{color:#94a3b8}
-body.night .flag-picker-panel{background:#111c2e}
-body.night .flag-picker-title,body.night .swatch{color:#e2e8f0}
-body.night .swatch{border-bottom-color:#1e2d45}
-body.night .muster-head{color:#e2e8f0}
-body.night .status-valid,body.night .induction-tag.ok,body.night .induction-note.good{background:#052e16;color:#4ade80}
+body.night .rep-row input,body.night .sheet-bar input[type=date]{background:var(--page);color:var(--ink);border-color:var(--ink-soft)}
+body.night .form-group input::placeholder,body.night .filter-box::placeholder{color:var(--muted)}
+body.night .data-table{background:var(--surface);box-shadow:none}
+body.night .data-table thead{background:var(--line)}
+body.night .data-table td{border-bottom-color:var(--line);color:var(--ink)}
+body.night .button-secondary{background:var(--line);color:var(--ink)}
+body.night .autocomplete-list{background:var(--surface);border-color:var(--ink-soft)}
+body.night .autocomplete-item{border-bottom-color:var(--line);color:var(--ink)}
+body.night .empty-state,body.night .text-muted,body.night .field-hint,body.night .cell-sub{color:var(--muted-soft)}
+body.night .page-switch{background:var(--line)}
+body.night .page-btn{color:var(--muted-soft)}
+body.night .page-btn.active{background:var(--page);color:var(--ink)}
+body.night .page-btn span{color:var(--muted)}
+body.night .num-btn{background:var(--page);border-color:var(--ink-soft);color:var(--ink-soft)}
+body.night .onsite-chip{background:var(--chip);border-color:var(--accent-deep);color:var(--accent-deep)}
+body.night .onsite-chip.none{background:var(--line);border-color:var(--ink-soft);color:var(--muted-soft)}
+body.night .sheet-summary{color:var(--muted-soft)}
+body.night .flag-picker-panel{background:var(--surface)}
+body.night .flag-picker-title,body.night .swatch{color:var(--ink)}
+body.night .swatch{border-bottom-color:var(--line)}
+body.night .muster-head{color:var(--ink)}
+body.night .status-valid,body.night .induction-tag.ok,body.night .induction-note.good{background:#052e16;color:var(--good)}
 body.night .status-needed,body.night .induction-tag.due,body.night .induction-note.bad{background:#3f1212;color:#fca5a5}
 body.night .status-soon,body.night .induction-tag.soon,body.night .induction-note.soon{background:#3a2a09;color:#fcd34d}
 body.night .form-title{color:#60a5fa}
 body.night .edit-btn{color:#60a5fa}
-body.night .rep-empty{color:#94a3b8}
-.guard-card{border:1px solid #e2e8f0;border-radius:.45rem;padding:.65rem .75rem;margin-bottom:.6rem;background:#fff}
-.sheet-date-read{margin-top:.6rem;font-size:.9rem;font-weight:600;color:#334155}
+body.night .rep-empty{color:var(--muted-soft)}
+.guard-card{border:1px solid var(--line);border-radius:.45rem;padding:.65rem .75rem;margin-bottom:.6rem;background:var(--surface)}
+.sheet-date-read{margin-top:.6rem;font-size:.9rem;font-weight:600;color:var(--ink-soft)}
 .sheet-date-line{display:block}
 .duty-line{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}
-.duty-chip{display:inline-flex;align-items:center;padding:.3rem .6rem;border:1px solid transparent;border-radius:9999px;background:#eef2f7;font-size:.78rem;font-weight:600;color:#334155;white-space:nowrap;font-family:inherit;cursor:pointer}
-.duty-chip.picked{background:#dbeafe;border-color:#2563eb;color:#1d4ed8}
-body.night .duty-chip.picked{background:#16243a;border-color:#3b82f6;color:#93c5fd}
-.duty-chip em{font-style:normal;font-weight:500;color:#64748b;margin-left:.3rem}
-.duty-chip.none{background:#f1f5f9;color:#5b6879;font-weight:500}
-body.night .duty-chip{background:#16243a;color:#cbd5e1}
-body.night .duty-chip em{color:#94a3b8}
-body.night .duty-chip.none{background:#1e2d45;color:#94a3b8}
-body.night .sheet-date-read{color:#cbd5e1}
+.duty-chip{display:inline-flex;align-items:center;padding:.3rem .6rem;border:1px solid transparent;border-radius:9999px;background:var(--chip);font-size:.78rem;font-weight:600;color:var(--ink-soft);white-space:nowrap;font-family:inherit;cursor:pointer}
+.duty-chip.picked{background:var(--accent-pale);border-color:var(--accent);color:var(--accent-deep)}
+body.night .duty-chip.picked{background:var(--chip);border-color:var(--accent);color:var(--accent-deep)}
+.duty-chip em{font-style:normal;font-weight:500;color:var(--muted);margin-left:.3rem}
+.duty-chip.none{background:var(--page);color:#5b6879;font-weight:500}
+body.night .duty-chip{background:var(--chip);color:var(--ink-soft)}
+body.night .duty-chip em{color:var(--muted-soft)}
+body.night .duty-chip.none{background:var(--line);color:var(--muted-soft)}
+body.night .sheet-date-read{color:var(--ink-soft)}
 .head-row{display:flex;align-items:baseline;gap:.75rem;margin-bottom:.75rem}
-.head-row h2{flex:1;min-width:0;margin-bottom:0;padding-bottom:.5rem;border-bottom:2px solid #1e293b}
+.head-row h2{flex:1;min-width:0;margin-bottom:0;padding-bottom:.5rem;border-bottom:2px solid var(--header)}
 .head-btn{flex:0 0 auto;padding:.4rem .85rem;font-size:.82rem;align-self:center}
-body.night .head-row h2{border-bottom-color:#334155}
+body.night .head-row h2{border-bottom-color:var(--ink-soft)}
 .fold{padding:0;overflow:hidden}
 .fold-row{display:flex;align-items:stretch}
 .fold-row .fold-head{flex:1;min-width:0}
 .licence-only{display:none}
 body.licences .licence-only{display:block}
-.move-btn{flex:0 0 auto;width:2.1rem;border:none;background:none;color:#94a3b8;font-size:.8rem;cursor:pointer;padding:0}
-.move-btn:active{color:#2563eb}
+.move-btn{flex:0 0 auto;width:2.1rem;border:none;background:none;color:var(--muted-soft);font-size:.8rem;cursor:pointer;padding:0}
+.move-btn:active{color:var(--accent)}
 .move-btn[disabled]{opacity:.25;cursor:default}
-body.night .move-btn{color:#64748b}
-.fold-head{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:.95rem 1rem;font-family:inherit;font-size:1rem;font-weight:700;color:#1e293b;text-align:left;cursor:pointer}
+body.night .move-btn{color:var(--muted)}
+.fold-head{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:.95rem 1rem;font-family:inherit;font-size:1rem;font-weight:700;color:var(--ink);text-align:left;cursor:pointer}
 .fold-head span{flex:1;min-width:0}
-.fold-arrow{width:.55rem;height:.55rem;border-right:2px solid #64748b;border-bottom:2px solid #64748b;transform:rotate(45deg);margin:-.2rem .15rem 0 .5rem;flex:0 0 auto;transition:transform .15s}
+.fold-arrow{width:.55rem;height:.55rem;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-.2rem .15rem 0 .5rem;flex:0 0 auto;transition:transform .15s}
 .fold.open .fold-arrow{transform:rotate(-135deg);margin-top:.15rem}
 .fold-body{display:none;padding:0 1rem 1rem}
 .fold.open .fold-body{display:block}
 .fold + .fold{margin-top:.5rem}
-body.night .fold-head{color:#e2e8f0}
-body.night .fold-arrow{border-color:#94a3b8}
+body.night .fold-head{color:var(--ink)}
+body.night .fold-arrow{border-color:var(--muted-soft)}
 .guard-dot{display:inline-block;width:.6rem;height:.6rem;border-radius:.15rem;margin-right:.35rem;vertical-align:baseline;flex:0 0 auto}
-.colour-input{width:3.4rem;height:2.4rem;padding:.15rem;border:1px solid #cbd5e1;border-radius:.375rem;background:#fff;flex:0 0 auto}
-body.night .colour-input{background:#0b1220;border-color:#334155}
+.colour-input{width:3.4rem;height:2.4rem;padding:.15rem;border:1px solid var(--line-firm);border-radius:.375rem;background:var(--surface);flex:0 0 auto}
+body.night .colour-input{background:var(--page);border-color:var(--ink-soft)}
 .guard-swatch{width:1.5rem;height:1.5rem;border-radius:.3rem;border:1px solid rgba(0,0,0,.15);padding:0;cursor:pointer;flex:0 0 auto}
-.guard-card h4{display:flex;align-items:center;gap:.45rem;font-size:.95rem;font-weight:700;color:#1e293b;margin-bottom:.35rem}
+.guard-card h4{display:flex;align-items:center;gap:.45rem;font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.35rem}
 .guard-tot{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
 .guard-tot span{padding:.2rem .5rem;border-radius:9999px;font-size:.74rem;font-weight:700}
 .tot-done{background:#f0fdf4;color:#15803d}
-.tot-all{background:#eff6ff;color:#1d4ed8}
-.tot-none{background:#f1f5f9;color:#5b6879}
-.week-row{display:flex;justify-content:space-between;font-size:.78rem;color:#475569;padding:.15rem 0;border-top:1px solid #f1f5f9}
-.week-row b{font-weight:600;color:#0f172a}
+.tot-all{background:#eff6ff;color:var(--accent-deep)}
+.tot-none{background:var(--page);color:#5b6879}
+.week-row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--slate);padding:.15rem 0;border-top:1px solid var(--page)}
+.week-row b{font-weight:600;color:var(--ink)}
 .guard-tot .tot-done,.guard-tot .tot-all,.guard-tot .tot-none{border:1px solid transparent}
-body.night .tot-done{background:#0f2417;color:#4ade80;border-color:#14532d}
-body.night .tot-all{background:#16243a;color:#93c5fd;border-color:#1e3a5f}
-body.night .tot-none{background:#1e2d45;color:#94a3b8;border-color:#243553}
-body.night .guard-card{background:#111c2e;border-color:#1e2d45}
-body.night .guard-card h4{color:#e2e8f0}
-body.night .week-row{color:#94a3b8;border-top-color:#1e2d45}
-body.night .week-row b{color:#e2e8f0}
-.seen-count{display:inline-block;margin-left:.4rem;padding:.1rem .45rem;border-radius:9999px;background:#e2e8f0;color:#475569;font-size:.68rem;font-weight:700}
-.seen-count.often{background:#eff6ff;color:#1d4ed8}
-body.night .seen-count{background:#1e2d45;color:#94a3b8}
-body.night .seen-count.often{background:#16243a;color:#93c5fd}
-.auto-tag{display:inline-block;margin-left:.4rem;padding:.1rem .4rem;border-radius:.25rem;background:#eff6ff;color:#1d4ed8;font-size:.68rem;font-weight:700;vertical-align:middle}
-body.night .auto-tag{background:#16243a;color:#93c5fd}
-.check-row{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;font-size:.9rem;color:#334155;cursor:pointer}
+body.night .tot-done{background:#0f2417;color:var(--good);border-color:#14532d}
+body.night .tot-all{background:var(--chip);color:var(--accent-deep);border-color:#1e3a5f}
+body.night .tot-none{background:var(--line);color:var(--muted-soft);border-color:#243553}
+body.night .guard-card{background:var(--surface);border-color:var(--line)}
+body.night .guard-card h4{color:var(--ink)}
+body.night .week-row{color:var(--muted-soft);border-top-color:var(--line)}
+body.night .week-row b{color:var(--ink)}
+.seen-count{display:inline-block;margin-left:.4rem;padding:.1rem .45rem;border-radius:9999px;background:var(--line);color:var(--slate);font-size:.68rem;font-weight:700}
+.seen-count.often{background:#eff6ff;color:var(--accent-deep)}
+body.night .seen-count{background:var(--line);color:var(--muted-soft)}
+body.night .seen-count.often{background:var(--chip);color:var(--accent-deep)}
+.auto-tag{display:inline-block;margin-left:.4rem;padding:.1rem .4rem;border-radius:.25rem;background:#eff6ff;color:var(--accent-deep);font-size:.68rem;font-weight:700;vertical-align:middle}
+body.night .auto-tag{background:var(--chip);color:var(--accent-deep)}
+.check-row{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;font-size:.9rem;color:var(--ink-soft);cursor:pointer}
 .check-row input{width:1.15rem;height:1.15rem}
-body.night .check-row{color:#cbd5e1}
+body.night .check-row{color:var(--ink-soft)}
 .chip-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem}
-.chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:9999px;padding:.4rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
-.chip:active{background:#2563eb;color:#fff}
-body.night .chip{background:#16243a;border-color:#1d4ed8;color:#93c5fd}
-.muster-head{font-size:1.6rem;font-weight:700;color:#1e293b;margin-bottom:.9rem;line-height:1.2}
-.muster-head small{display:block;font-size:.85rem;font-weight:500;color:#64748b;margin-top:.3rem}
+.chip{background:#eff6ff;border:1px solid #bfdbfe;color:var(--accent-deep);border-radius:9999px;padding:.4rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
+.chip:active{background:var(--accent);color:#fff}
+body.night .chip{background:var(--chip);border-color:var(--accent-deep);color:var(--accent-deep)}
+.muster-head{font-size:1.6rem;font-weight:700;color:var(--ink);margin-bottom:.9rem;line-height:1.2}
+.muster-head small{display:block;font-size:.85rem;font-weight:500;color:var(--muted);margin-top:.3rem}
 .muster-head.clear{color:#15803d}
 #vehicleInput,#staffVehicleInput,#visitorVehicle,#staffOwnVehicles,#siteVehicles,.rep-vehicles{text-transform:uppercase}
-.filter-box{width:100%;padding:.6rem .75rem;margin-bottom:.75rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.95rem;background:#fff;color:#0f172a}
-.filter-box:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:#e2e8f0;padding:.25rem;border-radius:.5rem;position:sticky;z-index:30}
-.page-btn{flex:1;min-width:0;padding:.55rem .35rem;border:none;background:transparent;color:#475569;font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
-.page-btn.active{background:#fff;color:#1e293b;box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.page-btn span{display:block;font-weight:500;font-size:.7rem;color:#64748b;margin-top:.1rem}
+.filter-box{width:100%;padding:.6rem .75rem;margin-bottom:.75rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:.95rem;background:var(--surface);color:var(--ink)}
+.filter-box:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:var(--line);padding:.25rem;border-radius:.5rem;position:sticky;z-index:30}
+.page-btn{flex:1;min-width:0;padding:.55rem .35rem;border:none;background:transparent;color:var(--slate);font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
+.page-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.page-btn span{display:block;font-weight:500;font-size:.7rem;color:var(--muted);margin-top:.1rem}
 .data-table td.band,.data-table th.band{width:.9rem;padding:.4rem .15rem}
 .kind-band{display:block;width:.55rem;height:1.15rem;border-radius:.15rem}
-.kind-visitor{background:#1d4ed8}
+.kind-visitor{background:var(--accent-deep)}
 .kind-staff{background:#0d9488}
 .kind-incident{background:#ea580c}
-.kind-key{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:.5rem;font-size:.75rem;color:#64748b}
+.kind-key{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:.5rem;font-size:.75rem;color:var(--muted)}
 .kind-key span{display:inline-flex;align-items:center;gap:.35rem}
 .kind-key i{height:.75rem}
-body.night .kind-key{color:#94a3b8}
-.act-kind{display:inline-block;min-width:4.6rem;font-size:.72rem;font-weight:700;letter-spacing:.02em;color:#64748b;text-transform:uppercase}
-body.night .act-kind{color:#94a3b8}
-.page-btn.active span{color:#475569}
+body.night .kind-key{color:var(--muted-soft)}
+.act-kind{display:inline-block;min-width:4.6rem;font-size:.72rem;font-weight:700;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}
+body.night .act-kind{color:var(--muted-soft)}
+.page-btn.active span{color:var(--slate)}
 .induction-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;padding:.15rem .45rem;border-radius:9999px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
 .induction-tag.ok{background:#f0fdf4;color:#15803d}
-.induction-tag.due{background:#fef2f2;color:#b91c1c}
+.induction-tag.due{background:#fef2f2;color:var(--bad-deep)}
 .induction-tag.soon{background:#fffbeb;color:#b45309}
 .status-soon{background:#fffbeb;color:#b45309}
 .induction-note.soon{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
 .flag-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
-.flag-legend span{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:#475569}
+.flag-legend span{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--slate)}
 .flag-legend i{width:.8rem;height:.8rem;border-radius:.2rem;display:inline-block}
 .flag-picker{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:2000;display:flex;align-items:flex-end}
-.flag-picker-panel{background:#fff;width:100%;border-radius:.75rem .75rem 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.25)}
-.flag-picker-title{font-weight:700;margin-bottom:.75rem;color:#1e293b}
-.swatch{display:flex;align-items:center;gap:.6rem;width:100%;padding:.6rem .5rem;border:none;background:none;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:.9rem;color:#0f172a;text-align:left}
+.flag-picker-panel{background:var(--surface);width:100%;border-radius:.75rem .75rem 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.25)}
+.flag-picker-title{font-weight:700;margin-bottom:.75rem;color:var(--ink)}
+.swatch{display:flex;align-items:center;gap:.6rem;width:100%;padding:.6rem .5rem;border:none;background:none;border-bottom:1px solid var(--page);cursor:pointer;font-size:.9rem;color:var(--ink);text-align:left}
 .swatch b{width:1.4rem;height:1.4rem;border-radius:.3rem;flex:0 0 auto;border:1px solid rgba(0,0,0,.1)}
 /* Wrapping, so a third control drops to its own line rather than being
    squeezed to nothing on a narrow screen. */
 .flag-row{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.75rem}
 .flag-row input[type=text]{flex:1 1 8rem}
+.theme-label{flex:1 1 8rem;min-width:0;font-size:.9rem}
+.theme-label small{display:block;color:var(--muted);font-size:.75rem}
+/* Not sticky, and not a tab bar for a page - it chooses which list of
+   colours is below it, so it must not join the chain at the top. */
+.theme-tabs{position:static;margin:.75rem 0 .85rem;box-shadow:none}
+body.no-scroll{overflow:hidden}
+/* A screen of its own, so nothing above it clips or competes. The list
+   scrolls; the preview and the switch above it do not move. */
+.theme-screen{display:none;position:fixed;inset:0;z-index:400;background:var(--page);flex-direction:column}
+.theme-screen.open{display:flex}
+.ts-bar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:var(--header);color:#fff;padding:calc(.75rem + env(safe-area-inset-top,0px)) calc(1rem + env(safe-area-inset-right,0px)) .75rem calc(1rem + env(safe-area-inset-left,0px))}
+.ts-title{font-weight:700}
+.ts-top{flex:0 0 auto;padding:.75rem 1rem 0}
+.ts-list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 1rem}
+.ts-foot{flex:0 0 auto;padding:.75rem calc(1rem + env(safe-area-inset-right,0px)) calc(1rem + env(safe-area-inset-bottom,0px)) calc(1rem + env(safe-area-inset-left,0px));border-top:1px solid var(--line)}
+.ts-foot .button{width:100%}
+.theme-row.picked{background:var(--accent-pale);border-radius:.35rem;box-shadow:0 0 0 2px var(--accent)}
+
+/* A page in miniature, drawn from the very same names, so it shows what
+   a change does without leaving the settings. */
+.theme-preview{border:1px solid var(--line-firm);border-radius:.5rem;overflow:hidden;background:var(--page);margin-bottom:.85rem;padding-bottom:.5rem}
+.tp-bar{display:flex;align-items:center;justify-content:space-between;background:var(--header);color:#fff;padding:.55rem .7rem;font-size:.8rem;font-weight:700}
+.tp-muster{background:var(--bad);color:#fff;border-radius:.3rem;padding:.2rem .45rem;font-size:.7rem;font-style:normal;font-weight:700}
+.tp-pills{display:flex;gap:.25rem;background:var(--chip);padding:.2rem;margin:.5rem;border-radius:.4rem}
+.tp-pill{flex:1;text-align:center;font-style:normal;font-size:.7rem;font-weight:600;color:var(--muted);padding:.25rem;border-radius:.3rem}
+.tp-pill.on{background:var(--surface);color:var(--ink)}
+.tp-card{background:var(--surface);border-top:1px solid var(--line);margin:.5rem;border-radius:.4rem;padding:.6rem}
+.tp-h{font-size:.82rem;font-weight:700;color:var(--ink)}
+.tp-sub{display:block;font-size:.7rem;color:var(--muted);margin-top:.1rem}
+.tp-table{width:100%;border-collapse:collapse;font-size:.75rem;color:var(--ink);margin-top:.4rem}
+.tp-table td{padding:.35rem .3rem;border-bottom:1px solid var(--line);vertical-align:middle}
+.tp-num{display:inline-block;min-width:1.3rem;text-align:center;background:var(--accent);color:#fff;border-radius:.25rem;padding:.1rem 0;font-size:.7rem}
+.tp-num.marked{background:var(--warn)}
+.tp-actions{display:flex;gap:.4rem;margin-top:.5rem}
+.tp-btn{font-style:normal;font-size:.72rem;font-weight:600;background:var(--accent);color:#fff;border-radius:.3rem;padding:.3rem .6rem}
+.tp-btn.ghost{background:var(--chip);color:var(--ink)}
 .remove-flag{flex:0 0 auto;min-height:2.6rem;padding:.4rem .9rem;font-size:.85rem}
 /* Named with the element as well, or ".flag-row input" outranks it and
    the swatch stretches like a text box - squeezing whatever follows it
    out of the row, which is why the X could not be reached. */
-.flag-row input.flag-swatch{width:2.6rem;height:2.6rem;flex:0 0 auto;padding:0;border:1px solid #cbd5e1;border-radius:.375rem;background:none;cursor:pointer}
+.flag-row input.flag-swatch{width:2.6rem;height:2.6rem;flex:0 0 auto;padding:0;border:1px solid var(--line-firm);border-radius:.375rem;background:none;cursor:pointer}
 
-body.night .flag-row input.flag-swatch{border-color:#334155}
+body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 .flag-row b{width:1.4rem;height:1.4rem;border-radius:.3rem;flex:0 0 auto}
-.flag-row input{flex:1;min-width:0;padding:.5rem .6rem;border:1px solid #cbd5e1;border-radius:.375rem;font-family:inherit;font-size:.9rem}
-</style>
+.flag-row input{flex:1;min-width:0;padding:.5rem .6rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:.9rem}</style>
+<style id="themeStyle"></style>
 </head>
 <body>
 
@@ -328,6 +377,7 @@ body.night .flag-row input.flag-swatch{border-color:#334155}
 <h1>Security Access Tracker</h1>
 <div class="header-date" id="headerDate"></div>
 </div>
+<button type="button" id="musterBtn" class="muster-btn" aria-label="Roll call" title="Roll call">Muster</button>
 <button type="button" id="themeBtn" class="cog" aria-label="Switch between day and night" title="Day or night">
 <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path id="themeIcon" fill="currentColor" d=""/></svg>
 </button>
@@ -601,7 +651,7 @@ body.night .flag-row input.flag-swatch{border-color:#334155}
 <button type="button" id="btnSubSheet" class="subtab active" role="tab" aria-selected="true">Sheet</button>
 <button type="button" id="btnSubDuty" class="subtab" role="tab" aria-selected="false">Duty</button>
 <button type="button" id="btnSubHandover" class="subtab" role="tab" aria-selected="false">Handover</button>
-<button type="button" id="btnSubMuster" class="subtab" role="tab" aria-selected="false">Muster</button>
+
 </div>
 <div id="subSheet" class="subpane active">
 <div class="page-switch" role="tablist">
@@ -1258,6 +1308,14 @@ body.night .flag-row input.flag-swatch{border-color:#334155}
 </div>
 </div>
 
+<div class="section">
+<div class="head-row">
+<h2>Colours and theme</h2>
+<button type="button" class="button button-primary head-btn" id="openTheme">Open</button>
+</div>
+<p class="text-muted" style="margin:0">Set how the app looks, with a preview you can tap. Day and night are kept separately.</p>
+</div>
+
 <div class="section fold" id="fold_rowcolours">
 <div class="fold-row"><button type="button" class="fold-head" id="foldBtn_rowcolours" aria-expanded="false" aria-controls="foldBody_rowcolours"><span>Row colours</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_rowcolours" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_rowcolours" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_rowcolours">
@@ -1347,6 +1405,38 @@ body.night .flag-row input.flag-swatch{border-color:#334155}
 </div>
 <button type="button" class="button button-secondary" id="guardPickerAuto">Back to the automatic colour</button>
 <button type="button" class="button button-secondary" id="guardPickerCancel">Cancel</button>
+</div>
+</div>
+
+<div id="themeScreen" class="theme-screen" role="dialog" aria-modal="true" aria-label="Colours and theme">
+<div class="ts-bar">
+<span class="ts-title">Colours</span>
+<button type="button" class="button button-secondary" id="closeTheme">Done</button>
+</div>
+<div class="ts-top">
+<p class="field-hint" style="margin:0 0 .4rem">Tap anything below to change the colour it uses.</p>
+<div class="theme-preview" id="themePreview" aria-label="How a page will look">
+<div class="tp-bar" data-part="header" role="button" tabindex="0" title="The bar at the top"><span>Security Access Tracker</span><i class="tp-muster" data-part="bad" role="button" tabindex="0" title="Warnings">Muster</i></div>
+<div class="tp-pills" data-part="chip" role="button" tabindex="0" title="Pills and tabs"><i class="tp-pill on">Activity</i><i class="tp-pill">Daily</i><i class="tp-pill">Contractors</i></div>
+<div class="tp-card" data-part="surface" role="button" tabindex="0" title="Cards and tables">
+<div class="tp-h" data-part="ink" role="button" tabindex="0" title="Main text">Occurrence sheet</div>
+<div class="tp-sub" data-part="muted" role="button" tabindex="0" title="Quieter text">Tuesday, 6 October &middot; 3 entries recorded</div>
+<table class="tp-table"><tbody>
+<tr><td><b class="tp-num" data-part="accent" role="button" tabindex="0" title="Buttons and links">1</b></td><td>Northgate Haulage<span class="tp-sub">D. Perry</span></td><td>06:00</td></tr>
+<tr><td><b class="tp-num marked" data-part="warn" role="button" tabindex="0" title="Needs attention">2</b></td><td>Apex Scaffolding<span class="tp-sub">B. Hedges</span></td><td>07:15</td></tr>
+</tbody></table>
+<div class="tp-actions"><i class="tp-btn" data-part="accent-deep" role="button" tabindex="0" title="Accent, pressed">Export</i><i class="tp-btn ghost" data-part="page-soft" role="button" tabindex="0" title="Page, second shade">Today</i></div>
+</div>
+</div>
+<div class="page-switch theme-tabs" role="tablist">
+<button type="button" id="themeSimple" class="page-btn active" role="tab">Simple</button>
+<button type="button" id="themeAdvanced" class="page-btn" role="tab">Advanced</button>
+</div>
+</div>
+<div class="ts-list"><div id="themeEditor"></div></div>
+<div class="ts-foot">
+<div id="themeWarn" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
+<button type="button" class="button button-secondary" id="resetTheme">Back to the standard colours</button>
 </div>
 </div>
 
@@ -1749,7 +1839,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v132';
+var BUILD = 'sat-v141';
 
 var app = {
   visitors: [],
@@ -2070,12 +2160,31 @@ var app = {
 
   /* One rule for all three lists. Written out three times, the day one
      gained a condition the others would quietly disagree with it. */
+  /* A shift is a span of time, not a date. One that runs to 03:00 takes
+     the small hours of the next morning with it, and filing those under
+     the following date - which is correct - would drop them from the
+     shift they were actually recorded on. So when a shift is chosen, the
+     span decides, not the date. */
   onDay: function (list, date, field) {
+    var sh = this.filterShift();
     var out = [], i;
     for (i = 0; i < list.length; i++) {
-      if (list[i].date !== date) continue;
-      if (!this.inShift(date, list[i][field])) continue;
+      if (sh) {
+        if (!this.inShift(list[i].date, list[i][field])) continue;
+      } else {
+        if (list[i].date !== date) continue;
+      }
       out.push(list[i]);
+    }
+    /* across midnight the clock reads lower after it, so order by the
+       moment rather than by the time on the face of it */
+    if (sh) {
+      var self = this;
+      return out.sort(function (a, b) {
+        var at = self.stamp(a.date, a[field] || '00:00');
+        var bt = self.stamp(b.date, b[field] || '00:00');
+        return (at === null ? 0 : at) - (bt === null ? 0 : bt);
+      });
     }
     return this.byTime(out, field);
   },
@@ -2714,6 +2823,14 @@ var app = {
       setTimeout(function () { document.getElementById('shiftGuardList').classList.remove('active'); }, 200);
     });
 
+    document.getElementById('musterBtn').addEventListener('click', function () {
+      /* wherever you are, the roll call is one press away */
+      self.activateTab('sheet');
+      self.activateSub('day', 'subMuster');
+      self.renderMuster();
+      if (window.scrollTo) window.scrollTo(0, 0);
+    });
+
     document.getElementById('themeBtn').addEventListener('click', function () {
       var on = false;
       try { on = localStorage.getItem('sat-night') === '1'; } catch (e) {}
@@ -2828,6 +2945,26 @@ var app = {
       if (!r) { self.toast('Could not add that colour', 'error'); return; }
       self.renderFlagEditor();
       self.toast('Colour added, tap the square to change it');
+    });
+
+    document.getElementById('openTheme').addEventListener('click', function () { self.openThemeScreen(); });
+    document.getElementById('closeTheme').addEventListener('click', function () { self.closeThemeScreen(); });
+
+    [['themeSimple', 'simple'], ['themeAdvanced', 'advanced']].forEach(function (pair) {
+      document.getElementById(pair[0]).addEventListener('click', function () {
+        self.themeShowing = pair[1];
+        document.getElementById('themeSimple').className =
+          'page-btn' + (pair[1] === 'simple' ? ' active' : '');
+        document.getElementById('themeAdvanced').className =
+          'page-btn' + (pair[1] === 'advanced' ? ' active' : '');
+        self.renderThemeEditor();
+      });
+    });
+
+    document.getElementById('resetTheme').addEventListener('click', function () {
+      self.resetTheme();
+      self.renderThemeEditor();
+      self.toast('Back to the standard colours');
     });
 
     document.getElementById('resetFlagColours').addEventListener('click', function () {
@@ -3095,7 +3232,7 @@ var app = {
      buttons can never drift apart. */
   SUBTABS: {
     entry: [['btnSubVisitor', 'subVisitor'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubKeyMove', 'subKeyMove'], ['btnSubIncident', 'subIncident']],
-    day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubHandover', 'subHandover'], ['btnSubMuster', 'subMuster']],
+    day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubHandover', 'subHandover'], ['musterBtn', 'subMuster', true]],
     db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubKeys', 'subKeys'], ['btnSubStaffList', 'subStaffList']],
     roster: [['btnSubRoster', 'subRoster'], ['btnSubGuards', 'subGuards']]
   },
@@ -3113,7 +3250,15 @@ var app = {
       var btn = document.getElementById(list[i][0]);
       var pane = document.getElementById(list[i][1]);
       if (btn) {
-        btn.className = 'subtab' + (on ? ' active' : '');
+        /* Whether a control is one of the tabs is stated in the list, not
+           read off its class. Reading the class means a button whose class
+           has not been set yet is mistaken for something else, and it ends
+           up dressed wrongly - or stripped of what made it stand out. */
+        if (list[i][2]) {
+          btn.classList[on ? 'add' : 'remove']('on');
+        } else {
+          btn.className = 'subtab' + (on ? ' active' : '');
+        }
         btn.setAttribute('aria-selected', on ? 'true' : 'false');
       }
       if (pane) {
@@ -4175,8 +4320,8 @@ var app = {
         '</td>' +
         '<td>' + this.esc(v.vehicle || '-') + '</td>' +
         '<td>' + this.esc(v.reason) + '</td>' +
-        '<td>' + this.esc(this.showTime(v.entryTime)) + '</td>' +
-        '<td>' + exitCell + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(v.entryTime)) + '</td>' +
+        '<td class="time-cell">' + exitCell + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.editEntry(' + v.id + ')">Edit</button>' +
         '<button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
@@ -5196,8 +5341,8 @@ var app = {
         '</td>' +
         '<td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
         '<td>' + this.esc(m.reason) + '</td>' +
-        '<td>' + this.esc(this.showTime(m.outTime)) + '</td>' +
-        '<td>' + backCell + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(m.outTime)) + '</td>' +
+        '<td class="time-cell">' + backCell + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.editStaffMove(' + m.id + ')">Edit</button>' +
         '<button type="button" class="delete-btn" onclick="app.deleteStaffMove(' + m.id + ')">X</button></td>' +
@@ -5357,7 +5502,7 @@ var app = {
       body += '<tr' + (open ? ' class="on-site"' : '') + '>' +
         '<td class="band"><i class="kind-band kind-' + r.kind + '"></i></td>' +
         this.numCell(r.rec, seq, r.kind, false) +
-        '<td>' + this.esc(this.showTime(r.time)) +
+        '<td class="time-cell">' + this.esc(this.showTime(r.time)) +
           (r.until ? '<span class="cell-sub">to ' + this.esc(this.showTime(r.until)) + '</span>' : '') + '</td>' +
         '<td><span class="act-kind">' +
           this.esc(r.kind === 'incident' ? r.label : (r.kind === 'staff' ? 'Staff' : 'Visitor')) +
@@ -5631,7 +5776,7 @@ var app = {
       var n = list[i];
       rows += '<tr>' +
         this.numCell(n, seq['i' + n.id], 'incident', false) +
-        '<td>' + this.esc(this.showTime(n.time)) +
+        '<td class="time-cell">' + this.esc(this.showTime(n.time)) +
           (n.ended ? '<span class="cell-sub">to ' + this.esc(this.showTime(n.ended)) + '</span>' : '') + '</td>' +
         '<td>' + this.esc(n.type) + '</td>' +
         '<td>' + this.esc(n.detail) + '</td>' +
@@ -6136,6 +6281,294 @@ var app = {
       })(rows[i]);
     }
     list.classList.add('active');
+  },
+
+  /* ---------------- how it looks ---------------- */
+
+  /* Named by the job each does, not by where it appears, so one change
+     carries to every page that uses it. Day and night hold their own set:
+     a colour that reads well on white rarely does on near black. */
+  THEME_PARTS: [
+    { key: 'page', name: 'Page background', note: 'Behind everything' },
+    { key: 'surface', name: 'Cards and tables', note: 'The panels the content sits on' },
+    { key: 'ink', name: 'Main text', note: 'Names, times, everything you read' },
+    { key: 'muted', name: 'Quieter text', note: 'Second lines and hints' },
+    { key: 'line', name: 'Lines and dividers', note: 'Between rows and around panels' },
+    { key: 'accent', name: 'Buttons and links', note: 'And the number beside each entry' },
+    { key: 'header', name: 'The bar at the top', note: 'Always white text on it' },
+    { key: 'chip', name: 'Pills and tabs', note: 'The strip the tabs sit in' }
+  ],
+
+  /* The rest of them. Each is used somewhere, and a site that wants the
+     app to look a particular way will want them - but they are the sort
+     of thing you would spend an afternoon on, not reach for at the gate. */
+  THEME_MORE: [
+    { key: 'page-soft', name: 'Page, second shade', note: 'Alternate rows and insets' },
+    { key: 'ink-soft', name: 'Text, second shade', note: 'Headings inside panels' },
+    { key: 'muted-soft', name: 'Quietest text', note: 'Placeholders and captions' },
+    { key: 'line-firm', name: 'Firmer lines', note: 'Field borders and outlines' },
+    { key: 'accent-deep', name: 'Accent, pressed', note: 'A button while it is held' },
+    { key: 'accent-pale', name: 'Accent, washed', note: 'Behind a selected item' },
+    { key: 'bad', name: 'Warnings', note: 'Overdue, expired, delete' },
+    { key: 'bad-deep', name: 'Warnings, pressed', note: 'The same while held' },
+    { key: 'good', name: 'All clear', note: 'In date, signed in, returned' },
+    { key: 'warn', name: 'Needs attention', note: 'Expiring soon' },
+    { key: 'slate', name: 'Neutral', note: 'Table headings and bands' }
+  ],
+
+  themeShowing: 'simple',
+
+  themeList: function () {
+    return this.themeShowing === 'advanced'
+      ? this.THEME_PARTS.concat(this.THEME_MORE)
+      : this.THEME_PARTS.slice();
+  },
+
+  themeKey: function () {
+    var night = false;
+    try { night = localStorage.getItem('sat-night') === '1'; } catch (e) {}
+    return night ? 'sat-theme-night' : 'sat-theme-day';
+  },
+
+  themeOverrides: function () {
+    var v = null;
+    try { v = JSON.parse(localStorage.getItem(this.themeKey()) || 'null'); } catch (e) {}
+    if (!v || typeof v !== 'object') return {};
+    var out = {}, i;
+    var known = this.THEME_PARTS.concat(this.THEME_MORE);
+    for (i = 0; i < known.length; i++) {
+      var k = known[i].key;
+      if (/^#[0-9a-fA-F]{6}$/.test(v[k] || '')) out[k] = String(v[k]).toLowerCase();
+    }
+    return out;
+  },
+
+  setThemePart: function (key, hex) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(String(hex))) return false;
+    var all = this.themeOverrides();
+    all[key] = String(hex).toLowerCase();
+    try { localStorage.setItem(this.themeKey(), JSON.stringify(all)); } catch (e) {}
+    this.applyTheme();
+    return true;
+  },
+
+  resetTheme: function () {
+    /* the whole set for this mode, including anything set under Advanced
+       and not currently on screen */
+    try { localStorage.removeItem(this.themeKey()); } catch (e) {}
+    this.applyTheme();
+  },
+
+  /* What a name resolves to right now, chosen or standard. */
+  themeValue: function (key) {
+    var mine = this.themeOverrides();
+    if (mine[key]) return mine[key];
+    return this.standardTheme()[key] || '#000000';
+  },
+
+  /* The values the app ships with, so there is always something to go
+     back to even where the page cannot be read for them. */
+  standardTheme: function () {
+    var night = false;
+    try { night = localStorage.getItem('sat-night') === '1'; } catch (e) {}
+    return night
+      ? { page: '#0b1220', surface: '#111c2e', ink: '#e2e8f0', muted: '#94a3b8',
+          line: '#1e2d45', accent: '#3b82f6', header: '#0f172a', chip: '#16243a',
+          'page-soft': '#0f1a2c', 'ink-soft': '#cbd5e1', 'muted-soft': '#64748b',
+          'line-firm': '#334155', 'accent-deep': '#93c5fd', 'accent-pale': '#16243a',
+          bad: '#f87171', 'bad-deep': '#dc2626', good: '#4ade80', warn: '#fbbf24',
+          slate: '#64748b' }
+      : { page: '#f1f5f9', surface: '#ffffff', ink: '#0f172a', muted: '#64748b',
+          line: '#e2e8f0', accent: '#2563eb', header: '#1e293b', chip: '#eef2f7',
+          'page-soft': '#f8fafc', 'ink-soft': '#334155', 'muted-soft': '#94a3b8',
+          'line-firm': '#cbd5e1', 'accent-deep': '#1d4ed8', 'accent-pale': '#dbeafe',
+          bad: '#dc2626', 'bad-deep': '#b91c1c', good: '#16a34a', warn: '#d97706',
+          slate: '#475569' };
+  },
+
+  applyTheme: function () {
+    /* the sheet is in the page from the start rather than made here, so
+       nothing has to guess whether it exists yet */
+    var el = document.getElementById('themeStyle');
+    if (!el) return;
+    var mine = this.themeOverrides(), bits = [], k;
+    for (k in mine) bits.push('--' + k + ':' + mine[k]);
+    var night = false;
+    try { night = localStorage.getItem('sat-night') === '1'; } catch (e) {}
+    /* written against the same selector the app uses, so it wins by order */
+    el.innerHTML = bits.length
+      ? (night ? 'body.night{' : ':root{') + bits.join(';') + '}'
+      : '';
+    this.checkThemeContrast();
+  },
+
+  /* A pair nobody can read is the one thing a colour picker must not let
+     you keep without saying so. */
+  /* The proper measure, not the average of the channels. An average says
+     grey text on white is 2.1 to 1 when it is really nearer 4.8, and the
+     app would sit there warning about its own colours. */
+  relLuminance: function (hex) {
+    var m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(String(hex));
+    if (!m) return 0;
+    var c = [1, 2, 3].map(function (i) {
+      var v = parseInt(m[i], 16) / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  },
+
+  contrastOf: function (a, b) {
+    var la = this.relLuminance(a), lb = this.relLuminance(b);
+    var hi = Math.max(la, lb), lo = Math.min(la, lb);
+    return (hi + 0.05) / (lo + 0.05);
+  },
+
+  checkThemeContrast: function () {
+    var box = document.getElementById('themeWarn');
+    if (!box) return null;
+    var pairs = [
+      ['ink', 'surface', 'Main text on cards', 4.5],
+      ['ink', 'page', 'Main text on the page', 4.5],
+      /* secondary by design, so held to the standard for supporting text */
+      ['muted', 'surface', 'Quieter text on cards', 3]
+      /* cards against the page is deliberately a whisper apart, and they
+         carry a border regardless, so it is not a readability matter */
+    ];
+    var bad = [], i;
+    for (i = 0; i < pairs.length; i++) {
+      var r = this.contrastOf(this.themeValue(pairs[i][0]), this.themeValue(pairs[i][1]));
+      if (r < pairs[i][3]) bad.push(pairs[i][2] + ' (' + r.toFixed(1) + ' to 1)');
+    }
+    if (bad.length) {
+      box.style.display = 'block';
+      box.textContent = 'Hard to read in daylight: ' + bad.join(', ') +
+        '. Anything under 4.5 to 1 is below what is readable on a phone outdoors.';
+    } else {
+      box.style.display = 'none';
+      box.textContent = '';
+    }
+    return bad;
+  },
+
+  /* Tapping the thing in the preview is how you find the colour that
+     controls it. Hunting down a name in a list of nineteen means knowing
+     the name first, which is exactly what somebody looking at a preview
+     does not. */
+  editPart: function (key) {
+    var i, inSimple = false;
+    for (i = 0; i < this.THEME_PARTS.length; i++) if (this.THEME_PARTS[i].key === key) inSimple = true;
+
+    /* a colour only listed under Advanced needs that list showing first */
+    if (!inSimple && this.themeShowing !== 'advanced') {
+      var adv = document.getElementById('themeAdvanced');
+      if (adv) adv.click();
+    }
+    this.renderThemeEditor();
+
+    var rows = document.getElementById('themeEditor');
+    if (!rows) return;
+    var kids = rows.children || [], found = null;
+    for (i = 0; i < kids.length; i++) {
+      var mine = kids[i].getAttribute && kids[i].getAttribute('data-row') === key;
+      if (kids[i].classList) kids[i].classList[mine ? 'add' : 'remove']('picked');
+      if (mine) found = kids[i];
+    }
+    if (!found) return;
+    if (found.scrollIntoView) {
+      /* the options form is not everywhere; the plain call always is, and
+         it only scrolls further than needed */
+      if (typeof found.scrollIntoView === 'function' && found.scrollIntoView.length > 0) {
+        found.scrollIntoView({ block: 'nearest' });
+      } else {
+        found.scrollIntoView();
+      }
+    }
+    /* Opening the picker from script is not allowed everywhere, and where
+       it is refused the row is already highlighted and one tap away. Say
+       so rather than swallow it, or a browser that quietly refuses looks
+       like a preview that does nothing. */
+    var swatch = (found.children || [])[0];
+    if (swatch && swatch.click) {
+      try {
+        swatch.click();
+      } catch (e) {
+        this.toast('Tap the square to change it', '');
+      }
+    }
+  },
+
+  wirePreview: function () {
+    var box = document.getElementById('themePreview');
+    if (!box || box._wired) return;
+    box._wired = true;
+    var self = this;
+    /* the attribute belongs to the preview and nowhere else, so there is
+       nothing to gain from narrowing the search to it */
+    var parts = document.querySelectorAll('[data-part]');
+    for (var i = 0; i < parts.length; i++) {
+      (function (el) {
+        var go = function (ev) {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          self.editPart(el.getAttribute('data-part'));
+        };
+        el.addEventListener('click', go);
+        el.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            if (ev.preventDefault) ev.preventDefault();
+            go(ev);
+          }
+        });
+      })(parts[i]);
+    }
+  },
+
+  openThemeScreen: function () {
+    var s = document.getElementById('themeScreen');
+    if (!s) return;
+    s.classList.add('open');
+    document.body.classList.add('no-scroll');
+    this.renderThemeEditor();
+    this.wirePreview();
+  },
+
+  closeThemeScreen: function () {
+    var s = document.getElementById('themeScreen');
+    if (!s) return;
+    s.classList.remove('open');
+    document.body.classList.remove('no-scroll');
+  },
+
+  renderThemeEditor: function () {
+    var box = document.getElementById('themeEditor');
+    if (!box) return;
+    var self = this;
+    box.innerHTML = '';
+    var showing = this.themeList();
+    for (var i = 0; i < showing.length; i++) {
+      (function (part) {
+        var row = document.createElement('div');
+        row.className = 'flag-row theme-row';
+        row.setAttribute('data-row', part.key);
+        var dot = document.createElement('input');
+        dot.type = 'color';
+        dot.className = 'flag-swatch';
+        dot.value = self.themeValue(part.key);
+        dot.setAttribute('aria-label', part.name);
+        var recolour = function () {
+          if (!self.setThemePart(part.key, dot.value)) return;
+        };
+        dot.addEventListener('change', recolour);
+        dot.addEventListener('input', recolour);
+        var label = document.createElement('span');
+        label.className = 'theme-label';
+        label.innerHTML = self.esc(part.name) +
+          (part.note ? '<small>' + self.esc(part.note) + '</small>' : '');
+        row.appendChild(dot);
+        row.appendChild(label);
+        box.appendChild(row);
+      })(showing[i]);
+    }
+    this.checkThemeContrast();
   },
 
   /* ---------------- keys ---------------- */
@@ -7259,8 +7692,8 @@ var app = {
         (s.date !== this.rosterPick
           ? '<span class="cell-sub carried">on since ' + this.showDate(s.date) + '</span>' : '') +
         '</td>' +
-        '<td>' + this.esc(this.showTime(s.start)) + '</td>' +
-        '<td>' + this.esc(this.showTime(s.end)) + this.spanNote(s) + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(s.start)) + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(s.end)) + this.spanNote(s) + '</td>' +
         '<td>' + this.esc(this.lengthText(this.shiftLen(s))) + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.editRosterShift(' + s.id + ')">Edit</button>' +
@@ -7945,8 +8378,8 @@ var app = {
         (s.date !== this.viewDate
           ? '<span class="cell-sub carried">on since ' + this.showDate(s.date) + '</span>' : '') +
         '</td>' +
-        '<td>' + this.esc(this.showTime(s.start)) + '</td>' +
-        '<td>' + this.esc(this.showTime(s.end)) + this.spanNote(s) + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(s.start)) + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(s.end)) + this.spanNote(s) + '</td>' +
         '<td>' + this.esc(this.lengthText(this.shiftRealMins(s))) + '</td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.swapShift(' + s.id + ')">Swap</button>' +
@@ -7995,7 +8428,7 @@ var app = {
           (v.date !== this.currentDate
             ? '<span class="cell-sub carried">in on ' + this.showDate(v.date) + '</span>' : '') +
           '</td><td>' + this.esc(v.vehicle || '-') + '</td>' +
-          '<td>' + this.esc(this.showTime(v.entryTime)) + '</td>' +
+          '<td class="time-cell">' + this.esc(this.showTime(v.entryTime)) + '</td>' +
           '<td><button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Sign out</button></td></tr>';
       }
       box.innerHTML = '<table class="data-table"><thead><tr>' +
@@ -8015,7 +8448,7 @@ var app = {
         (m.date !== this.currentDate
           ? '<span class="cell-sub carried">out on ' + this.showDate(m.date) + '</span>' : '') +
         '</td><td>' + this.esc(this.vehicleLabel(m)) + '</td>' +
-        '<td>' + this.esc(this.showTime(m.outTime)) + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(m.outTime)) + '</td>' +
         '<td>' + this.esc(m.reason) + '</td>' +
         '<td><button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button></td></tr>';
     }
@@ -9713,6 +10146,11 @@ var app = {
       if (on) document.documentElement.classList.add('night');
       else document.documentElement.classList.remove('night');
     }
+    /* day and night hold their own set, so the one in force changes with
+       the mode - and the editor is now showing the other one's values */
+    this.applyTheme();
+    if (document.getElementById('themeEditor')) this.renderThemeEditor();
+
     var btn = document.getElementById('nightToggle');
     if (btn) btn.textContent = on ? 'Switch to day mode' : 'Switch to night mode';
 

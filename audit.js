@@ -163,13 +163,43 @@ function checkStructure(html, body, js) {
   if (paneIds.length) {
     const listSrc = (window.__js || '').match(/(?:TABS|VIEWS|PANES|SCREENS|ROUTES)\s*[:=]\s*[[{][\s\S]{0,1500}?[\]}]/g) || [];
     const named = listSrc.join(' ');
+    /* A view need not be reached by a route: one opened by a button is
+       just as reachable, and demanding a route calls it dead. */
     const reachable = paneIds.filter(p =>
       new RegExp("['\"]" + p + "['\"]").test(named) ||
       new RegExp("\\b" + p + "\\s*:").test(named) ||
-      new RegExp("activate\\w*\\(\\s*['\"]" + p + "['\"]").test(window.__js || ''));
+      new RegExp("activate\\w*\\(\\s*['\"]" + p + "['\"]").test(window.__js || '') ||
+      new RegExp("getElementById\\(\\s*['\"]" + p + "['\"]").test(window.__js || ''));
     const stranded = paneIds.filter(p => !reachable.includes(p));
     if (stranded.length) fault('unreachable view', 'declared in the markup but no route names it, so nothing can open it', stranded.join(', '));
     else note('unreachable view', `${paneIds.length} views, all reachable`);
+  }
+
+  /* The same reasoning one level down. A tab's inner panes are declared in
+     script and drawn in markup, and nothing forces the two to agree: a
+     pane with no button is unreachable, a button with no pane does
+     nothing when pressed. Both look fine until someone tries. */
+  const subPanes = uniq(matches(/<div[^>]*\sid="([^"]+)"[^>]*class="[^"]*\bsubpane\b/g, body).map(m => m[1])
+    .concat(matches(/<div[^>]*class="[^"]*\bsubpane\b[^"]*"[^>]*\sid="([^"]+)"/g, body).map(m => m[1])));
+  if (subPanes.length) {
+    /* Any control paired with a pane, not only one named to a convention.
+       Requiring the "btn" prefix meant a pane opened from somewhere other
+       than a tab row read as unreachable. */
+    /* A pair may carry more than two entries - a flag saying the control
+       is not one of the tabs, say - so do not insist the bracket closes
+       right after the pane, or the pane reads as having no control. */
+    const declared = matches(/\[\s*['"]([\w$]+)['"]\s*,\s*['"](sub[\w$]+)['"]\s*[,\]]/g, window.__js || '');
+    const declaredPanes = declared.map(m => m[2]);
+    const declaredBtns = declared.map(m => m[1]);
+    const strandedPanes = subPanes.filter(p => !declaredPanes.includes(p));
+    const strandedBtns = uniq(declaredBtns.filter(b => !new RegExp('id="' + b + '"').test(body)));
+    const missingPanes = uniq(declaredPanes.filter(p => !subPanes.includes(p)));
+    if (strandedPanes.length) fault('unreachable sub view', 'drawn in the markup but no button is declared for it', strandedPanes.join(', '));
+    if (strandedBtns.length) fault('button with no markup', 'declared in script but the page has no such button', strandedBtns.join(', '));
+    if (missingPanes.length) fault('missing sub view', 'a button is declared for a pane the page does not contain', missingPanes.join(', '));
+    if (!strandedPanes.length && !strandedBtns.length && !missingPanes.length) {
+      note('sub views', `${subPanes.length} inner panes, each with a button that exists`);
+    }
   }
 
   /* A button inside a form with no type submits it. */
@@ -381,6 +411,27 @@ function luminance(hex) {
    class attributes inside script strings as if they were markup, which is
    how a fragment like "cls" ends up reported as a missing rule. */
 function checkStyles(body, css, js) {
+  /* A colour named for a background, used as text. Mapping one hex to one
+     name is right until the same hex served two jobs - a bar behind white
+     text and a heading beside it. Then the heading takes the bar's dark
+     value after dark and disappears. */
+  const backNames = ['page', 'surface', 'header', 'chip', 'page-soft',
+                     'accent-pale', 'line', 'line-firm', 'panel', 'card', 'bg'];
+  const wrongWay = [];
+  for (const m of matches(/([^{}]+)\{([^}]*)\}/g, css)) {
+    const sel = m[1].replace(/\s+/g, ' ').trim();
+    if (sel.indexOf('@') === 0) continue;
+    for (const c of matches(/(?<![-\w])color:var\(--([a-z-]+)\)/g, m[2])) {
+      if (backNames.indexOf(c[1]) !== -1) wrongWay.push(sel.slice(0, 40) + ' -> ' + c[1]);
+    }
+  }
+  if (wrongWay.length) {
+    fault('text given a background colour',
+      'a text colour named for a background takes the background\'s value in the other mode, and the text vanishes',
+      uniq(wrongWay).slice(0, 4).join(' | '));
+  } else note('text given a background colour', 'every text colour is named for text');
+
+
   layer('styles');
   if (!css) { note('stylesheet', 'no inline stylesheet found'); return; }
 
@@ -548,7 +599,7 @@ function checkAccess(body, css, js) {
  * layer 7 - the same thing written twice
  * ------------------------------------------------------------------ */
 
-function checkDuplication(clean, body) {
+function checkDuplication(clean, body, raw) {
   layer('duplication');
 
   /* Building the same feature twice is easy over a long session and very
@@ -583,6 +634,41 @@ function checkDuplication(clean, body) {
   if (parallel.length) note('duplicate logic', `${parallel.length} set${parallel.length === 1 ? '' : 's'} of parallel functions share a shape, which is expected of edit and delete pairs`,
     parallel.map(t => t.join(' / ')).slice(0, 4).join(' | '));
   if (!twins.length) note('duplicate logic', 'no two functions share a body shape');
+
+  /* The same list written out twice is the quietest of these. Both copies
+     look right, both are used, and the day one gains an entry the other
+     does not, something goes silently unreachable. It has happened here
+     with tab groups, time fields and week helpers - each time noticed only
+     when a feature turned out to be dead. */
+  const lists = [];
+  for (const m of matches(/\[\s*((?:['"][\w$ .-]{1,50}['"]\s*,\s*){2,}['"][\w$ .-]{1,50}['"])\s*,?\s*\]/g, raw)) {
+    const items = matches(/['"]([\w$ .-]+)['"]/g, m[1]).map(x => x[1]);
+    if (items.length < 3) continue;
+    lists.push({ items, set: new Set(items), at: m.index });
+  }
+
+  const twinned = [];
+  for (let a = 0; a < lists.length; a++) {
+    for (let b = a + 1; b < lists.length; b++) {
+      const A = lists[a], B = lists[b];
+      let shared = 0;
+      for (const x of A.set) if (B.set.has(x)) shared++;
+      if (shared < 3) continue;
+      const smaller = Math.min(A.set.size, B.set.size);
+      if (shared / smaller < 0.85) continue;
+      if (A.set.size === B.set.size && shared === smaller) {
+        twinned.push('the same ' + shared + ' names listed twice: ' + [...A.set].slice(0, 4).join(', '));
+      } else {
+        const extra = A.set.size > B.set.size
+          ? [...A.set].filter(x => !B.set.has(x)) : [...B.set].filter(x => !A.set.has(x));
+        twinned.push('two lists of the same thing, one missing ' + extra.join(', '));
+      }
+    }
+  }
+  if (twinned.length) {
+    warn('list written twice', 'one will gain an entry the other does not, and something will go quietly unreachable',
+      uniq(twinned).slice(0, 4).join(' | '));
+  } else note('list written twice', 'no list of names is duplicated');
 
   /* Two controls that do the same job usually means one was meant to
      replace the other and the first was never removed. */
@@ -930,6 +1016,90 @@ function checkConstants(clean) {
 }
 
 /* ------------------------------------------------------------------ *
+ * layer 15 - lists of element names, and families of elements
+ * ------------------------------------------------------------------ */
+
+/* Three separate checks in this file grew out of the same mistake made in
+   three places: a list in the script naming elements, and the markup
+   drifting away from it. Enumerating each case by hand means the next one
+   goes unnoticed until something is dead for months, so this looks for the
+   shape rather than the instances. */
+function checkRegisters(body, js, clean) {
+  layer('registers');
+
+  const ids = new Set(matches(/\sid="([^"]+)"/g, body).map(m => m[1]));
+  if (!ids.size) { note('name lists', 'no ids to check against'); return; }
+
+  /* A list where most entries are element names is a list of element
+     names, and the odd one out is almost always a rename that was not
+     carried through. */
+  const broken = [];
+  for (const m of matches(/\[\s*((?:['"][\w$-]{2,40}['"]\s*,\s*){2,}['"][\w$-]{2,40}['"])\s*,?\s*\]/g, js)) {
+    const items = matches(/['"]([\w$-]+)['"]/g, m[1]).map(x => x[1]);
+    /* A list holding a key and the two fields it names - ['shift',
+       'shiftStart', 'shiftEnd'] - is an ordinary pattern, not a list of
+       ids with one wrong. Only a list that is almost entirely element
+       names says anything about the one that is not. */
+    const known = items.filter(i => ids.has(i));
+    if (known.length < 4 || known.length / items.length < 0.85) continue;
+    const strays = items.filter(i => !ids.has(i));
+    if (strays.length) broken.push(strays.join(', ') + ' (in a list of ' + items.length + ')');
+  }
+  if (broken.length) fault('name lists', 'a list of element names contains one the page does not have', uniq(broken).slice(0, 4).join(' | '));
+  else note('name lists', 'every list of element names resolves');
+
+  /* The important family is the one built by concatenation: getElementById
+     ('fold_' + slug). Those ids never appear whole in the source, so
+     looking for literals finds nothing and the check quietly passes on a
+     file where half the sections are unreachable. Find the prefixes
+     instead, then hold the markup and the list to each other. */
+  /* Read from the raw source. The de-stringed copy has had every literal
+     taken out of it, so looking for string content there finds nothing and
+     the whole check passes on a file it never examined. */
+  const prefixes = uniq(matches(/['"]([a-zA-Z][\w-]{1,20}[_-])['"]\s*\+/g, js).map(m => m[1])
+    .concat(matches(/['"]([a-z]{2,10})['"]\s*\+\s*[\w$.]+\s*\)/g, js).map(m => m[1])));
+
+  const drifted = [];
+  const strandedMembers = [];
+  for (const pre of prefixes) {
+    const members = [...ids].filter(id => id.indexOf(pre) === 0 && id.length > pre.length);
+    if (members.length < 3) continue;
+    const tails = members.map(id => id.slice(pre.length));
+
+    /* every tail should be named somewhere, or that element is drawn and
+       driven by nothing */
+    const unnamed = tails.filter(t => !new RegExp("['\"`]" + t + "['\"`]").test(js));
+    if (unnamed.length && unnamed.length < tails.length) {
+      strandedMembers.push(pre + '{' + unnamed.join(', ') + '}');
+    }
+
+    /* and every name in a list of tails should have its element, or the
+       lookup returns nothing at run time */
+    for (const m of matches(/\[\s*((?:['"][\w$-]{2,40}['"]\s*,\s*){2,}['"][\w$-]{2,40}['"])\s*,?\s*\]/g, js)) {
+      const items = matches(/['"]([\w$-]+)['"]/g, m[1]).map(x => x[1]);
+      /* A list is often used with more than one prefix, and not every
+         member needs every one - a time field may have no Now button.
+         Only the odd one out matters, so require nearly all of them to
+         have the element before calling the remainder a fault. */
+      const hit = items.filter(i => tails.includes(i));
+      if (hit.length < 3 || hit.length / items.length < 0.85) continue;
+      const missing = items.filter(i => !tails.includes(i));
+      if (missing.length) drifted.push(pre + missing.join(', ' + pre));
+    }
+  }
+
+  if (strandedMembers.length) {
+    fault('element nothing drives', 'drawn in the markup and named nowhere, while its siblings are — it cannot be reached',
+      uniq(strandedMembers).slice(0, 4).join(' | '));
+  } else note('element nothing drives', 'every member of a built-id family is named');
+
+  if (drifted.length) {
+    fault('name with no element', 'named in a list alongside real ones, but the page has no such element',
+      uniq(drifted).slice(0, 4).join(' | '));
+  } else note('name with no element', 'every name in a list has its element');
+}
+
+/* ------------------------------------------------------------------ *
  * layer 5 - progressive web app
  * ------------------------------------------------------------------ */
 
@@ -1043,13 +1213,14 @@ function run(files, opts) {
   checkHazards(html, body, js, clean);
   checkStyles(body, css, js);
   checkAccess(body, css, js);
-  checkDuplication(clean, body);
+  checkDuplication(clean, body, js);
   checkPatterns(clean);
   checkInputs(body);
   checkFailure(clean, js);
   checkCopy(js, body);
   checkContainment(html, clean, extras);
   checkConstants(clean);
+  checkRegisters(body, js, clean);
   checkDrift(html, clean, js, swPath && fs.existsSync(swPath) ? fs.readFileSync(swPath, 'utf8') : '');
   checkPwa(html, js, dir, swPath, manifestPath);
 
