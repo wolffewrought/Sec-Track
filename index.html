@@ -150,6 +150,10 @@ body.night .day-pick{background:var(--page);border-color:var(--ink-soft);color:v
 /* the second time in a cell reads as small print; at the same size the
    pair reads as what it is, a span from one to the other */
 .time-cell .cell-sub{font-size:inherit;color:inherit;margin-top:.15rem}
+/* start, the word, then the end - each on its own line, so a pair reads
+   as a span rather than a run of digits */
+.time-cell .span-to{display:block;font-size:.72rem;color:var(--muted);line-height:1.2;margin:.05rem 0}
+.time-cell .span-end{display:block;line-height:1.2}
 .cell-sub.carried{color:#b45309;font-weight:600}
 .row-actions{text-align:right;white-space:normal}
 .row-actions .edit-btn,.row-actions .delete-btn{white-space:nowrap;margin:.1rem 0 .1rem .25rem}
@@ -1839,7 +1843,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v143';
+var BUILD = 'sat-v146';
 
 var app = {
   visitors: [],
@@ -2187,6 +2191,30 @@ var app = {
       });
     }
     return this.byTime(out, field);
+  },
+
+  /* Which day a thing recorded at a given time actually belongs to.
+     A guard on a 16:00 to 05:00 shift who logs a call at 01:00 means one
+     o'clock tomorrow morning, not one o'clock this morning - and filing
+     it under the sheet's own date puts it fourteen hours before the shift
+     it happened on, at the top of the wrong day. */
+  dateForTime: function (time) {
+    var day = this.viewDate;
+    if (!/^\d{1,2}:\d{2}$/.test(String(time || ''))) return day;
+
+    var on = this.shiftsFor(day), i;
+    for (i = 0; i < on.length; i++) {
+      var s = on[i];
+      /* only a shift that runs past midnight can claim the small hours */
+      if (!s.end || s.end >= s.start) continue;
+      if (time < s.start && time <= s.end) {
+        var d = this.parseLocalDate(day);
+        if (!d) return day;
+        d.setDate(d.getDate() + 1);
+        return d.getFullYear() + '-' + this.pad2(d.getMonth() + 1) + '-' + this.pad2(d.getDate());
+      }
+    }
+    return day;
   },
 
   entriesFor: function (date) { return this.onDay(this.visitors, date, 'entryTime'); },
@@ -4119,7 +4147,7 @@ var app = {
 
     this.visitors.push({
       id: this.nextId(),
-      date: this.viewDate,
+      date: this.dateForTime(entryTime),
       company: company,
       rep: rep,
       vehicle: vehicle,
@@ -4461,10 +4489,14 @@ var app = {
     };
   },
 
-  inductionEntries: function (c) {
+  /* Judged as of a given day, not as of today. A sheet reprinted months
+     later showed the standing now rather than the standing then, so a
+     visit that was perfectly in order came back marked overdue - and the
+     paper contradicted the guard who signed it. */
+  inductionEntries: function (c, asOf) {
     var out = [], i, d;
     var self = this;
-    function status(dateStr) { return self.expiryStatus(dateStr); }
+    function status(dateStr) { return self.expiryStatus(dateStr, asOf); }
 
     for (i = 0; i < (c.reps || []).length; i++) {
       d = c.reps[i].inductionDate || '';
@@ -5196,7 +5228,7 @@ var app = {
 
     this.staffMovements.push({
       id: this.nextId(),
-      date: this.viewDate,
+      date: this.dateForTime(outTime),
       name: name,
       vehicleType: mode,
       vehicle: vehicle,
@@ -5409,7 +5441,8 @@ var app = {
   entryInduction: function (v) {
     var c = this.findContractor(v.company);
     if (!c) return null;
-    var entries = this.inductionEntries(c), i, due = 0;
+    /* the day of the visit, which is what the sheet is a record of */
+    var entries = this.inductionEntries(c, v.date), i, due = 0;
 
     if (v.rep) {
       for (i = 0; i < entries.length; i++) {
@@ -5473,8 +5506,15 @@ var app = {
         until: n.ended || '', label: n.type, detail: n.detail });
     }
 
+    /* By the moment, not by the face of the clock. Across midnight 01:00
+       reads lower than 17:00, so comparing the times alone puts the small
+       hours of a night shift at the top of it. */
+    var self = this;
     return out.sort(function (a, b) {
-      return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0);
+      var at = self.stamp(a.rec.date, a.time || '00:00');
+      var bt = self.stamp(b.rec.date, b.time || '00:00');
+      if (at === null || bt === null) return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0);
+      return at - bt;
     });
   },
 
@@ -5544,6 +5584,17 @@ var app = {
   /* One table, drawn once. Activity and Daily show the same rows through
      different windows, and drawing it twice is how the two would come to
      disagree about what a row looks like. */
+  /* A span of time written down the cell rather than across it. Two times
+     and the word between them on one line is a wall of digits in a narrow
+     column, and the column is narrow because the names beside it need the
+     room. */
+  timeSpan: function (from, to) {
+    var start = this.esc(this.showTime(from));
+    if (!to) return start;
+    return start + '<span class="span-to">to</span>' +
+      '<span class="span-end">' + this.esc(this.showTime(to)) + '</span>';
+  },
+
   dayLogTable: function (rows) {
     var idx = this.dayIndex();
     var body = '', i;
@@ -5556,8 +5607,7 @@ var app = {
       body += '<tr' + (open ? ' class="on-site"' : '') + '>' +
         '<td class="band"><i class="kind-band kind-' + r.kind + '"></i></td>' +
         this.numCell(r.rec, seq, r.kind, false) +
-        '<td class="time-cell">' + this.esc(this.showTime(r.time)) +
-          (r.until ? '<span class="cell-sub">to ' + this.esc(this.showTime(r.until)) + '</span>' : '') + '</td>' +
+        '<td class="time-cell">' + this.timeSpan(r.time, r.until) + '</td>' +
         '<td><span class="act-kind">' +
           this.esc(r.kind === 'incident' ? r.label : (r.kind === 'staff' ? 'Staff' : 'Visitor')) +
           '</span>' +
@@ -5763,7 +5813,7 @@ var app = {
 
     this.incidents.push({
       id: this.nextId(),
-      date: this.viewDate,
+      date: this.dateForTime(time),
       type: type,
       detail: detail,
       time: time,
@@ -5850,8 +5900,7 @@ var app = {
       var n = list[i];
       rows += '<tr>' +
         this.numCell(n, seq['i' + n.id], 'incident', false) +
-        '<td class="time-cell">' + this.esc(this.showTime(n.time)) +
-          (n.ended ? '<span class="cell-sub">to ' + this.esc(this.showTime(n.ended)) + '</span>' : '') + '</td>' +
+        '<td class="time-cell">' + this.timeSpan(n.time, n.ended) + '</td>' +
         '<td>' + this.esc(n.type) + '</td>' +
         '<td>' + this.esc(n.detail) + '</td>' +
         '<td class="row-actions">' +
@@ -6914,7 +6963,7 @@ var app = {
                    '. Mark it returned first.', 'error');
         return;
       }
-      this.keyMoves.push({ id: this.nextId(), date: this.viewDate, keyId: keyId,
+      this.keyMoves.push({ id: this.nextId(), date: this.dateForTime(outTime), keyId: keyId,
         to: to, toFrom: toFrom, outTime: outTime, backTime: backTime || '' });
       this.toast(backTime ? this.keyLabel(keyId) + ' issued and returned'
                           : this.keyLabel(keyId) + ' issued to ' + to);
@@ -8272,6 +8321,7 @@ var app = {
     }
 
     this.shifts.push(this.setShiftLength(
+      /* a shift belongs to the day it starts on, whatever hour that is */
       { id: this.nextId(), date: this.viewDate, guard: guard, start: start, end: end },
       this.shiftMinutes(start, end)));
     this.saveData();
@@ -8702,6 +8752,22 @@ var app = {
       var ka = a.date + ' ' + a.t, kb = b.date + ' ' + b.t;
       return ka < kb ? -1 : (ka > kb ? 1 : 0);
     });
+    /* Numbered per day, which is right for a day sheet. Read through a
+       shift that crosses midnight it is not: the sequence would restart
+       at one in the small hours, and a sheet covering a single watch
+       would run 1, 2, 1, 2. Number across the shift instead. */
+    var sh = this.filterShift();
+    if (sh) {
+      var from = this.shiftFrom(sh), to = this.shiftTo(sh), n = 0;
+      for (i = 0; i < all.length; i++) {
+        var at = this.stamp(all[i].date, all[i].t || '00:00');
+        if (at === null || at < from || at > to) continue;
+        n++;
+        map[all[i].key] = n;
+      }
+      return map;
+    }
+
     for (i = 0; i < all.length; i++) {
       if (!byDate[all[i].date]) byDate[all[i].date] = 0;
       byDate[all[i].date]++;
@@ -9911,7 +9977,9 @@ var app = {
       });
       var crows = [], due = 0, soonCount = 0, people = 0;
       for (var c2 = 0; c2 < sorted.length; c2++) {
-        var entries = this.inductionEntries(sorted[c2]);
+        /* as the sheet stood on its own day, so a reprint says what the
+         guard saw rather than what is true now */
+      var entries = this.inductionEntries(sorted[c2], toKey);
         if (!entries.length) {
           crows.push([sorted[c2].name, 'Nobody inducted', '-', '-',
             { t: 'NONE RECORDED', c: RED, b: true }]);
