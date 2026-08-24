@@ -35,6 +35,14 @@ jobs:
           move MainActivity.java          android-shell/app/src/main/java/com/wolffewrought/sectrack/MainActivity.java
           move colors.xml                 android-shell/app/src/main/res/values/colors.xml
           move ic_launcher_foreground.xml android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          # numbered icon cuts: whichever one is at the root is the icon
+          move icon3.xml                  android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          move icon4.xml                  android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          move icon5.xml                  android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          move icon6.xml                  android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          move icon7.xml                  android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          move icon8.xml                  android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          move icon9.xml                  android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
           move ic_launcher.xml            android-shell/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           move shell-README.md            android-shell/README.md
           if [ "$moved" = "0" ]; then
