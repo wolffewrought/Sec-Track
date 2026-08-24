@@ -355,6 +355,12 @@ body.no-scroll{overflow:hidden}
 .link-btn{background:none;border:none;padding:.4rem 0;font:inherit;color:var(--accent);font-weight:600;cursor:pointer;text-align:left;min-height:2.5rem;display:inline-flex;align-items:center;gap:.35rem}
 .detail-line{padding:.45rem 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.4rem}
 .detail-line:last-child{border-bottom:none}
+.log-acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem}
+.gs-period{margin:.9rem 0 .2rem;font-size:.95rem;color:var(--ink)}
+.gs-period:first-child{margin-top:.2rem}
+.gs-week{margin-top:.45rem}
+/* the little Log out and Back that sit with Edit in a log row */
+.small-act{padding:.45rem .6rem;font-size:.8rem;min-height:2.5rem;white-space:nowrap}
 .theme-row.picked{background:var(--accent-pale);border-radius:.35rem;box-shadow:0 0 0 2px var(--accent)}
 
 /* A page in miniature, drawn from the very same names, so it shows what
@@ -1284,6 +1290,14 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </select>
 </div>
 <div class="form-group">
+<label for="timeEntry">Typing a time</label>
+<select id="timeEntry">
+<option value="pad">Type the numbers &mdash; 0530 becomes 05:30</option>
+<option value="native">Use the phone's own clock picker</option>
+</select>
+<p class="field-hint">Typed times are kept the moment you leave the box &mdash; no Set button needed. The phone's picker is the phone's own; which face it opens with belongs to the phone, not the app.</p>
+</div>
+<div class="form-group">
 <label for="tzPick">Time zone</label>
 <select id="tzPick"></select>
 <p class="field-hint">Only changes how times are written out. Entries are still stamped by the device clock, so leave this on the device setting unless sheets are read somewhere else.</p>
@@ -1499,7 +1513,28 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 
 <div class="section fold open" id="fold_guardshifts">
 <div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guardshifts" aria-expanded="true" aria-controls="foldBody_guardshifts"><span>Shifts</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guardshifts" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guardshifts" aria-label="Move down" title="Move down">&#9660;</button></div>
-<div class="fold-body" id="foldBody_guardshifts"><div id="guardShiftList"></div></div>
+<div class="fold-body" id="foldBody_guardshifts">
+<form id="gsEditForm" autocomplete="off" style="display:none">
+<h3 class="form-title" id="gsEditTitle"></h3>
+<div class="form-group"><label for="gsDay">Day</label><input type="date" id="gsDay" required></div>
+<div class="grid-2">
+<div class="form-group"><label for="gsStart">Start</label><input type="time" id="gsStart"></div>
+<div class="form-group"><label for="gsEnd">End</label><input type="time" id="gsEnd"></div>
+</div>
+<div class="form-group">
+<label for="lenInput_guardShift">Shift length in hours</label>
+<div class="len-row">
+<input type="number" id="lenInput_guardShift" class="len-input" min="0.25" max="48" step="0.25" inputmode="decimal" placeholder="8">
+<button type="button" class="button button-secondary len-btn" id="lenSet_guardShift">Fill in the times</button>
+<span class="len-now" id="len_guardShift">&mdash;</span>
+</div>
+</div>
+<div class="action-row">
+<button type="submit" class="button button-primary">Save shift</button>
+<button type="button" class="button button-secondary" id="gsCancel">Cancel</button>
+</div>
+</form>
+<div id="guardShiftList"></div></div>
 </div>
 
 <div class="section fold open" id="fold_guardleave">
@@ -1956,7 +1991,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v154';
+var BUILD = 'sat-v156';
 
 var app = {
   visitors: [],
@@ -3094,6 +3129,12 @@ var app = {
     document.getElementById('closeTheme').addEventListener('click', function () { self.closeThemeScreen(); });
     document.getElementById('closeGuard').addEventListener('click', function () { self.closeGuard(); });
 
+    document.getElementById('gsEditForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      self.saveGuardShift();
+    });
+    document.getElementById('gsCancel').addEventListener('click', function () { self.cancelGuardShiftEdit(); });
+
     document.getElementById('guardLeaveForm').addEventListener('submit', function (ev) {
       ev.preventDefault();
       var from = document.getElementById('leaveFrom').value;
@@ -3141,6 +3182,42 @@ var app = {
 
     var ps = document.getElementById('paperSize');
     var ws = document.getElementById('weekStart');
+    var te = document.getElementById('timeEntry');
+    te.value = self.timeEntryMode();
+    te.addEventListener('change', function () {
+      self.setTimeEntryMode(te.value);
+      self.toast(te.value === 'pad'
+        ? 'Type times as numbers - 0530 becomes 05:30'
+        : "Times use the phone's own clock picker");
+    });
+    /* one listener for every time box there will ever be: blur does not
+       bubble, so the capturing phase hears it instead */
+    document.addEventListener('blur', function (ev) {
+      if (ev.target && ev.target.getAttribute &&
+          ev.target.getAttribute('data-timepad') === '1') {
+        self.commitTypedTime(ev.target);
+      }
+    }, true);
+    /* some webviews whisper focusout where blur never arrives */
+    document.addEventListener('focusout', function (ev) {
+      if (ev.target && ev.target.getAttribute &&
+          ev.target.getAttribute('data-timepad') === '1') {
+        self.commitTypedTime(ev.target);
+      }
+    });
+    /* Go on the phone keyboard submits the form the finger is still in,
+       which can outrun blur - so the raw digits are made a time first */
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' && ev.target && ev.target.getAttribute &&
+          ev.target.getAttribute('data-timepad') === '1') {
+        self.commitTypedTime(ev.target);
+      }
+    }, true);
+    document.addEventListener('submit', function () {
+      self.commitAllTypedTimes();
+    }, true);
+    self.applyTimeEntryMode();
+
     var cf = document.getElementById('clockFormat');
     var tz = document.getElementById('tzPick');
     cf.value = self.clockFormat();
@@ -5913,6 +5990,29 @@ var app = {
       var seq = idx[(r.kind === 'staff' ? 's' : (r.kind === 'incident' ? 'i' : 'v')) + r.rec.id];
       var open = (r.kind === 'visitor' && !r.rec.exitTime) ||
                  (r.kind === 'staff' && !r.rec.backTime);
+      /* The same three controls the contractor table has, whatever page
+         the entry is read on. A visitor whose company is not a registered
+         contractor lives only on these pages, and for a while that meant
+         no Log out, no Edit and no delete anywhere - found on a real
+         phone, not by the tests. */
+      var act = '';
+      if (r.kind === 'visitor') {
+        act = (r.rec.exitTime ? '' :
+          '<button type="button" class="button button-secondary small-act" ' +
+          'onclick="app.setExit(' + r.rec.id + ')">Log out</button>') +
+          '<button type="button" class="edit-btn" onclick="app.editEntry(' + r.rec.id + ')">Edit</button>' +
+          '<button type="button" class="delete-btn" onclick="app.deleteVisitor(' + r.rec.id + ')" aria-label="Delete">&times;</button>';
+      } else if (r.kind === 'staff') {
+        act = (r.rec.backTime ? '' :
+          '<button type="button" class="button button-secondary small-act" ' +
+          'onclick="app.setStaffBack(' + r.rec.id + ')">Back</button>') +
+          '<button type="button" class="edit-btn" onclick="app.editStaffMove(' + r.rec.id + ')">Edit</button>' +
+          '<button type="button" class="delete-btn" onclick="app.deleteStaffMove(' + r.rec.id + ')" aria-label="Delete">&times;</button>';
+      } else {
+        act = '<button type="button" class="edit-btn" onclick="app.editIncident(' + r.rec.id + ')">Edit</button>' +
+          '<button type="button" class="delete-btn" onclick="app.deleteIncident(' + r.rec.id + ')" aria-label="Delete">&times;</button>';
+      }
+
       body += '<tr' + (open ? ' class="on-site"' : '') + '>' +
         '<td class="band"><i class="kind-band kind-' + r.kind + '"></i></td>' +
         this.numCell(r.rec, seq, r.kind, false) +
@@ -5922,7 +6022,12 @@ var app = {
           '</span>' +
           (r.kind === 'incident' ? '' : '<span class="cell-sub">' + this.esc(r.label) + '</span>') +
         '</td>' +
-        '<td>' + this.esc(r.detail) + '</td>' +
+        '<td>' + this.esc(r.detail) +
+          /* under the words, not in a seventh column: a phone is only so
+             wide, and a column past the edge is a column that does not
+             exist - found on a real phone, again */
+          (act ? '<div class="log-acts">' + act + '</div>' : '') +
+        '</td>' +
         '</tr>';
     }
 
@@ -6474,6 +6579,100 @@ var app = {
 
   /* Written out as the site prefers. The stored value never changes: a
      record is always HH:MM, and only the reading of it moves. */
+  /* Whether a time is typed as numbers or picked on the phone's clock.
+     Typing wins by default: on a phone the clock dialog hides the numbers
+     behind a dial, its Set button moves between makes, and a guard in
+     gloves knows what 0530 means. A typed time is kept the moment the
+     finger leaves the box. */
+  timeEntryMode: function () {
+    var v = null;
+    try { v = localStorage.getItem('sat-time-entry'); } catch (e) {}
+    return v === 'native' ? 'native' : 'pad';
+  },
+
+  setTimeEntryMode: function (mode) {
+    try { localStorage.setItem('sat-time-entry', mode === 'native' ? 'native' : 'pad'); } catch (e) {}
+    this.applyTimeEntryMode();
+  },
+
+  /* '530', '0530', '5:30', '05.30' all mean 05:30; anything that cannot
+     be a time of day comes back null rather than guessed at */
+  normaliseTypedTime: function (raw) {
+    var s = String(raw == null ? '' : raw).replace(/^\s+|\s+$/g, '').toLowerCase();
+    if (!s) return '';
+    var pm = /p/.test(s), am = /a/.test(s);
+    s = s.replace(/[^0-9:.,]/g, '').replace(/[.,]/g, ':');
+    var hh, mm;
+    if (s.indexOf(':') !== -1) {
+      var parts = s.split(':');
+      hh = parseInt(parts[0], 10);
+      mm = parseInt(parts[1] || '0', 10);
+    } else {
+      if (!/^\d{1,4}$/.test(s)) return null;
+      if (s.length <= 2) { hh = parseInt(s, 10); mm = 0; }
+      else { hh = parseInt(s.slice(0, s.length - 2), 10); mm = parseInt(s.slice(-2), 10); }
+    }
+    if (isNaN(hh) || isNaN(mm)) return null;
+    if (pm && hh >= 1 && hh <= 11) hh += 12;
+    if (am && hh === 12) hh = 0;
+    if (hh > 23 || mm > 59 || hh < 0 || mm < 0) return null;
+    return this.pad2(hh) + ':' + this.pad2(mm);
+  },
+
+  /* every time box in the app, converted in place; ids and values keep
+     their meaning so nothing that reads them has to care */
+  applyTimeEntryMode: function () {
+    var pad = this.timeEntryMode() === 'pad';
+    /* every input, checked by hand: attribute selectors are more than
+       some webviews - and my own test shim - can be trusted with */
+    var all = document.getElementsByTagName('input');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      var isTime = el.getAttribute('type') === 'time' ||
+                   el.getAttribute('data-timepad') === '1';
+      if (!isTime) continue;
+      if (pad) {
+        el.setAttribute('data-timepad', '1');
+        el.setAttribute('type', 'text');
+        el.setAttribute('inputmode', 'numeric');
+        el.setAttribute('maxlength', '8');
+        el.setAttribute('placeholder', '0530');
+        el.setAttribute('autocomplete', 'off');
+      } else {
+        el.removeAttribute('data-timepad');
+        el.setAttribute('type', 'time');
+        el.removeAttribute('inputmode');
+        el.removeAttribute('maxlength');
+        el.removeAttribute('placeholder');
+      }
+    }
+  },
+
+  /* Every typed box at once, run before any save reads a value - so a
+     half-typed 730 becomes 07:30 whichever way the form is submitted. */
+  commitAllTypedTimes: function () {
+    var all = document.getElementsByTagName('input');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].getAttribute && all[i].getAttribute('data-timepad') === '1') {
+        this.commitTypedTime(all[i]);
+      }
+    }
+  },
+
+  /* leaving the box is the commitment; a Set button is one more thing to
+     know about and one more thing to miss */
+  commitTypedTime: function (el) {
+    if (el.getAttribute('data-timepad') !== '1') return;
+    if (!el.value) return;
+    var t = this.normaliseTypedTime(el.value);
+    if (t === null) {
+      this.toast('Could not read \u201c' + el.value + '\u201d as a time \u2014 0530 or 05:30', 'error');
+      el.value = '';
+      return;
+    }
+    el.value = t;
+  },
+
   clockFormat: function () {
     var v = '';
     try { v = localStorage.getItem('sat-clock') || ''; } catch (e) {}
@@ -7627,6 +7826,16 @@ var app = {
 
   /* by position in the list on screen, so no name is ever put into an
      inline handler */
+  /* Which week of its period a day falls in. Week one is the week holding
+     the period's first day, and where a week begins comes from the same
+     setting the calendar uses - so the guard page, the calendar and the
+     hours cards all agree on what "this week" means. */
+  weekOfPeriod: function (dateKey, periodFromKey) {
+    var a = this.weekStart(this.parseLocalDate(periodFromKey));
+    var b = this.weekStart(this.parseLocalDate(dateKey));
+    return Math.round((b - a) / 604800000) + 1;
+  },
+
   openGuardAt: function (i) {
     var order = this.knownGuards();
     if (!order[i]) return;
@@ -7644,6 +7853,7 @@ var app = {
   },
 
   closeGuard: function () {
+    this.cancelGuardShiftEdit();
     var s = document.getElementById('guardScreen');
     if (s) s.classList.remove('open');
     document.body.classList.remove('no-scroll');
@@ -7691,26 +7901,62 @@ var app = {
     }
     document.getElementById('guardDetails').innerHTML = bits.join('');
 
-    /* shifts, most recent first */
+    /* Shifts, grouped the way a rota reads: the month as the person set
+       it, then Week 1, 2, 3, 4 inside it, reckoned from the same
+       settings as the calendar. The newest month comes first, but weeks
+       and days inside a month run forward, because that is how a rota
+       is read. */
     var self = this;
-    var sorted = mine.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    var sorted = mine.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     if (!sorted.length) {
       document.getElementById('guardShiftList').innerHTML =
         '<div class="empty-state">No shifts yet. Add one on the roster.</div>';
     } else {
-      var rows = '';
-      for (i = 0; i < sorted.length && i < 40; i++) {
-        var sh = sorted[i];
-        var away = this.onLeave(name, sh.date);
-        rows += '<tr><td>' + this.showDate(sh.date) +
-          (away ? '<span class="cell-sub carried">marked ' + this.esc(away.why.toLowerCase()) + '</span>' : '') +
-          '</td><td class="time-cell">' + this.timeSpan(sh.start, sh.end) + '</td>' +
-          '<td>' + this.esc(this.lengthText(this.shiftRealMins(sh))) + '</td></tr>';
+      var periods = [], byPeriod = {};
+      for (i = 0; i < sorted.length; i++) {
+        var p = this.periodFor(sorted[i].date);
+        if (!byPeriod[p.fromKey]) { byPeriod[p.fromKey] = { p: p, weeks: {}, order: [] }; periods.push(p.fromKey); }
+        var wk = this.weekOfPeriod(sorted[i].date, p.fromKey);
+        if (!byPeriod[p.fromKey].weeks[wk]) { byPeriod[p.fromKey].weeks[wk] = []; byPeriod[p.fromKey].order.push(wk); }
+        byPeriod[p.fromKey].weeks[wk].push(sorted[i]);
       }
-      document.getElementById('guardShiftList').innerHTML =
-        '<table class="data-table"><thead><tr><th>Day</th><th>Hours</th><th>Length</th></tr></thead>' +
-        '<tbody>' + rows + '</tbody></table>' +
-        (sorted.length > 40 ? '<p class="field-hint">Showing the most recent 40 of ' + sorted.length + '.</p>' : '');
+      periods.sort().reverse();
+
+      var out = '', shown = 0, PERIOD_CAP = 4;
+      for (var pi = 0; pi < periods.length && pi < PERIOD_CAP; pi++) {
+        var grp = byPeriod[periods[pi]];
+        out += '<h4 class="gs-period">' + this.showDate(grp.p.fromKey) + ' to ' +
+          this.showDate(grp.p.toKey) + '</h4>';
+        grp.order.sort(function (a, b) { return a - b; });
+        for (var wi = 0; wi < grp.order.length; wi++) {
+          var list = grp.weeks[grp.order[wi]];
+          var wkMins = 0, r;
+          for (r = 0; r < list.length; r++) wkMins += this.shiftRealMins(list[r]) || 0;
+          var rows = '';
+          for (r = 0; r < list.length; r++) {
+            var sh = list[r];
+            var away = this.onLeave(name, sh.date);
+            rows += '<tr><td>' + this.showDate(sh.date) +
+              (away ? '<span class="cell-sub carried">marked ' + this.esc(away.why.toLowerCase()) + '</span>' : '') +
+              '</td><td class="time-cell">' + this.timeSpan(sh.start, sh.end) + '</td>' +
+              '<td>' + this.esc(this.lengthText(this.shiftRealMins(sh))) + '</td>' +
+              '<td class="row-actions">' +
+              '<button type="button" class="edit-btn" onclick="app.editGuardShift(' + sh.id + ')">Edit</button>' +
+              '<button type="button" class="delete-btn" onclick="app.removeRosterShift(' + sh.id + ')" aria-label="Remove">&times;</button>' +
+              '</td></tr>';
+            shown++;
+          }
+          out += '<div class="week-row gs-week"><b>Week ' + grp.order[wi] + '</b><span>' +
+            this.esc(this.lengthText(wkMins)) + '</span></div>' +
+            '<table class="data-table"><tbody>' + rows + '</tbody></table>';
+        }
+      }
+      if (sorted.length > shown) {
+        out += '<p class="field-hint">' + (sorted.length - shown) +
+          ' older shift' + (sorted.length - shown === 1 ? '' : 's') +
+          ' in earlier months not shown.</p>';
+      }
+      document.getElementById('guardShiftList').innerHTML = out;
     }
 
     /* time off */
@@ -7753,6 +7999,65 @@ var app = {
           return '<tr><td>' + self.showDate(c.when) + '</td><td>' + self.esc(c.what) + '</td></tr>';
         }).join('') + '</tbody></table>'
       : '<div class="empty-state">No cover recorded for this guard.</div>';
+  },
+
+  editGuardShift: function (id) {
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) if (this.shifts[i].id === id) rec = this.shifts[i];
+    if (!rec) return;
+    this.editingGuardShiftId = id;
+    document.getElementById('gsDay').value = rec.date;
+    document.getElementById('gsStart').value = rec.start;
+    document.getElementById('gsEnd').value = rec.end;
+    document.getElementById('lenInput_guardShift').value = '';
+    document.getElementById('gsEditTitle').textContent =
+      'Editing ' + this.showDate(rec.date) + ' \u00b7 ' +
+      this.showTime(rec.start) + ' to ' + this.showTime(rec.end);
+    document.getElementById('gsEditForm').style.display = 'block';
+    this.showShiftLength('guardShift');
+  },
+
+  cancelGuardShiftEdit: function () {
+    this.editingGuardShiftId = null;
+    var f = document.getElementById('gsEditForm');
+    if (f) { f.reset(); f.style.display = 'none'; }
+  },
+
+  saveGuardShift: function () {
+    var id = this.editingGuardShiftId;
+    var rec = null, i;
+    for (i = 0; i < this.shifts.length && !rec; i++) if (this.shifts[i].id === id) rec = this.shifts[i];
+    if (!rec) { this.cancelGuardShiftEdit(); return; }
+
+    var day = document.getElementById('gsDay').value;
+    var start = document.getElementById('gsStart').value;
+    var end = document.getElementById('gsEnd').value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !this.parseLocalDate(day)) {
+      this.toast('Set a real day', 'error'); return;
+    }
+    if (!start) { this.toast('Set a start time - a length can fill it in', 'error'); return; }
+    var mins = this.typedMinutes('guardShift', start, end);
+    if (mins === null) return;
+    if (!mins) { this.toast('Set an end time or a length', 'error'); return; }
+
+    /* the same rule as adding one: landing on another shift means taking
+       its place, never standing beside it */
+    var clash = this.overlapsAnother(day, start, mins, rec.id);
+    if (clash) {
+      if (!confirm(clash.guard + ' is rostered ' + this.showTime(clash.start) + ' to ' +
+        this.showTime(clash.end) + ' that day.\n\nReplace that shift with this one?')) return;
+      this.shifts = this.shifts.filter(function (s) { return s.id !== clash.id; });
+    }
+
+    rec.date = day;
+    rec.start = start;
+    this.setShiftLength(rec, mins);
+    this.cancelGuardShiftEdit();
+    this.saveData();
+    this.renderRoster();
+    this.renderShifts();
+    this.renderGuardPage();
+    this.toast('Shift updated');
   },
 
   /* by position, so no name goes into a handler */
@@ -8339,6 +8644,7 @@ var app = {
      never end up with buttons that drive the wrong fields. */
   LENGTH_FORMS: [
     ['shift', 'shiftStart', 'shiftEnd'],
+    ['guardShift', 'gsStart', 'gsEnd'],
     ['rosterAdd', 'rosterStart', 'rosterEnd'],
     ['rosterEdit', 'rosterEditStart', 'rosterEditEnd']
   ],
@@ -8678,6 +8984,7 @@ var app = {
     this.saveData();
     this.renderRoster();
     this.renderShifts();
+    if (this.viewingGuard) this.renderGuardPage();
     this.toast('Shift removed');
   },
 

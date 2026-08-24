@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION on every deploy to evict old entries.
  */
 
-var CACHE_VERSION = 'sat-v154';
+var CACHE_VERSION = 'sat-v156';
 var CACHE_NAME = 'security-access-tracker-' + CACHE_VERSION;
 
 var PRECACHE = [
