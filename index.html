@@ -356,6 +356,8 @@ body.no-scroll{overflow:hidden}
 .detail-line{padding:.45rem 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.4rem}
 .detail-line:last-child{border-bottom:none}
 .log-acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem}
+/* a date is one thing; squeezed columns must not snap it at the slashes */
+.data-table .date-cell{white-space:nowrap;width:1%}
 .gs-period{margin:.9rem 0 .2rem;font-size:.95rem;color:var(--ink)}
 .gs-period:first-child{margin-top:.2rem}
 .gs-week{margin-top:.45rem}
@@ -420,9 +422,9 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div id="tracker" class="tab-content active">
 <div class="subtab-nav" role="tablist">
 <button type="button" id="btnSubVisitor" class="subtab active" role="tab" aria-selected="true">Visitor</button>
+<button type="button" id="btnSubIncident" class="subtab" role="tab" aria-selected="false">Incident</button>
 <button type="button" id="btnSubStaffOut" class="subtab" role="tab" aria-selected="false">Staff</button>
 <button type="button" id="btnSubKeyMove" class="subtab" role="tab" aria-selected="false">Key</button>
-<button type="button" id="btnSubIncident" class="subtab" role="tab" aria-selected="false">Incident</button>
 </div>
 <div id="subVisitor" class="subpane active">
 <div class="section fold open" id="fold_recordvisitor">
@@ -1376,6 +1378,21 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </select>
 <p class="field-hint">Returns to your default once the export has run.</p>
 </div>
+<div class="form-group">
+<label for="pdfDelivery">Where PDFs go</label>
+<select id="pdfDelivery">
+<option value="download">Straight to the phone's Downloads folder</option>
+<option value="share">Ask each time &mdash; pick a folder or app</option>
+<option value="folder">A folder chosen once &mdash; installed app only</option>
+</select>
+<p class="field-hint">A web app cannot be granted a folder of its own; the share sheet is how the phone lets you choose a place each time.</p>
+</div>
+<div class="action-row">
+<button type="button" class="button button-secondary" id="btnPdfDownload">Download PDF</button>
+<button type="button" class="button button-secondary" id="btnPdfShare">Save to&hellip;</button>
+<button type="button" class="button button-secondary" id="btnPickFolder" style="display:none">Choose folder&hellip;</button>
+</div>
+<p class="field-hint" id="folderHint" style="display:none"></p>
 <label class="check-row"><input type="checkbox" id="exportWholeDay"> Export the whole day as one sheet</label>
 <label class="check-row"><input type="checkbox" id="exportBlock"> Export an operational day as one sheet, the log divided by shift</label>
 <div class="grid-2" id="blockTimes">
@@ -1991,7 +2008,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v156';
+var BUILD = 'sat-v159';
 
 var app = {
   visitors: [],
@@ -3182,6 +3199,34 @@ var app = {
 
     var ps = document.getElementById('paperSize');
     var ws = document.getElementById('weekStart');
+    var pdel = document.getElementById('pdfDelivery');
+    pdel.value = self.pdfDeliveryMode();
+    pdel.addEventListener('change', function () {
+      if (pdel.value === 'folder' && !self.saverBridge()) {
+        pdel.value = self.pdfDeliveryMode();
+        self.toast('A standing folder needs the installed app', 'error');
+        return;
+      }
+      self.setPdfDeliveryMode(pdel.value);
+      self.toast(pdel.value === 'share'
+        ? 'Each export will ask where to put the PDF'
+        : (pdel.value === 'folder'
+          ? 'PDFs will go to your chosen folder'
+          : "PDFs will go to the phone's Downloads folder"));
+    });
+    document.getElementById('btnPickFolder').addEventListener('click', function () {
+      var br = self.saverBridge();
+      if (!br) return;
+      try { br.pickFolder(); } catch (e) { self.toast('Could not open the folder picker', 'error'); }
+    });
+    self.applyBridgeUi();
+    document.getElementById('btnPdfDownload').addEventListener('click', function () {
+      self.exportDaySheets('download');
+    });
+    document.getElementById('btnPdfShare').addEventListener('click', function () {
+      self.exportDaySheets('share');
+    });
+
     var te = document.getElementById('timeEntry');
     te.value = self.timeEntryMode();
     te.addEventListener('change', function () {
@@ -3469,7 +3514,7 @@ var app = {
   /* Held as a list rather than looked up by selector, so the panes and their
      buttons can never drift apart. */
   SUBTABS: {
-    entry: [['btnSubVisitor', 'subVisitor'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubKeyMove', 'subKeyMove'], ['btnSubIncident', 'subIncident']],
+    entry: [['btnSubVisitor', 'subVisitor'], ['btnSubIncident', 'subIncident'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubKeyMove', 'subKeyMove']],
     day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubHandover', 'subHandover'], ['musterBtn', 'subMuster', true]],
     db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubKeys', 'subKeys'], ['btnSubStaffList', 'subStaffList']],
     roster: [['btnSubRoster', 'subRoster'], ['btnSubGuards', 'subGuards']]
@@ -5076,7 +5121,7 @@ var app = {
               return note ? '<span class="cell-sub carried">usually ' + self.esc(note) + '</span>' : '';
             })(this.usualVehicleNote(c.name, ent.name)) +
           '</td>' +
-          '<td>' + this.showDate(ent.date) +
+          '<td class="date-cell">' + this.showDate(ent.date) +
             (ent.inherited ? '<span class="cell-sub">default</span>' : '') +
           '</td>' +
           '<td><span class="status-badge ' + cls + '">' +
@@ -5104,7 +5149,7 @@ var app = {
     }
 
     container.innerHTML = banner + '<table class="data-table"><thead><tr>' +
-      '<th>Company</th><th>Representative</th><th>Valid until</th><th>Status</th><th></th>' +
+      '<th>Company</th><th>Representative</th><th class="date-cell">Valid until</th><th>Status</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   },
 
@@ -9566,9 +9611,9 @@ var app = {
   exportMuster: function () {
     try {
       var now = new Date();
-      this.savePdf(this.buildMusterPdf(),
+      this.deliverPdfs([{ bytes: this.buildMusterPdf(), name:
         'roll call ' + this.dateStamp(this.currentDate) + ' ' +
-        this.pad2(now.getHours()) + this.pad2(now.getMinutes()) + '.pdf');
+        this.pad2(now.getHours()) + this.pad2(now.getMinutes()) + '.pdf' }]);
       this.toast('Roll call saved');
     } catch (err) {
       this.toast('Could not build the roll call', 'error');
@@ -10991,6 +11036,148 @@ var app = {
     this.exportPdf(range);
   },
 
+  /* The native bridge, when the page is running inside its own Android
+     shell rather than a browser. Absent everywhere else, and everything
+     here must behave when it is. */
+  saverBridge: function () {
+    return (typeof AndroidSaver !== 'undefined' && AndroidSaver) ? AndroidSaver : null;
+  },
+
+  /* bytes to base64, in slices: one giant fromCharCode call overflows
+     the argument stack on a big sheet */
+  toBase64: function (bytes) {
+    var s = '', i, step = 8192;
+    for (i = 0; i < bytes.length; i += step) {
+      s += String.fromCharCode.apply(null, Array.prototype.slice.call(bytes, i, i + step));
+    }
+    return btoa(s);
+  },
+
+  /* What the stored choice means where the app is running now: a folder
+     needs the shell, so in a plain browser the choice quietly becomes a
+     download rather than a nag. */
+  resolveDeliveryMode: function (mode) {
+    var m = mode || this.pdfDeliveryMode();
+    if (m === 'folder' && !this.saverBridge()) return 'download';
+    return m;
+  },
+
+  /* Sheets waiting for the person to pick a folder the first time. */
+  pendingFolderFiles: [],
+
+  /* shell entry points: folderPicked, fileSaved */
+  folderPicked: function (ok, name) {
+    var queue = this.pendingFolderFiles;
+    this.pendingFolderFiles = [];
+    this.applyBridgeUi();
+    if (!ok) {
+      if (queue.length) this.toast('No folder chosen - nothing was saved', 'error');
+      return;
+    }
+    if (name) this.toast('Saving to ' + name);
+    for (var i = 0; i < queue.length; i++) {
+      this.saverBridge().saveFile(queue[i].name, this.toBase64(queue[i].bytes));
+    }
+  },
+
+  fileSaved: function (name, ok) {
+    if (!ok) this.toast('Could not save ' + name, 'error');
+  },
+
+  applyBridgeUi: function () {
+    var br = this.saverBridge();
+    var btn = document.getElementById('btnPickFolder');
+    var hint = document.getElementById('folderHint');
+    if (!btn) return;
+    btn.style.display = br ? 'inline-flex' : 'none';
+    if (hint) {
+      var where = '';
+      if (br) { try { where = br.folderName() || ''; } catch (e) {} }
+      hint.textContent = br
+        ? (where ? 'Saving to ' + where : 'No folder chosen yet')
+        : '';
+      hint.style.display = br ? 'block' : 'none';
+    }
+  },
+
+  /* Where a finished PDF goes. 'download' is the phone's own Downloads
+     folder - the one place a web app may write without asking. 'share'
+     opens the share sheet, which is how a phone lets a person pick a
+     folder, a drive or an app each time; a web page cannot be granted a
+     standing folder of its own, so this is the honest version of
+     "choose where". */
+  pdfDeliveryMode: function () {
+    var v = null;
+    try { v = localStorage.getItem('sat-pdf-delivery'); } catch (e) {}
+    return (v === 'share' || v === 'folder') ? v : 'download';
+  },
+
+  setPdfDeliveryMode: function (m) {
+    var v = (m === 'share' || m === 'folder') ? m : 'download';
+    try { localStorage.setItem('sat-pdf-delivery', v); } catch (e) {}
+  },
+
+  /* Every sheet in one share, because the sheet after the first would
+     otherwise arrive without the finger-tap the phone insists on. */
+  sharePdfs: function (files) {
+    var self = this;
+    if (typeof File === 'undefined' || !navigator.share) return false;
+    var out = [], i;
+    try {
+      for (i = 0; i < files.length; i++) {
+        out.push(new File([files[i].bytes], files[i].name, { type: 'application/pdf' }));
+      }
+      if (navigator.canShare && !navigator.canShare({ files: out })) return false;
+      navigator.share({ files: out, title: files.length === 1 ? files[0].name : files.length + ' sheets' })
+        .catch(function () { self.toast('Share closed - nothing was saved'); });
+      return true;
+    } catch (e) { return false; }
+  },
+
+  deliverPdfs: function (files, mode) {
+    var self = this;
+    var br = this.saverBridge();
+    mode = this.resolveDeliveryMode(mode);
+
+    if (mode === 'folder') {
+      var has = false;
+      try { has = !!br.hasFolder(); } catch (e) {}
+      if (!has) {
+        /* queued, so export -> pick -> saved is one motion, not two */
+        this.pendingFolderFiles = files;
+        this.toast('Choose where - the sheets will follow');
+        try { br.pickFolder(); } catch (e) {
+          this.pendingFolderFiles = [];
+          this.toast('Could not open the folder picker', 'error');
+        }
+        return;
+      }
+      for (var f = 0; f < files.length; f++) {
+        br.saveFile(files[f].name, this.toBase64(files[f].bytes));
+      }
+      return;
+    }
+
+    if (mode === 'share' && this.sharePdfs(files)) return;
+    if (mode === 'share') this.toast('Sharing is not available here - downloading instead');
+
+    /* In the shell, a blob link is a dead end - the WebView has no
+       download manager behind it - so Downloads is written natively. */
+    if (br && br.saveToDownloads) {
+      for (var d = 0; d < files.length; d++) {
+        br.saveToDownloads(files[d].name, this.toBase64(files[d].bytes));
+      }
+      return;
+    }
+
+    /* staggered, because a browser will block a burst of downloads */
+    (function run(i) {
+      if (i >= files.length) return;
+      self.savePdf(files[i].bytes, files[i].name);
+      if (i + 1 < files.length) setTimeout(function () { run(i + 1); }, 600);
+    })(0);
+  },
+
   savePdf: function (bytes, filename) {
     var blob = new Blob([bytes], { type: 'application/pdf' });
     var url = URL.createObjectURL(blob);
@@ -11103,11 +11290,11 @@ var app = {
   exportPdf: function (range) {
     try {
       var bytes = this.buildPdf(range && range.from ? range : null);
-      this.savePdf(bytes, (range && range.slug)
+      this.deliverPdfs([{ bytes: bytes, name: (range && range.slug)
         ? 'occurrence-report-' + range.slug + '.pdf'
         : this.sheetFileName(this.viewDate,
             document.getElementById('startTime').value,
-            document.getElementById('endTime').value, this.customExportName()));
+            document.getElementById('endTime').value, this.customExportName()) }]);
       this.markBackup();
       this.toast(range && range.slug ? 'Report saved' : 'PDF saved');
     } catch (err) {
@@ -11115,33 +11302,31 @@ var app = {
     }
   },
 
-  exportDaySheets: function () {
+  exportDaySheets: function (mode) {
     var jobs;
     try { jobs = this.daySheetJobs(); }
     catch (err) { this.toast('Could not work out the sheets', 'error'); return; }
 
-    var self = this;
     var note = '';
     for (var n = 0; n < jobs.length; n++) if (jobs[n].note) note = jobs[n].note;
 
-    /* staggered, because a browser will block a burst of downloads */
-    function run(i) {
-      if (i >= jobs.length) {
-        self.resetExportStyle();
-        self.markBackup();
-        self.toast(jobs.length === 1
-          ? 'Sheet saved as ' + jobs[0].name
-          : jobs.length + ' sheets saved' + (note ? '. ' + note : ''));
-        return;
-      }
+    /* built first, delivered once: the share sheet can take them all in
+       one go, and a download can still be staggered afterwards */
+    var files = [], i;
+    for (i = 0; i < jobs.length; i++) {
       try {
-        self.savePdf(self.buildPdf(jobs[i].range), jobs[i].name);
+        files.push({ bytes: this.buildPdf(jobs[i].range), name: jobs[i].name });
       } catch (err) {
-        self.toast('Could not build ' + jobs[i].name, 'error');
+        this.toast('Could not build ' + jobs[i].name, 'error');
       }
-      setTimeout(function () { run(i + 1); }, 600);
     }
-    run(0);
+    if (!files.length) return;
+    this.deliverPdfs(files, mode);
+    this.resetExportStyle();
+    this.markBackup();
+    this.toast(files.length === 1
+      ? 'Sheet ready: ' + files[0].name
+      : files.length + ' sheets ready' + (note ? '. ' + note : ''));
   },
 
   applyNightMode: function () {
