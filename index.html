@@ -60,8 +60,8 @@ body.night .len-input{background:var(--page);border-color:var(--ink-soft);color:
 .roster-month{flex:1;text-align:center;font-weight:700;color:var(--ink);font-size:.95rem}
 body.night .roster-month{color:var(--ink)}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:.2rem}
-.cal-head{text-align:center;font-size:.7rem;font-weight:700;color:var(--muted);padding:.2rem 0}
-.cal-day{min-height:3.1rem;border:1px solid var(--line);border-radius:.3rem;padding:.2rem;background:var(--surface);cursor:pointer;font-size:.72rem;text-align:left;font-family:inherit;color:var(--ink);overflow:hidden}
+.cal-head{text-align:center;font-size:.8rem;font-weight:700;color:var(--muted);padding:.3rem 0}
+.cal-day{min-height:3.1rem;border:1px solid var(--line);border-radius:.3rem;padding:.2rem;background:var(--surface);cursor:pointer;font-size:.8rem;text-align:left;font-family:inherit;color:var(--ink);overflow:hidden}
 .cal-day.blank{background:transparent;border-color:transparent;cursor:default}
 .cal-day.today{border-color:var(--accent);border-width:2px}
 .cal-day.chosen{background:#eff6ff;border-color:var(--accent)}
@@ -112,21 +112,24 @@ body.night .day-pick{background:var(--page);border-color:var(--ink-soft);color:v
 .data-table th{padding:.75rem;text-align:left;font-weight:600}
 .data-table td{padding:.75rem;border-bottom:1px solid var(--line);vertical-align:middle;overflow-wrap:anywhere;word-break:break-word}
 .data-table tbody tr:last-child td{border-bottom:none}
-.status-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .625rem;border-radius:9999px;font-weight:600;font-size:.75rem;white-space:nowrap}
+.status-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .625rem;border-radius:9999px;font-weight:600;font-size:.8rem;white-space:nowrap}
 .status-valid{background:#f0fdf4;color:#15803d}
 .status-needed{background:#fef2f2;color:var(--bad-deep)}
 .status-dot{width:.5rem;height:.5rem;border-radius:50%;display:inline-block}
 .empty-state{text-align:center;padding:2rem 1rem;color:var(--muted)}
-.delete-btn{background:none;border:none;color:var(--bad);cursor:pointer;font-size:1rem;padding:.25rem .5rem}
+/* The row controls are the most tapped things here and one of them
+   deletes. A quarter of a rem of padding is about a 24px target with
+   its neighbour alongside; a fingertip is nearer 44. */
+.delete-btn{background:none;border:none;color:var(--bad);cursor:pointer;font-size:1.05rem;font-weight:700;padding:.6rem .8rem;min-height:2.75rem;min-width:2.75rem}
 .text-muted{color:var(--muted);font-size:.875rem;margin-top:1rem}
 .toast{position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:.875rem 1.25rem;border-radius:.375rem;box-shadow:0 10px 15px rgba(0,0,0,.2);z-index:1000;font-size:.875rem;max-width:90vw;text-align:center}
 .toast.success{background:#15803d}
 .toast.error{background:var(--bad-deep)}
 @media (max-width:640px){
-.tab-nav button{font-size:.75rem;padding:.75rem .4rem;min-width:88px}
+.tab-nav button{font-size:.8rem;padding:.75rem .4rem;min-width:88px}
 .container{padding:.75rem calc(.75rem + env(safe-area-inset-right,0px)) .75rem calc(.75rem + env(safe-area-inset-left,0px))}
 .section{padding:1rem}
-.data-table{font-size:.78rem}
+.data-table{font-size:.8rem}
 .data-table th,.data-table td{padding:.5rem .35rem}
 .button{padding:.625rem .75rem;font-size:.8rem}
 .rep-row{flex-wrap:wrap}
@@ -142,7 +145,8 @@ body.night .day-pick{background:var(--page);border-color:var(--ink-soft);color:v
 .rep-row .rep-remove{flex:0 0 auto;background:#fef2f2;border:1px solid #fecaca;color:var(--bad-deep);border-radius:.375rem;padding:.5rem .65rem;cursor:pointer;font-weight:700;line-height:1}
 .add-rep{font-size:.8rem;padding:.5rem .75rem}
 .rep-empty{color:var(--muted);font-size:.85rem;margin-bottom:.5rem}
-.cell-sub{display:block;color:var(--muted);font-size:.78rem;margin-top:.1rem}
+/* the floor for anything a person has to read, set once here */
+.cell-sub{display:block;color:var(--muted);font-size:.82rem;margin-top:.15rem}
 /* A time is short and must not be broken across lines. Every cell carries
    overflow-wrap:anywhere so a long company name can fold, and that same
    rule was snapping "14:30" in half whenever the column was tight. */
@@ -152,13 +156,16 @@ body.night .day-pick{background:var(--page);border-color:var(--ink-soft);color:v
 .time-cell .cell-sub{font-size:inherit;color:inherit;margin-top:.15rem}
 /* start, the word, then the end - each on its own line, so a pair reads
    as a span rather than a run of digits */
-.time-cell .span-to{display:block;font-size:.72rem;color:var(--muted);line-height:1.2;margin:.05rem 0}
+/* quieter than the times by weight and colour rather than by size,
+   since nothing a person reads should go under the floor */
+.time-cell .span-to{display:block;font-size:.8rem;font-weight:400;color:var(--muted);line-height:1.2;margin:.05rem 0}
 .time-cell .span-end{display:block;line-height:1.2}
 .cell-sub.carried{color:#b45309;font-weight:600}
 .row-actions{text-align:right;white-space:normal}
-.row-actions .edit-btn,.row-actions .delete-btn{white-space:nowrap;margin:.1rem 0 .1rem .25rem}
-.edit-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.8rem;font-weight:600;padding:.25rem .4rem}
-.field-hint{color:var(--muted);font-size:.78rem;margin-top:.35rem}
+.row-actions .edit-btn,.row-actions /* and a gap between them, so a thumb aiming at Edit cannot catch the X */
+.delete-btn{white-space:nowrap;margin:.1rem 0 .1rem .5rem}
+.edit-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.85rem;font-weight:600;padding:.6rem .7rem;min-height:2.75rem}
+.field-hint{color:var(--muted);font-size:.8rem;margin-top:.35rem}
 .induction-note{margin-top:.5rem;padding:.55rem .7rem;border-radius:.375rem;font-size:.82rem;font-weight:600}
 .induction-note.good{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
 .induction-note.bad{background:#fef2f2;color:var(--bad-deep);border:1px solid #fecaca}
@@ -166,14 +173,15 @@ body.night .day-pick{background:var(--page);border-color:var(--ink-soft);color:v
 .group-start td{border-top:2px solid var(--line-firm)}
 .sheet-bar{display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap;align-items:center}
 .sheet-bar input[type=date]{flex:1 1 8rem;min-width:8rem;padding:.5rem .6rem;border:1px solid var(--line-firm);border-radius:.375rem;font-family:inherit;font-size:.9rem;background:var(--surface);color:var(--ink)}
-.sheet-bar .button{flex:0 0 auto;padding:.5rem .7rem;font-size:.78rem}
+.sheet-bar .button{flex:0 0 auto;padding:.5rem .7rem;font-size:.8rem}
 .sheet-summary{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;font-size:.85rem;color:var(--slate)}
-.onsite-chip{background:#eff6ff;border:1px solid #bfdbfe;color:var(--accent-deep);border-radius:9999px;padding:.35rem .75rem;font-weight:600;cursor:pointer;font-size:.8rem}
+.onsite-chip{background:#eff6ff;border:1px solid #bfdbfe;color:var(--accent-deep);border-radius:9999px;padding:.55rem .9rem;font-weight:600;cursor:pointer;font-size:.85rem;min-height:2.5rem;display:inline-flex;align-items:center}
 .onsite-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .onsite-chip.none{background:var(--page);border-color:var(--line);color:#5b6879;cursor:default}
 tr.on-site td.num{box-shadow:inset 3px 0 0 var(--accent)}
-.data-table td.num,.data-table th.num{width:2.6rem;text-align:center;padding:.4rem .2rem}
-.num-btn{width:2rem;height:2rem;border-radius:.3rem;border:1px solid var(--line-firm);background:var(--page-soft);color:var(--ink-soft);font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
+.data-table td.num,.data-table th.num{width:3.1rem;text-align:center;padding:.4rem .2rem}
+/* the number is tapped to colour a row, so it is a control, not a label */
+.num-btn{width:2.5rem;height:2.5rem;border-radius:.3rem;border:1px solid var(--line-firm);background:var(--page-soft);color:var(--ink-soft);font-weight:700;font-size:.8rem;cursor:pointer;line-height:1;padding:0}
 .num-btn.flagged{border-color:transparent;color:#fff}
 .num-btn.carried{border-style:dashed;border-color:#b45309;opacity:.85}
 /* Night mode. Defining our own dark palette also stops Samsung Internet
@@ -223,7 +231,7 @@ body.night .rep-empty{color:var(--muted-soft)}
 .sheet-date-read{margin-top:.6rem;font-size:.9rem;font-weight:600;color:var(--ink-soft)}
 .sheet-date-line{display:block}
 .duty-line{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}
-.duty-chip{display:inline-flex;align-items:center;padding:.3rem .6rem;border:1px solid transparent;border-radius:9999px;background:var(--chip);font-size:.78rem;font-weight:600;color:var(--ink-soft);white-space:nowrap;font-family:inherit;cursor:pointer}
+.duty-chip{display:inline-flex;align-items:center;min-height:2.5rem;padding:.5rem .75rem;border:1px solid transparent;border-radius:9999px;background:var(--chip);font-size:.8rem;font-weight:600;color:var(--ink-soft);white-space:nowrap;font-family:inherit;cursor:pointer}
 .duty-chip.picked{background:var(--accent-pale);border-color:var(--accent);color:var(--accent-deep)}
 body.night .duty-chip.picked{background:var(--chip);border-color:var(--accent);color:var(--accent-deep)}
 .duty-chip em{font-style:normal;font-weight:500;color:var(--muted);margin-left:.3rem}
@@ -234,7 +242,7 @@ body.night .duty-chip.none{background:var(--line);color:var(--muted-soft)}
 body.night .sheet-date-read{color:var(--ink-soft)}
 .head-row{display:flex;align-items:baseline;gap:.75rem;margin-bottom:.75rem}
 .head-row h2{flex:1;min-width:0;margin-bottom:0;padding-bottom:.5rem;border-bottom:2px solid var(--header)}
-.head-btn{flex:0 0 auto;padding:.4rem .85rem;font-size:.82rem;align-self:center}
+.head-btn{flex:0 0 auto;padding:.6rem 1rem;font-size:.85rem;min-height:2.5rem;align-self:center}
 body.night .head-row h2{border-bottom-color:var(--ink-soft)}
 .fold{padding:0;overflow:hidden}
 .fold-row{display:flex;align-items:stretch}
@@ -260,11 +268,11 @@ body.night .colour-input{background:var(--page);border-color:var(--ink-soft)}
 .guard-swatch{width:1.5rem;height:1.5rem;border-radius:.3rem;border:1px solid rgba(0,0,0,.15);padding:0;cursor:pointer;flex:0 0 auto}
 .guard-card h4{display:flex;align-items:center;gap:.45rem;font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.35rem}
 .guard-tot{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
-.guard-tot span{padding:.2rem .5rem;border-radius:9999px;font-size:.74rem;font-weight:700}
+.guard-tot span{padding:.2rem .5rem;border-radius:9999px;font-size:.8rem;font-weight:700}
 .tot-done{background:#f0fdf4;color:#15803d}
 .tot-all{background:#eff6ff;color:var(--accent-deep)}
 .tot-none{background:var(--page);color:#5b6879}
-.week-row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--slate);padding:.15rem 0;border-top:1px solid var(--page)}
+.week-row{display:flex;justify-content:space-between;font-size:.8rem;color:var(--slate);padding:.15rem 0;border-top:1px solid var(--page)}
 .week-row b{font-weight:600;color:var(--ink)}
 .guard-tot .tot-done,.guard-tot .tot-all,.guard-tot .tot-none{border:1px solid transparent}
 body.night .tot-done{background:#0f2417;color:var(--good);border-color:#14532d}
@@ -274,17 +282,17 @@ body.night .guard-card{background:var(--surface);border-color:var(--line)}
 body.night .guard-card h4{color:var(--ink)}
 body.night .week-row{color:var(--muted-soft);border-top-color:var(--line)}
 body.night .week-row b{color:var(--ink)}
-.seen-count{display:inline-block;margin-left:.4rem;padding:.1rem .45rem;border-radius:9999px;background:var(--line);color:var(--slate);font-size:.68rem;font-weight:700}
+.seen-count{display:inline-block;margin-left:.4rem;padding:.15rem .5rem;border-radius:9999px;background:var(--line);color:var(--slate);font-size:.8rem;font-weight:700}
 .seen-count.often{background:#eff6ff;color:var(--accent-deep)}
 body.night .seen-count{background:var(--line);color:var(--muted-soft)}
 body.night .seen-count.often{background:var(--chip);color:var(--accent-deep)}
-.auto-tag{display:inline-block;margin-left:.4rem;padding:.1rem .4rem;border-radius:.25rem;background:#eff6ff;color:var(--accent-deep);font-size:.68rem;font-weight:700;vertical-align:middle}
+.auto-tag{display:inline-block;margin-left:.4rem;padding:.1rem .4rem;border-radius:.25rem;background:#eff6ff;color:var(--accent-deep);font-size:.8rem;font-weight:700;vertical-align:middle}
 body.night .auto-tag{background:var(--chip);color:var(--accent-deep)}
 .check-row{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;font-size:.9rem;color:var(--ink-soft);cursor:pointer}
 .check-row input{width:1.15rem;height:1.15rem}
 body.night .check-row{color:var(--ink-soft)}
 .chip-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem}
-.chip{background:#eff6ff;border:1px solid #bfdbfe;color:var(--accent-deep);border-radius:9999px;padding:.4rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
+.chip{background:#eff6ff;border:1px solid #bfdbfe;color:var(--accent-deep);border-radius:9999px;padding:.4rem .75rem;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit}
 .chip:active{background:var(--accent);color:#fff}
 body.night .chip{background:var(--chip);border-color:var(--accent-deep);color:var(--accent-deep)}
 .muster-head{font-size:1.6rem;font-weight:700;color:var(--ink);margin-bottom:.9rem;line-height:1.2}
@@ -296,27 +304,27 @@ body.night .chip{background:var(--chip);border-color:var(--accent-deep);color:va
 .page-switch{display:flex;gap:.35rem;margin-bottom:.85rem;background:var(--line);padding:.25rem;border-radius:.5rem;position:sticky;z-index:30}
 .page-btn{flex:1;min-width:0;padding:.55rem .35rem;border:none;background:transparent;color:var(--slate);font-weight:600;font-size:.82rem;border-radius:.375rem;cursor:pointer;line-height:1.25}
 .page-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.page-btn span{display:block;font-weight:500;font-size:.7rem;color:var(--muted);margin-top:.1rem}
+.page-btn span{display:block;font-weight:500;font-size:.8rem;color:var(--muted);margin-top:.1rem}
 .data-table td.band,.data-table th.band{width:.9rem;padding:.4rem .15rem}
 .kind-band{display:block;width:.55rem;height:1.15rem;border-radius:.15rem}
 .kind-visitor{background:var(--accent-deep)}
 .kind-staff{background:#0d9488}
 .kind-incident{background:#ea580c}
-.kind-key{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:.5rem;font-size:.75rem;color:var(--muted)}
+.kind-key{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:.5rem;font-size:.8rem;color:var(--muted)}
 .kind-key span{display:inline-flex;align-items:center;gap:.35rem}
 .kind-key i{height:.75rem}
 body.night .kind-key{color:var(--muted-soft)}
-.act-kind{display:inline-block;min-width:4.6rem;font-size:.72rem;font-weight:700;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}
+.act-kind{display:inline-block;min-width:4.6rem;font-size:.8rem;font-weight:700;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}
 body.night .act-kind{color:var(--muted-soft)}
 .page-btn.active span{color:var(--slate)}
-.induction-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;padding:.15rem .45rem;border-radius:9999px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
+.induction-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;padding:.15rem .45rem;border-radius:9999px;font-size:.8rem;font-weight:700;letter-spacing:.02em}
 .induction-tag.ok{background:#f0fdf4;color:#15803d}
 .induction-tag.due{background:#fef2f2;color:var(--bad-deep)}
 .induction-tag.soon{background:#fffbeb;color:#b45309}
 .status-soon{background:#fffbeb;color:#b45309}
 .induction-note.soon{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
 .flag-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
-.flag-legend span{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--slate)}
+.flag-legend span{display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;color:var(--slate)}
 .flag-legend i{width:.8rem;height:.8rem;border-radius:.2rem;display:inline-block}
 .flag-picker{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:2000;display:flex;align-items:flex-end}
 .flag-picker-panel{background:var(--surface);width:100%;border-radius:.75rem .75rem 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.25)}
@@ -328,7 +336,7 @@ body.night .act-kind{color:var(--muted-soft)}
 .flag-row{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.75rem}
 .flag-row input[type=text]{flex:1 1 8rem}
 .theme-label{flex:1 1 8rem;min-width:0;font-size:.9rem}
-.theme-label small{display:block;color:var(--muted);font-size:.75rem}
+.theme-label small{display:block;color:var(--muted);font-size:.8rem}
 /* Not sticky, and not a tab bar for a page - it chooses which list of
    colours is below it, so it must not join the chain at the top. */
 .theme-tabs{position:static;margin:.75rem 0 .85rem;box-shadow:none}
@@ -456,6 +464,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div class="time-row"><input type="time" id="exitTime"><button type="button" id="now_exitTime" class="button button-secondary now-btn">Now</button></div>
 </div>
 </div>
+<div class="form-group" id="moveVisitorDateRow" style="display:none">
+<label for="moveVisitorDate">Day</label>
+<input type="date" id="moveVisitorDate">
+<p class="field-hint">Correct the day if this visit was logged against the wrong one.</p>
+</div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="visitorEntrySubmit">Record entry</button>
 <button type="button" class="button button-secondary" id="setCurrentTime">Use current time</button>
@@ -506,6 +519,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <label for="staffBackTime">Back</label>
 <div class="time-row"><input type="time" id="staffBackTime"><button type="button" id="now_staffBackTime" class="button button-secondary now-btn">Now</button></div>
 </div>
+</div>
+<div class="form-group" id="moveStaffDateRow" style="display:none">
+<label for="moveStaffDate">Day</label>
+<input type="date" id="moveStaffDate">
+<p class="field-hint">Correct the day if this movement was logged against the wrong one.</p>
 </div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="staffMoveSubmit">Record departure</button>
@@ -621,6 +639,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <label for="incidentEnd">Ended (optional)</label>
 <div class="time-row"><input type="time" id="incidentEnd"><button type="button" id="now_incidentEnd" class="button button-secondary now-btn">Now</button></div>
 </div>
+</div>
+<div class="form-group" id="moveIncidentDateRow" style="display:none">
+<label for="moveIncidentDate">Day</label>
+<input type="date" id="moveIncidentDate">
+<p class="field-hint">Correct the day if this note was logged against the wrong one.</p>
 </div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="incidentSubmit">Record incident</button>
@@ -1376,6 +1399,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 <div class="action-row">
 <button type="button" class="button button-danger" id="clearTodayBtn">Clear the shown day</button>
+<button type="button" class="button button-danger" id="clearRecordsBtn">Clear the records, keep the registers</button>
 <button type="button" class="button button-danger" id="clearAllBtn">Clear everything</button>
 </div>
 <p class="text-muted">Everything is stored on this device only. Clearing cannot be undone, so save a backup first.</p>
@@ -1843,7 +1867,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v146';
+var BUILD = 'sat-v151';
 
 var app = {
   visitors: [],
@@ -3248,6 +3272,7 @@ var app = {
     document.getElementById('forceUpdateBtn').addEventListener('click', function () { self.forceUpdate(); });
     document.getElementById('pruneBtn').addEventListener('click', function () { self.pruneOld(); });
     document.getElementById('clearTodayBtn').addEventListener('click', function () { self.clearToday(); });
+    document.getElementById('clearRecordsBtn').addEventListener('click', function () { self.clearRecords(); });
     document.getElementById('clearAllBtn').addEventListener('click', function () { self.clearAll(); });
   },
 
@@ -3602,6 +3627,15 @@ var app = {
     return pool;
   },
 
+  /* how many people and vehicles a firm has, found by its name */
+  hintFor: function (name) {
+    var rec = this.findCompany ? this.findCompany(name) : null;
+    if (!rec) {
+      rec = this.findContractor(name) || null;
+    }
+    return rec && rec.reps ? this.companyHint(rec) : '';
+  },
+
   companyHint: function (rec) {
     var bits = [];
     if (rec.reps.length) bits.push(rec.reps.length + (rec.reps.length === 1 ? ' rep' : ' reps'));
@@ -3622,6 +3656,56 @@ var app = {
      offer. A guard who starts with a registration should not then be shown
      every company on site, and one who starts with a company should not be
      offered somebody else's driver. */
+  /* Which vehicle a person actually turns up in, counted from the visits
+     already logged. A rep listed with three vans usually drives one of
+     them, and the list should say which rather than leaving the guard to
+     remember. Where a rep has no history, the company's own is the next
+     best answer. */
+  vehicleUse: function (company, rep) {
+    var counts = {}, i, order = [];
+    var co = String(company || '').toLowerCase();
+    var who = String(rep || '').toLowerCase();
+
+    for (i = 0; i < this.visitors.length; i++) {
+      var v = this.visitors[i];
+      if (!v.vehicle) continue;
+      if (co && String(v.company).toLowerCase() !== co) continue;
+      /* a rep named, so only their own visits; none, so the whole firm */
+      if (who && String(v.rep || '').toLowerCase() !== who) continue;
+      var key = String(v.vehicle).toUpperCase();
+      if (!counts[key]) { counts[key] = { vehicle: v.vehicle, times: 0, last: '' }; order.push(key); }
+      counts[key].times++;
+      if (v.date > counts[key].last) counts[key].last = v.date;
+    }
+
+    return order.map(function (k) { return counts[k]; })
+      .sort(function (a, b) {
+        if (b.times !== a.times) return b.times - a.times;
+        /* the same number of times, so the more recent one */
+        return a.last < b.last ? 1 : -1;
+      });
+  },
+
+  /* What to put first, and what to say about it. */
+  /* The one to put first, and where the answer came from. */
+  usualVehicle: function (company, rep) {
+    var mine = this.vehicleUse(company, rep);
+    if (mine.length) return { vehicle: mine[0].vehicle, times: mine[0].times, from: 'rep' };
+    if (rep) {
+      var theirs = this.vehicleUse(company, '');
+      if (theirs.length) return { vehicle: theirs[0].vehicle, times: theirs[0].times, from: 'company' };
+    }
+    return null;
+  },
+
+  /* what the picker leads with, said in words, for anywhere that wants it */
+  usualVehicleNote: function (company, rep) {
+    var u = this.usualVehicle(company, rep);
+    if (!u) return '';
+    return u.vehicle + ' \u00b7 ' + (u.times === 1 ? 'once' : u.times + ' times') +
+      (u.from === 'company' ? ' for this company' : ' before');
+  },
+
   narrowedPool: function (field) {
     var pool = this.suggestionPool(), out = [], i, f;
     var ctx = [];
@@ -3699,6 +3783,36 @@ var app = {
       rows.push(e);
     }
 
+    /* Ordered by what the person actually turns up in. A rep listed with
+       three vans usually drives one of them, and the list should say
+       which rather than leaving the guard to remember. */
+    var seenTimes = {}, usedByFirm = false;
+    if (field === 'vehicle') {
+      var co = document.getElementById('companyInput');
+      var rp = document.getElementById('repInput');
+      var company = co ? co.value : '', who = rp ? rp.value : '';
+      var used = this.vehicleUse(company, who);
+      /* A rep with no history of their own: what the firm turns up in is
+         the next best answer, and better than the order they happen to be
+         listed in. */
+      var fromCompany = false;
+      if (!used.length && who) {
+        used = this.vehicleUse(company, '');
+        fromCompany = used.length > 0;
+      }
+      var rank = {}, u;
+      for (u = 0; u < used.length; u++) {
+        rank[String(used[u].vehicle).toUpperCase()] = used.length - u;
+        seenTimes[String(used[u].vehicle).toUpperCase()] = used[u].times;
+      }
+      usedByFirm = fromCompany;
+      rows.sort(function (a, b) {
+        var ra = rank[String(a.vehicle).toUpperCase()] || 0;
+        var rb = rank[String(b.vehicle).toUpperCase()] || 0;
+        return rb - ra;
+      });
+    }
+
     list.innerHTML = '';
     if (!rows.length) { list.classList.remove('active'); return; }
 
@@ -3708,6 +3822,11 @@ var app = {
         var item = document.createElement('div');
         item.className = 'autocomplete-item';
         var others = [];
+        var seen = field === 'vehicle' ? seenTimes[String(entry.vehicle).toUpperCase()] : 0;
+        if (seen) {
+          others.push((seen === 1 ? 'once' : seen + ' times') +
+            (usedByFirm ? ' for this company' : ' before'));
+        }
         if (field !== 'company' && entry.company) others.push(entry.company);
         if (field !== 'rep' && entry.rep) others.push(entry.rep);
         if (field !== 'vehicle' && entry.vehicle) others.push(entry.vehicle);
@@ -3734,15 +3853,30 @@ var app = {
     var list = document.getElementById('companyList');
     list.innerHTML = '';
 
+    /* Companies only. Offering every combination of company, person and
+       vehicle turned one firm with four drivers into nine lines to read
+       past - and the two boxes underneath exist to narrow it down. */
     var pool = this.suggestionPool();
-    var matches = [], i;
+    var matches = [], seen = {}, i;
     for (i = 0; i < pool.length && matches.length < 10; i++) {
-      if (!q ||
-          pool[i].company.toLowerCase().indexOf(q) !== -1 ||
-          (pool[i].rep && pool[i].rep.toLowerCase().indexOf(q) !== -1) ||
-          (pool[i].vehicle && pool[i].vehicle.toLowerCase().indexOf(q) !== -1)) {
-        matches.push(pool[i]);
+      var e = pool[i];
+      var hit = !q ||
+        e.company.toLowerCase().indexOf(q) !== -1 ||
+        (e.rep && e.rep.toLowerCase().indexOf(q) !== -1) ||
+        (e.vehicle && e.vehicle.toLowerCase().indexOf(q) !== -1);
+      if (!hit) continue;
+      var key = e.company.toLowerCase();
+      if (seen[key]) continue;
+      seen[key] = 1;
+      /* what typing found, so a search by driver or plate still says
+         which firm it belongs to */
+      var why = '';
+      if (q && e.company.toLowerCase().indexOf(q) === -1) {
+        if (e.rep && e.rep.toLowerCase().indexOf(q) !== -1) why = e.rep;
+        else if (e.vehicle && e.vehicle.toLowerCase().indexOf(q) !== -1) why = e.vehicle;
       }
+      matches.push({ company: e.company, rep: '', vehicle: '',
+        label: e.company, hint: why || this.hintFor(e.company) });
     }
 
     if (!matches.length) { list.classList.remove('active'); return; }
@@ -3756,8 +3890,10 @@ var app = {
       item.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
       item.addEventListener('click', function () {
         document.getElementById('companyInput').value = entry.company;
-        document.getElementById('repInput').value = entry.rep || '';
-        if (entry.vehicle) document.getElementById('vehicleInput').value = entry.vehicle;
+        /* the person and the vehicle are chosen in their own boxes, which
+           narrow to this company the moment it is set */
+        document.getElementById('repInput').value = '';
+        document.getElementById('vehicleInput').value = '';
         self.hideSuggestions();
         self.refreshPickers();
         if (!document.getElementById('reasonInput').value) {
@@ -4108,6 +4244,7 @@ var app = {
     if (this.editingEntryId !== null) {
       for (var ei = 0; ei < this.visitors.length; ei++) {
         if (this.visitors[ei].id !== this.editingEntryId) continue;
+        this.visitors[ei].date = this.movedDay('moveVisitorDate', this.visitors[ei].date);
         this.visitors[ei].company = company;
         this.visitors[ei].rep = rep;
         this.visitors[ei].vehicle = vehicle;
@@ -4185,6 +4322,34 @@ var app = {
   /* Loads a logged movement back into the form. The entry keeps its id,
      its date and its colour, so editing does not disturb the numbering or
      lose a flag the way delete-and-retype did. */
+  /* The day a record sits on, shown only while correcting one. Logging
+     something against the wrong date was previously undoable only by
+     deleting it and typing it again. */
+  showMoveDay: function (rowId, fieldId, date) {
+    var row = document.getElementById(rowId), f = document.getElementById(fieldId);
+    if (!row || !f) return;
+    if (date) {
+      f.value = date;
+      f.max = this.currentDate;
+      row.style.display = 'block';
+    } else {
+      f.value = '';
+      row.style.display = 'none';
+    }
+  },
+
+  /* What a record's day should become after an edit: what was typed if it
+     is a real day no later than today, otherwise the day it already had. */
+  movedDay: function (fieldId, was) {
+    var f = document.getElementById(fieldId);
+    if (!f || !f.value) return was;
+    var v = f.value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return was;
+    if (!this.parseLocalDate(v)) return was;
+    if (v > this.currentDate) return was;
+    return v;
+  },
+
   editEntry: function (id) {
     var rec = null, i;
     for (i = 0; i < this.visitors.length && !rec; i++) {
@@ -4199,6 +4364,7 @@ var app = {
     document.getElementById('reasonInput').value = rec.reason;
     document.getElementById('entryTime').value = rec.entryTime;
     document.getElementById('exitTime').value = rec.exitTime || '';
+    this.showMoveDay('moveVisitorDateRow', 'moveVisitorDate', rec.date);
 
     var seq = this.seqFor('visitor', rec);
     var title = document.getElementById('visitorEntryTitle');
@@ -4214,6 +4380,7 @@ var app = {
   },
 
   cancelEntryEdit: function () {
+    this.showMoveDay('moveVisitorDateRow', 'moveVisitorDate', '');
     this.editingEntryId = null;
     document.getElementById('visitorForm').reset();
     document.getElementById('visitorEntryTitle').style.display = 'none';
@@ -4692,6 +4859,11 @@ var app = {
           '<td>' + (e === 0 ? this.esc(c.name) : '') + '</td>' +
           '<td>' + this.esc(ent.name) +
             (ent.vehicles.length ? '<span class="cell-sub">' + this.esc(ent.vehicles.join(', ')) + '</span>' : '') +
+            /* what they actually turn up in, which is not always what
+               they are listed with */
+            (function (note) {
+              return note ? '<span class="cell-sub carried">usually ' + self.esc(note) + '</span>' : '';
+            })(this.usualVehicleNote(c.name, ent.name)) +
           '</td>' +
           '<td>' + this.showDate(ent.date) +
             (ent.inherited ? '<span class="cell-sub">default</span>' : '') +
@@ -5206,6 +5378,7 @@ var app = {
     if (this.editingMoveId !== null) {
       for (var mi = 0; mi < this.staffMovements.length; mi++) {
         if (this.staffMovements[mi].id !== this.editingMoveId) continue;
+        this.staffMovements[mi].date = this.movedDay('moveStaffDate', this.staffMovements[mi].date);
         this.staffMovements[mi].name = name;
         this.staffMovements[mi].vehicleType = mode;
         this.staffMovements[mi].vehicle = vehicle;
@@ -5263,6 +5436,7 @@ var app = {
     document.getElementById('staffVehicleInput').value = rec.vehicle || '';
     document.getElementById('staffReasonInput').value = rec.reason;
     document.getElementById('staffOutTime').value = rec.outTime;
+    this.showMoveDay('moveStaffDateRow', 'moveStaffDate', rec.date);
     document.getElementById('staffBackTime').value = rec.backTime || '';
 
     var seq = this.seqFor('staff', rec);
@@ -5279,6 +5453,7 @@ var app = {
   },
 
   cancelStaffMoveEdit: function () {
+    this.showMoveDay('moveStaffDateRow', 'moveStaffDate', '');
     this.editingMoveId = null;
     document.getElementById('staffMoveForm').reset();
     document.getElementById('staffMoveTitle').style.display = 'none';
@@ -5799,6 +5974,7 @@ var app = {
     if (this.editingIncidentId !== null) {
       for (var k = 0; k < this.incidents.length; k++) {
         if (this.incidents[k].id !== this.editingIncidentId) continue;
+        this.incidents[k].date = this.movedDay('moveIncidentDate', this.incidents[k].date);
         this.incidents[k].type = type;
         this.incidents[k].detail = detail;
         this.incidents[k].time = time;
@@ -5839,6 +6015,7 @@ var app = {
     document.getElementById('incidentDetail').value = rec.detail;
     document.getElementById('incidentTime').value = rec.time;
     document.getElementById('incidentEnd').value = rec.ended || '';
+    this.showMoveDay('moveIncidentDateRow', 'moveIncidentDate', rec.date);
 
     var seq = this.seqFor('incident', rec);
     var title = document.getElementById('incidentTitle');
@@ -5852,6 +6029,7 @@ var app = {
   },
 
   cancelIncidentEdit: function () {
+    this.showMoveDay('moveIncidentDateRow', 'moveIncidentDate', '');
     this.editingIncidentId = null;
     document.getElementById('incidentForm').reset();
     document.getElementById('incidentTitle').style.display = 'none';
@@ -8318,6 +8496,23 @@ var app = {
       this.renderShifts();
       this.toast('Shift updated');
       return;
+    }
+
+    /* A shift added over one already rostered is somebody actually
+       working it, so it takes the planned one's place. Left alongside,
+       the day shows two guards on the same hours and the sheet cannot
+       say who was really there. */
+    var planned = this.overlapsAnother(this.viewDate, start,
+      this.typedMinutes('shift', start, end) || this.shiftMinutes(start, end), null);
+    if (planned) {
+      var sameSlot = planned.start === start;
+      var msg = sameSlot
+        ? planned.guard + ' is rostered for ' + this.showTime(planned.start) + ' to ' +
+          this.showTime(planned.end) + '.\n\nReplace that with ' + guard + '?'
+        : planned.guard + ' is rostered ' + this.showTime(planned.start) + ' to ' +
+          this.showTime(planned.end) + ', which this overlaps.\n\nReplace it with ' + guard + '?';
+      if (!confirm(msg)) return;
+      this.shifts = this.shifts.filter(function (s) { return s.id !== planned.id; });
     }
 
     this.shifts.push(this.setShiftLength(
@@ -10967,6 +11162,65 @@ var app = {
     this.renderShifts();
     this.renderIncidents();
     this.toast('Sheet cleared');
+  },
+
+  /* Everything that happened, without what the site is made of. A trial
+     that is over, or the same contractor list handed to another gate:
+     the visits go, the people who make them stay. */
+  clearRecords: function () {
+    var counts = {
+      visits: this.visitors.length,
+      moves: this.staffMovements.length,
+      notes: this.incidents.length,
+      keys: this.keyMoves.length
+    };
+    var total = counts.visits + counts.moves + counts.notes + counts.keys;
+    if (!total) { this.toast('There are no records to clear', 'error'); return; }
+
+    var kept = [], k;
+    function tally(n, one, many) {
+      if (n) kept.push(n + ' ' + (n === 1 ? one : (many || one + 's')));
+    }
+    tally(this.contractors.length, 'contractor');
+    tally(this.regularVisitors.length, 'regular visitor');
+    tally(this.staff.length, 'staff member', 'staff');
+    tally(this.guards.length, 'guard');
+    tally(this.keys.length, 'key');
+    tally(this.irregulars.length, 'company on the holding list', 'companies on the holding list');
+    tally(this.shifts.length, 'rostered shift');
+
+    /* named plainly, because this cannot be undone without a backup */
+    var going = [];
+    if (counts.visits) going.push(counts.visits + ' visit' + (counts.visits === 1 ? '' : 's'));
+    if (counts.moves) going.push(counts.moves + ' staff movement' + (counts.moves === 1 ? '' : 's'));
+    if (counts.notes) going.push(counts.notes + ' occurrence' + (counts.notes === 1 ? '' : 's'));
+    if (counts.keys) going.push(counts.keys + ' key movement' + (counts.keys === 1 ? '' : 's'));
+
+    if (!confirm('Delete ' + going.join(', ') + '?\n\nKeeping ' +
+      (kept.length ? kept.join(', ') : 'the registers') +
+      '.\n\nExport a sheet first if you need the record.')) return;
+    if (!confirm('This cannot be undone on this device. Continue?')) return;
+
+    this.cancelEntryEdit();
+    this.cancelStaffMoveEdit();
+    this.cancelIncidentEdit();
+    this.cancelKeyMoveEdit();
+
+    this.visitors = [];
+    this.staffMovements = [];
+    this.incidents = [];
+    this.keyMoves = [];
+    /* The holding list stays. It is a list of companies that have called,
+       built up over time - the same kind of thing as the registers, not a
+       record of a day. */
+    this.shiftFilter = null;
+
+    this.saveData();
+    this.redraw();
+    this.renderKeys();
+    this.renderKeysOut();
+    this.renderArchive();
+    this.toast('Records cleared, ' + (kept.length ? kept.join(', ') + ' kept' : 'registers kept'));
   },
 
   clearAll: function () {
