@@ -1,0 +1,11 @@
+/* The whole project definition: plugin versions pinned here so the
+   GitHub runner and a desktop build resolve identically. */
+pluginManagement {
+    repositories { google(); mavenCentral(); gradlePluginPortal() }
+    plugins { id 'com.android.application' version '8.5.0' }
+}
+dependencyResolutionManagement {
+    repositories { google(); mavenCentral() }
+}
+rootProject.name = 'sec-track-shell'
+include ':app'

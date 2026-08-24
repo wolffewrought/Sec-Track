@@ -1,0 +1,44 @@
+plugins { id 'com.android.application' }
+
+/* Present when the workflow has decoded the keystore secret; absent in a
+   checkout, where a debug build still works for testing. */
+def ksFile = rootProject.file('keystore.jks')
+
+android {
+    namespace 'com.wolffewrought.sectrack'
+    compileSdk 34
+
+    defaultConfig {
+        /* Keep the applicationId and signing key of the old wrapper and
+           this installs OVER it as an update. Change either and it lands
+           beside it as a second app instead. */
+        applicationId "com.wolffewrought.sectrack"
+        minSdk 29            /* Android 10: MediaStore.Downloads needs it */
+        targetSdk 34
+        versionCode 2
+        versionName "shell-1"
+    }
+
+    signingConfigs {
+        release {
+            if (ksFile.exists()) {
+                storeFile ksFile
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (ksFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+}
+
+dependencies {
+    /* the one dependency: DocumentFile wraps the chosen folder's URI */
+    implementation 'androidx.documentfile:documentfile:1.0.1'
+}
