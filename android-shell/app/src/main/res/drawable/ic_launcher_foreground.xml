@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A plain gatehouse barrier: two posts and the arm across. -->
+<!-- A white hexagon carrying the blue chevron, arms out to its walls,
+     the whole mark centred in the hexagon. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
     <path android:fillColor="#ffffff"
-        android:pathData="M30,38 h8 v34 h-8 z M70,38 h8 v34 h-8 z"/>
-    <path android:fillColor="#ffffff"
-        android:pathData="M26,44 h56 v8 h-56 z"/>
-    <path android:fillColor="#1e3a5f"
-        android:pathData="M34,44 l8,8 h-8 z M50,44 l8,8 h-8 z M66,44 l8,8 h-8 z"/>
+        android:pathData="M54,28 L76.5,41 L76.5,67 L54,80 L31.5,67 L31.5,41 Z"/>
+    <path android:fillColor="#2563eb"
+        android:pathData="M31.5,58 L54,41 L76.5,58 L76.5,67 L54,50 L31.5,67 Z"/>
 </vector>
