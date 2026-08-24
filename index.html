@@ -351,6 +351,10 @@ body.no-scroll{overflow:hidden}
 .ts-list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 1rem}
 .ts-foot{flex:0 0 auto;padding:.75rem calc(1rem + env(safe-area-inset-right,0px)) calc(1rem + env(safe-area-inset-bottom,0px)) calc(1rem + env(safe-area-inset-left,0px));border-top:1px solid var(--line)}
 .ts-foot .button{width:100%}
+/* a name that is also the way in, without looking like a button */
+.link-btn{background:none;border:none;padding:.4rem 0;font:inherit;color:var(--accent);font-weight:600;cursor:pointer;text-align:left;min-height:2.5rem;display:inline-flex;align-items:center;gap:.35rem}
+.detail-line{padding:.45rem 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.4rem}
+.detail-line:last-child{border-bottom:none}
 .theme-row.picked{background:var(--accent-pale);border-radius:.35rem;box-shadow:0 0 0 2px var(--accent)}
 
 /* A page in miniature, drawn from the very same names, so it shows what
@@ -415,8 +419,9 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <button type="button" id="btnSubIncident" class="subtab" role="tab" aria-selected="false">Incident</button>
 </div>
 <div id="subVisitor" class="subpane active">
-<div class="section">
-<h2>Record visitor</h2>
+<div class="section fold open" id="fold_recordvisitor">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_recordvisitor" aria-expanded="true" aria-controls="foldBody_recordvisitor"><span>Record visitor</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_recordvisitor" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_recordvisitor" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_recordvisitor">
 <form id="visitorForm" autocomplete="off">
 <h3 class="form-title" id="visitorEntryTitle" style="display:none"></h3>
 <div class="form-group">
@@ -477,9 +482,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </form>
 </div>
 </div>
+</div>
 <div id="subStaffOut" class="subpane">
-<div class="section">
-<h2>Record staff departure</h2>
+<div class="section fold open" id="fold_recordstaffdeparture">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_recordstaffdeparture" aria-expanded="true" aria-controls="foldBody_recordstaffdeparture"><span>Record staff departure</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_recordstaffdeparture" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_recordstaffdeparture" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_recordstaffdeparture">
 <form id="staffMoveForm" autocomplete="off">
 <h3 class="form-title" id="staffMoveTitle" style="display:none"></h3>
 <div class="form-group">
@@ -533,9 +540,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </form>
 </div>
 </div>
+</div>
 <div id="subKeyMove" class="subpane">
-<div class="section">
-<h2>Issue or return a key</h2>
+<div class="section fold open" id="fold_issueorreturnakey">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_issueorreturnakey" aria-expanded="true" aria-controls="foldBody_issueorreturnakey"><span>Issue or return a key</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_issueorreturnakey" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_issueorreturnakey" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_issueorreturnakey">
 <form id="keyMoveForm">
 <input type="hidden" id="keyMoveEditId">
 <input type="hidden" id="keyToFrom">
@@ -566,16 +575,20 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 </form>
 </div>
+</div>
 
-<div class="section">
-<h2>Out at the moment</h2>
+<div class="section fold open" id="fold_outatthemoment">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_outatthemoment" aria-expanded="true" aria-controls="foldBody_outatthemoment"><span>Out at the moment</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_outatthemoment" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_outatthemoment" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_outatthemoment">
 <div id="keysOutContainer"></div>
+</div>
 </div>
 </div>
 
 <div id="subIncident" class="subpane">
-<div class="section">
-<h2>Record incident</h2>
+<div class="section fold open" id="fold_recordincident">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_recordincident" aria-expanded="true" aria-controls="foldBody_recordincident"><span>Record incident</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_recordincident" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_recordincident" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_recordincident">
 <form id="incidentForm" autocomplete="off">
 <h3 class="form-title" id="incidentTitle" style="display:none"></h3>
 <div class="form-group">
@@ -654,12 +667,13 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 </div>
 </div>
+</div>
 
 <div id="sheet" class="tab-content">
 <div id="sheetDateBar">
 <div class="section fold open" id="fold_sheetdate">
 <div class="head-row">
-<button type="button" class="fold-head sheet-fold" id="foldBtn_sheetdate" aria-expanded="true" aria-controls="foldBody_sheetdate"><span id="sheetFoldLabel">Sheet date</span><i class="fold-arrow"></i></button>
+<button type="button" class="fold-head sheet-fold" id="foldBtn_sheetdate" aria-expanded="true" aria-controls="foldBody_sheetdate"><span id="sheetFoldLabel">Sheet date</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_sheetdate" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_sheetdate" aria-label="Move down" title="Move down">&#9660;</button>
 <button type="button" class="button button-primary head-btn" id="quickExportBtn">Export</button>
 </div>
 <div class="fold-body" id="foldBody_sheetdate">
@@ -689,8 +703,9 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 
 
 
-<div class="section">
-<h2>Occurrence sheet</h2>
+<div class="section fold open" id="fold_occurrencesheet">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_occurrencesheet" aria-expanded="true" aria-controls="foldBody_occurrencesheet"><span>Occurrence sheet</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_occurrencesheet" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_occurrencesheet" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_occurrencesheet">
 <div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <input type="search" id="sheetSearch" aria-label="Search this day's log" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
 <label class="check-row"><input type="checkbox" id="searchAllDays"> Search every day, not just this one</label>
@@ -698,20 +713,26 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div id="flagLegend" class="flag-legend"></div>
 <div id="logContainer"></div>
 </div>
-<div class="section">
-<h2>Staff movements</h2>
+</div>
+<div class="section fold open" id="fold_staffmovements">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_staffmovements" aria-expanded="true" aria-controls="foldBody_staffmovements"><span>Staff movements</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_staffmovements" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_staffmovements" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_staffmovements">
 <div id="staffSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="staffMoveContainer"></div>
 </div>
-<div class="section">
-<h2>Incidents and occurrences</h2>
+</div>
+<div class="section fold open" id="fold_incidentsandoccurrence">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_incidentsandoccurrence" aria-expanded="true" aria-controls="foldBody_incidentsandoccurrence"><span>Incidents and occurrences</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_incidentsandoccurrence" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_incidentsandoccurrence" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_incidentsandoccurrence">
 <div id="incidentSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="incidentContainer"></div>
 </div>
 </div>
+</div>
 <div id="subDuty" class="subpane">
-<div class="section">
-<h2>On duty</h2>
+<div class="section fold open" id="fold_onduty">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_onduty" aria-expanded="true" aria-controls="foldBody_onduty"><span>On duty</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_onduty" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_onduty" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_onduty">
 <div id="dutyDayLabel" class="sheet-summary" role="status" aria-live="polite"></div>
 <form id="shiftForm" autocomplete="off">
 <h3 class="form-title" id="shiftFormTitle" style="display:none"></h3>
@@ -772,18 +793,22 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <p class="field-hint">More than one shift can be recorded for a day, so a handover is shown on the sheet and on the printed report.</p>
 </div>
 </div>
+</div>
 <div id="subHandover" class="subpane">
-<div class="section">
-<h2>To hand over</h2>
+<div class="section fold open" id="fold_tohandover">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_tohandover" aria-expanded="true" aria-controls="foldBody_tohandover"><span>To hand over</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_tohandover" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_tohandover" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_tohandover">
 <div id="handoverSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="handoverContainer"></div>
 <p class="field-hint">Gathered from what has already been recorded. Anything listed here is still outstanding at the end of this day.</p>
 </div>
 </div>
+</div>
 
 <div id="subMuster" class="subpane">
-<div class="section">
-<h2>Roll call</h2>
+<div class="section fold open" id="fold_rollcall">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_rollcall" aria-expanded="true" aria-controls="foldBody_rollcall"><span>Roll call</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_rollcall" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_rollcall" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_rollcall">
 <div id="musterHead" class="muster-head" role="status" aria-live="polite"></div>
 <div class="action-row">
 <button type="button" class="button button-primary" id="musterPdfBtn">Print roll call</button>
@@ -791,13 +816,18 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 <p class="field-hint">Everyone signed in without a recorded exit, plus staff currently off site. Use this for an evacuation roll call.</p>
 </div>
-<div class="section">
-<h2>On site</h2>
+</div>
+<div class="section fold open" id="fold_onsite">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_onsite" aria-expanded="true" aria-controls="foldBody_onsite"><span>On site</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_onsite" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_onsite" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_onsite">
 <div id="musterOnSite"></div>
 </div>
-<div class="section">
-<h2>Staff off site</h2>
+</div>
+<div class="section fold open" id="fold_staffoffsite">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_staffoffsite" aria-expanded="true" aria-controls="foldBody_staffoffsite"><span>Staff off site</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_staffoffsite" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_staffoffsite" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_staffoffsite">
 <div id="musterAway"></div>
+</div>
 </div>
 </div>
 </div>
@@ -965,15 +995,18 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 <div id="subGuards" class="subpane">
 
-<div class="section">
-<h2>Guards</h2>
+<div class="section fold open" id="fold_guards">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guards" aria-expanded="true" aria-controls="foldBody_guards"><span>Guards</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guards" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guards" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_guards">
 <div id="guardsSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="guardsContainer"></div>
 <p class="field-hint">Every name used on a shift appears here. Renaming one updates every shift it appears on, and its colour follows.</p>
 </div>
+</div>
 
-<div class="section">
-<h2>Add a guard</h2>
+<div class="section fold open" id="fold_addaguard">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_addaguard" aria-expanded="true" aria-controls="foldBody_addaguard"><span>Add a guard</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_addaguard" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_addaguard" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_addaguard">
 <form id="guardForm">
 <input type="hidden" id="guardEditId">
 <div class="form-group">
@@ -1005,9 +1038,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 </form>
 </div>
+</div>
 
-<div class="section">
-<h2>Merge two guards</h2>
+<div class="section fold open" id="fold_mergetwoguards">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_mergetwoguards" aria-expanded="true" aria-controls="foldBody_mergetwoguards"><span>Merge two guards</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_mergetwoguards" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_mergetwoguards" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_mergetwoguards">
 <p class="field-hint">A name typed slightly differently becomes a second guard with its own hours. Merging moves every shift across and removes the duplicate, keeping the history intact.</p>
 <div class="grid-2">
 <div class="form-group">
@@ -1023,6 +1058,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <button type="button" class="button button-primary" id="mergeGuardsBtn">Merge</button>
 </div>
 </div>
+</div>
 
 </div>
 
@@ -1035,8 +1071,9 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <button type="button" id="btnSubStaffList" class="subtab" role="tab" aria-selected="false">Staff</button>
 </div>
 <div id="subContractors" class="subpane active">
-<div class="section">
-<h2>Contractor inductions</h2>
+<div class="section fold open" id="fold_contractorinductions">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_contractorinductions" aria-expanded="true" aria-controls="foldBody_contractorinductions"><span>Contractor inductions</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_contractorinductions" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_contractorinductions" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_contractorinductions">
 <div class="action-row">
 <button type="button" class="button button-primary" id="addContractorBtn">Add contractor</button>
 </div>
@@ -1061,9 +1098,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div id="archiveContainer"></div>
 </div>
 </div>
+</div>
 <div id="subRegulars" class="subpane">
-<div class="section">
-<h2>Regular visitors</h2>
+<div class="section fold open" id="fold_regularvisitors">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_regularvisitors" aria-expanded="true" aria-controls="foldBody_regularvisitors"><span>Regular visitors</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_regularvisitors" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_regularvisitors" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_regularvisitors">
 <div class="action-row">
 <button type="button" class="button button-primary" id="addVisitorBtn">Add regular visitor</button>
 </div>
@@ -1094,21 +1133,27 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </form>
 <div id="visitorsContainer"></div>
 </div>
-<div class="section">
-<h2>Irregular visitors</h2>
+</div>
+<div class="section fold open" id="fold_irregularvisitors">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_irregularvisitors" aria-expanded="true" aria-controls="foldBody_irregularvisitors"><span>Irregular visitors</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_irregularvisitors" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_irregularvisitors" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_irregularvisitors">
 <p class="text-muted" style="margin-top:0">Companies logged at the gate that are on neither list. Promote the ones that will be back.</p>
 <div id="irregularsContainer"></div>
 </div>
 </div>
+</div>
 <div id="subKeys" class="subpane">
-<div class="section">
-<h2>Keys held at the gate</h2>
+<div class="section fold open" id="fold_keysheldatthegate">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_keysheldatthegate" aria-expanded="true" aria-controls="foldBody_keysheldatthegate"><span>Keys held at the gate</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_keysheldatthegate" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_keysheldatthegate" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_keysheldatthegate">
 <div id="keySummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="keysContainer"></div>
 </div>
+</div>
 
-<div class="section">
-<h2>Add a key</h2>
+<div class="section fold open" id="fold_addakey">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_addakey" aria-expanded="true" aria-controls="foldBody_addakey"><span>Add a key</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_addakey" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_addakey" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_addakey">
 <form id="keyForm">
 <input type="hidden" id="keyEditId">
 <div class="form-group">
@@ -1126,10 +1171,12 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </form>
 </div>
 </div>
+</div>
 
 <div id="subStaffList" class="subpane">
-<div class="section">
-<h2>Site vehicles</h2>
+<div class="section fold open" id="fold_sitevehicles">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_sitevehicles" aria-expanded="true" aria-controls="foldBody_sitevehicles"><span>Site vehicles</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_sitevehicles" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_sitevehicles" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_sitevehicles">
 <div class="form-group">
 <label for="siteVehicles">Vehicles kept on site</label>
 <input type="text" id="siteVehicles" maxlength="200" placeholder="Comma separate, e.g. VAN1 ABC, TIPPER2 DEF">
@@ -1139,8 +1186,10 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 <p class="field-hint">Offered whenever a staff member signs out in a site vehicle.</p>
 </div>
-<div class="section">
-<h2>Staff register</h2>
+</div>
+<div class="section fold open" id="fold_staffregister">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_staffregister" aria-expanded="true" aria-controls="foldBody_staffregister"><span>Staff register</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_staffregister" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_staffregister" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_staffregister">
 <div class="action-row">
 <button type="button" class="button button-primary" id="addStaffBtn">Add staff member</button>
 </div>
@@ -1164,6 +1213,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 </form>
 <div id="staffRegisterContainer"></div>
+</div>
 </div>
 </div>
 </div>
@@ -1433,6 +1483,45 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 <button type="button" class="button button-secondary" id="guardPickerAuto">Back to the automatic colour</button>
 <button type="button" class="button button-secondary" id="guardPickerCancel">Cancel</button>
+</div>
+</div>
+
+<div id="guardScreen" class="theme-screen" role="dialog" aria-modal="true" aria-label="Guard details">
+<div class="ts-bar">
+<span class="ts-title" id="guardScreenName">Guard</span>
+<button type="button" class="button button-secondary" id="closeGuard">Done</button>
+</div>
+<div class="ts-list">
+<div class="section fold open" id="fold_guarddetails">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guarddetails" aria-expanded="true" aria-controls="foldBody_guarddetails"><span>Details</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guarddetails" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guarddetails" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_guarddetails"><div id="guardDetails"></div></div>
+</div>
+
+<div class="section fold open" id="fold_guardshifts">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guardshifts" aria-expanded="true" aria-controls="foldBody_guardshifts"><span>Shifts</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guardshifts" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guardshifts" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_guardshifts"><div id="guardShiftList"></div></div>
+</div>
+
+<div class="section fold open" id="fold_guardleave">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guardleave" aria-expanded="true" aria-controls="foldBody_guardleave"><span>Time off</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guardleave" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guardleave" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_guardleave">
+<div id="guardLeaveList"></div>
+<form id="guardLeaveForm" autocomplete="off">
+<div class="grid-2">
+<div class="form-group"><label for="leaveFrom">From</label><input type="date" id="leaveFrom" required></div>
+<div class="form-group"><label for="leaveTo">To</label><input type="date" id="leaveTo" required></div>
+</div>
+<div class="form-group"><label for="leaveWhy">What for</label>
+<select id="leaveWhy"><option value="Holiday">Holiday</option><option value="Off sick">Off sick</option><option value="Training">Training</option><option value="Not available">Not available</option></select></div>
+<div class="action-row"><button type="submit" class="button button-primary">Add time off</button></div>
+</form>
+</div>
+</div>
+
+<div class="section fold open" id="fold_guardcover">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_guardcover" aria-expanded="true" aria-controls="foldBody_guardcover"><span>Cover</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_guardcover" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_guardcover" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_guardcover"><div id="guardCoverList"></div></div>
+</div>
 </div>
 </div>
 
@@ -1867,7 +1956,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v151';
+var BUILD = 'sat-v154';
 
 var app = {
   visitors: [],
@@ -2324,6 +2413,7 @@ var app = {
           self.shifts = d.shifts || [];
           self.irregulars = d.irregulars || [];
       self.guards = d.guards || [];
+      self.leave = d.leave || [];
       self.keys = d.keys || [];
       self.keyMoves = d.keyMoves || [];
           self.incidents = d.incidents || [];
@@ -2653,6 +2743,7 @@ var app = {
       irregulars: this.irregulars,
       incidents: this.incidents,
       guards: this.guards,
+      leave: this.leave,
       keys: this.keys,
       keyMoves: this.keyMoves
     }, function () {
@@ -3001,6 +3092,23 @@ var app = {
 
     document.getElementById('openTheme').addEventListener('click', function () { self.openThemeScreen(); });
     document.getElementById('closeTheme').addEventListener('click', function () { self.closeThemeScreen(); });
+    document.getElementById('closeGuard').addEventListener('click', function () { self.closeGuard(); });
+
+    document.getElementById('guardLeaveForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var from = document.getElementById('leaveFrom').value;
+      var to = document.getElementById('leaveTo').value;
+      var why = document.getElementById('leaveWhy').value;
+      if (!from || !to) { self.toast('Set both days', 'error'); return; }
+      if (!self.addLeave(self.viewingGuard, from, to, why)) {
+        self.toast('Could not add that', 'error');
+        return;
+      }
+      document.getElementById('leaveFrom').value = '';
+      document.getElementById('leaveTo').value = '';
+      self.renderGuardPage();
+      self.toast(why + ' recorded');
+    });
 
     [['themeSimple', 'simple'], ['themeAdvanced', 'advanced']].forEach(function (pair) {
       document.getElementById(pair[0]).addEventListener('click', function () {
@@ -3404,7 +3512,21 @@ var app = {
                'unknowncompanies', 'export', 'rowcolours', 'periodreport', 'data',
                'guardlicences', 'region', 'owntypes'],
     roster: ['rostercalendar', 'plannedshifts', 'guardhours', 'coverguard', 'addtoroster'],
-    day: ['sheetdate']
+    day: ['sheetdate'],
+    guardPage: ['guarddetails', 'guardshifts', 'guardleave', 'guardcover'],
+    subVisitor: ['recordvisitor'],
+    subStaffOut: ['recordstaffdeparture'],
+    subKeyMove: ['issueorreturnakey', 'outatthemoment'],
+    subIncident: ['recordincident'],
+    subSheet: ['occurrencesheet', 'staffmovements', 'incidentsandoccurrence'],
+    subDuty: ['onduty'],
+    subHandover: ['tohandover'],
+    subMuster: ['rollcall', 'onsite', 'staffoffsite'],
+    subGuards: ['guards', 'addaguard', 'mergetwoguards'],
+    subContractors: ['contractorinductions'],
+    subRegulars: ['regularvisitors', 'irregularvisitors'],
+    subKeys: ['keysheldatthegate', 'addakey'],
+    subStaffList: ['sitevehicles', 'staffregister']
   },
 
   /* Alphabetical until somebody decides otherwise, then their order.
@@ -3497,13 +3619,25 @@ var app = {
     }
   },
 
+  /* A settings section is something you look at once, so it starts shut.
+     A working screen is the screen, so it starts open and the person
+     folds away whatever they do not use. */
+  foldsOpenByDefault: function () {
+    var out = [], g;
+    for (g in this.FOLD_GROUPS) {
+      if (g === 'settings') continue;
+      out = out.concat(this.FOLD_GROUPS[g]);
+    }
+    return out;
+  },
+
   openFolds: function () {
     try {
       var v = JSON.parse(localStorage.getItem('sat-folds') || 'null');
-      if (!Array.isArray(v)) return ['rostercalendar', 'sheetdate'];
+      if (!Array.isArray(v)) return this.foldsOpenByDefault();
       var self = this;
       return v.filter(function (s) { return self.foldList().indexOf(s) !== -1; });
-    } catch (e) { return ['rostercalendar', 'sheetdate']; }
+    } catch (e) { return this.foldsOpenByDefault(); }
   },
 
   toggleFold: function (slug) {
@@ -7343,6 +7477,7 @@ var app = {
   /* ---------------- the guard register ---------------- */
 
   guards: [],
+  leave: [],
 
   /* Every name that has ever been on a shift is a guard, whether anyone
      added them deliberately or not. Building the register from the shifts
@@ -7437,6 +7572,199 @@ var app = {
     return before - this.shifts.length;
   },
 
+  /* ---------------- one guard, in full ---------------- */
+
+  /* Time off is the guard's own, so it lives beside them rather than in
+     the roster: a day nobody is on is not the same as a day this person
+     said they could not work. */
+  leaveFor: function (name) {
+    var out = [], i, who = String(name || '').toLowerCase();
+    for (i = 0; i < this.leave.length; i++) {
+      if (String(this.leave[i].guard || '').toLowerCase() === who) out.push(this.leave[i]);
+    }
+    return out.sort(function (a, b) { return a.from < b.from ? -1 : (a.from > b.from ? 1 : 0); });
+  },
+
+  addLeave: function (name, from, to, why) {
+    if (!name || !from || !to) return false;
+    if (to < from) { var swap = from; from = to; to = swap; }
+    this.leave.push({ id: this.nextId(), guard: name, from: from, to: to, why: why || 'Holiday' });
+    this.saveData();
+    return true;
+  },
+
+  removeLeave: function (id) {
+    this.leave = this.leave.filter(function (l) { return l.id !== id; });
+    this.saveData();
+  },
+
+  /* whole days, counted inclusively, which is how people talk about leave */
+  leaveDays: function (l) {
+    var a = this.parseLocalDate(l.from), b = this.parseLocalDate(l.to);
+    if (!a || !b) return 1;
+    return Math.round((b - a) / 86400000) + 1;
+  },
+
+  onLeave: function (name, dateKey) {
+    var mine = this.leaveFor(name), i;
+    for (i = 0; i < mine.length; i++) {
+      if (dateKey >= mine[i].from && dateKey <= mine[i].to) return mine[i];
+    }
+    return null;
+  },
+
+  /* A shift rostered on a day the guard said they were away. Worth
+     seeing, because it is either a mistake in the rota or leave that was
+     cancelled and never removed. */
+  leaveClashes: function (name) {
+    var out = [], mine = this.shiftsForGuard(name), i;
+    for (i = 0; i < mine.length; i++) {
+      var l = this.onLeave(name, mine[i].date);
+      if (l) out.push({ shift: mine[i], leave: l });
+    }
+    return out;
+  },
+
+  /* by position in the list on screen, so no name is ever put into an
+     inline handler */
+  openGuardAt: function (i) {
+    var order = this.knownGuards();
+    if (!order[i]) return;
+    this.openGuard(typeof order[i] === 'string' ? order[i] : order[i].name);
+  },
+
+  openGuard: function (name) {
+    this.viewingGuard = name;
+    var s = document.getElementById('guardScreen');
+    if (!s) return;
+    document.getElementById('guardScreenName').textContent = name;
+    s.classList.add('open');
+    document.body.classList.add('no-scroll');
+    this.renderGuardPage();
+  },
+
+  closeGuard: function () {
+    var s = document.getElementById('guardScreen');
+    if (s) s.classList.remove('open');
+    document.body.classList.remove('no-scroll');
+    this.viewingGuard = null;
+  },
+
+  renderGuardPage: function () {
+    var name = this.viewingGuard;
+    if (!name) return;
+    var rec = null, i;
+    for (i = 0; i < this.guards.length; i++) {
+      if (this.guards[i].name.toLowerCase() === String(name).toLowerCase()) rec = this.guards[i];
+    }
+
+    /* details */
+    /* their own shifts, added up. guardHours takes a date and reports on
+       everybody, which is a different question. */
+    var mine = this.shiftsForGuard(name);
+    var mins = 0, mi;
+    for (mi = 0; mi < mine.length; mi++) mins += this.shiftRealMins(mine[mi]) || 0;
+    var bits = [];
+    bits.push('<div class="detail-line">' + this.guardDot(name) +
+      '<b>' + this.esc(name) + '</b></div>');
+    if (rec && rec.phone) {
+      bits.push('<div class="detail-line">Phone <b>' + this.esc(rec.phone) + '</b></div>');
+    } else {
+      bits.push('<div class="detail-line text-muted">No phone number recorded</div>');
+    }
+    bits.push('<div class="detail-line">' + mine.length +
+      (mine.length === 1 ? ' shift' : ' shifts') + ' on the roster, ' +
+      this.lengthText(mins) + ' in total</div>');
+    if (this.licencesOn()) {
+      var st = rec && rec.licenceDate ? this.expiryStatus(rec.licenceDate) : null;
+      bits.push('<div class="detail-line">' + this.esc(this.licenceLabel()) + ' ' +
+        (st ? (st.missing ? '<b>not recorded</b>'
+              : (st.valid ? (st.soon ? '<b>expires in ' + st.days + ' days</b>' : '<b>in date</b>')
+                          : '<b>out of date</b>'))
+            : '<b>not recorded</b>') + '</div>');
+    }
+    var clashes = this.leaveClashes(name);
+    if (clashes.length) {
+      bits.push('<div class="induction-note bad">' + clashes.length +
+        (clashes.length === 1 ? ' shift is' : ' shifts are') +
+        ' rostered on days marked as time off.</div>');
+    }
+    document.getElementById('guardDetails').innerHTML = bits.join('');
+
+    /* shifts, most recent first */
+    var self = this;
+    var sorted = mine.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    if (!sorted.length) {
+      document.getElementById('guardShiftList').innerHTML =
+        '<div class="empty-state">No shifts yet. Add one on the roster.</div>';
+    } else {
+      var rows = '';
+      for (i = 0; i < sorted.length && i < 40; i++) {
+        var sh = sorted[i];
+        var away = this.onLeave(name, sh.date);
+        rows += '<tr><td>' + this.showDate(sh.date) +
+          (away ? '<span class="cell-sub carried">marked ' + this.esc(away.why.toLowerCase()) + '</span>' : '') +
+          '</td><td class="time-cell">' + this.timeSpan(sh.start, sh.end) + '</td>' +
+          '<td>' + this.esc(this.lengthText(this.shiftRealMins(sh))) + '</td></tr>';
+      }
+      document.getElementById('guardShiftList').innerHTML =
+        '<table class="data-table"><thead><tr><th>Day</th><th>Hours</th><th>Length</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table>' +
+        (sorted.length > 40 ? '<p class="field-hint">Showing the most recent 40 of ' + sorted.length + '.</p>' : '');
+    }
+
+    /* time off */
+    var away2 = this.leaveFor(name);
+    if (!away2.length) {
+      document.getElementById('guardLeaveList').innerHTML =
+        '<div class="empty-state">No time off recorded. Add some below.</div>';
+    } else {
+      var lrows = '';
+      for (i = 0; i < away2.length; i++) {
+        var l = away2[i];
+        var days = this.leaveDays(l);
+        lrows += '<tr><td>' + this.esc(l.why) + '</td>' +
+          '<td class="time-cell">' + this.showDate(l.from) +
+          (l.to !== l.from ? '<span class="span-to">to</span><span class="span-end">' +
+            this.showDate(l.to) + '</span>' : '') + '</td>' +
+          '<td>' + days + (days === 1 ? ' day' : ' days') + '</td>' +
+          '<td class="row-actions"><button type="button" class="delete-btn" ' +
+          'onclick="app.dropLeaveAt(' + i + ')" aria-label="Remove">&times;</button></td></tr>';
+      }
+      document.getElementById('guardLeaveList').innerHTML =
+        '<table class="data-table"><thead><tr><th>What for</th><th>When</th><th>How long</th><th></th></tr></thead>' +
+        '<tbody>' + lrows + '</tbody></table>';
+    }
+
+    /* cover: shifts this guard took that somebody else was down for, and
+       the other way about, read from the roster's own record */
+    var cover = [];
+    for (i = 0; i < this.shifts.length; i++) {
+      var c = this.shifts[i];
+      if (!c.coveredFor) continue;
+      if (String(c.guard).toLowerCase() === String(name).toLowerCase()) {
+        cover.push({ when: c.date, what: 'covered for ' + c.coveredFor });
+      } else if (String(c.coveredFor).toLowerCase() === String(name).toLowerCase()) {
+        cover.push({ when: c.date, what: 'covered by ' + c.guard });
+      }
+    }
+    document.getElementById('guardCoverList').innerHTML = cover.length
+      ? '<table class="data-table"><tbody>' + cover.map(function (c) {
+          return '<tr><td>' + self.showDate(c.when) + '</td><td>' + self.esc(c.what) + '</td></tr>';
+        }).join('') + '</tbody></table>'
+      : '<div class="empty-state">No cover recorded for this guard.</div>';
+  },
+
+  /* by position, so no name goes into a handler */
+  dropLeaveAt: function (i) {
+    var mine = this.leaveFor(this.viewingGuard);
+    if (!mine[i]) return;
+    if (!confirm('Remove this time off?')) return;
+    this.removeLeave(mine[i].id);
+    this.renderGuardPage();
+    this.toast('Time off removed');
+  },
+
   renderGuards: function () {
     var box = document.getElementById('guardsContainer');
     var sum = document.getElementById('guardsSummary');
@@ -7488,7 +7816,9 @@ var app = {
           (lapsed === 1 ? ' shift' : ' shifts') + ' rostered after it expires</span>';
       }
 
-      rows += '<tr><td>' + this.guardDot(g.name) + this.esc(g.name) +
+      rows += '<tr><td>' +
+        '<button type="button" class="link-btn" onclick="app.openGuardAt(' + i + ')">' +
+        this.guardDot(g.name) + this.esc(g.name) + '</button>' +
         (g.phone ? '<span class="cell-sub">' + this.esc(g.phone) + '</span>' : '') +
         '</td>' + (licOn ? '<td>' + lic + '</td>' : '') +
         '<td>' + mine.length + (mine.length === 1 ? ' shift' : ' shifts') +
@@ -8066,7 +8396,13 @@ var app = {
     var box = document.getElementById('lenInput_' + key);
     if (!box) return;
 
-    if (!startEl.value) { this.toast('Set the start time first', 'error'); return; }
+    /* Either end will do. A guard who knows a shift finished at 14:00 and
+       ran eight hours has said everything needed; insisting on the start
+       makes them do the arithmetic the app is here to do. */
+    if (!startEl.value && !endEl.value) {
+      this.toast('Set a start or an end time, and the length fills in the other', 'error');
+      return;
+    }
 
     var raw = String(box.value).replace(',', '.').replace(/^\s+|\s+$/g, '');
     var hours = parseFloat(raw);
@@ -8081,12 +8417,26 @@ var app = {
     if (hours >= this.LONG_SHIFT_HOURS &&
         !confirm('That is a ' + this.lengthText(mins) + ' shift. Is that right?')) return;
 
-    var total = this.toMinutes(startEl.value) + mins;
-    endEl.value = this.pad2(Math.floor((total % 1440) / 60)) + ':' + this.pad2(total % 60);
+    if (startEl.value) {
+      var total = this.toMinutes(startEl.value) + mins;
+      endEl.value = this.pad2(Math.floor((total % 1440) / 60)) + ':' + this.pad2(total % 60);
+      this.showShiftLength(key);
+      var over = Math.floor(total / 1440);
+      this.toast(this.lengthText(mins) + ', ending ' + this.showTime(endEl.value) +
+        (over === 1 ? ' the next day' : (over > 1 ? ' ' + over + ' days later' : '')));
+      return;
+    }
+
+    /* Only an end, so work back to the start. A shift that ended at 02:00
+       and ran eight hours began at 18:00 the evening before, which the
+       clock reaches by wrapping rather than going negative. */
+    var back = this.toMinutes(endEl.value) - mins;
+    var days = 0;
+    while (back < 0) { back += 1440; days++; }
+    startEl.value = this.pad2(Math.floor(back / 60)) + ':' + this.pad2(back % 60);
     this.showShiftLength(key);
-    var over = Math.floor(total / 1440);
-    this.toast(this.lengthText(mins) + ', ending ' + endEl.value +
-      (over === 1 ? ' the next day' : (over > 1 ? ' ' + over + ' days later' : '')));
+    this.toast(this.lengthText(mins) + ', starting ' + this.showTime(startEl.value) +
+      (days === 1 ? ' the day before' : (days > 1 ? ' ' + days + ' days before' : '')));
   },
 
   /* A shift is "starts at X, runs for N minutes". Storing two clock times
@@ -10875,7 +11225,8 @@ var app = {
       if (took) this.setFlagLabels(mine);
     }
     var lists = ['visitors', 'contractors', 'regularVisitors', 'staff',
-                 'staffMovements', 'siteVehicles', 'shifts', 'irregulars', 'incidents', 'guards', 'keys', 'keyMoves'];
+                 'staffMovements', 'siteVehicles', 'shifts', 'irregulars', 'incidents', 'guards',
+                 'leave', 'keys', 'keyMoves'];
     for (i = 0; i < lists.length; i++) {
       if (d[lists[i]] === undefined) continue;
       if (!Array.isArray(d[lists[i]])) { d[lists[i]] = []; continue; }
@@ -10949,6 +11300,26 @@ var app = {
         if (sDup) continue;
         this.staffMovements.push(this.adopt(sMove));
         report.movements++;
+      }
+    }
+
+    /* Time off, paired by who and when so the same booking arriving twice
+       does not become two. */
+    if (Array.isArray(d.leave)) {
+      for (i = 0; i < d.leave.length; i++) {
+        var lv = d.leave[i];
+        if (!lv || !lv.guard || !lv.from || !lv.to) continue;
+        var lvKey = [String(lv.guard).toLowerCase(), lv.from, lv.to].join('|');
+        var haveLv = false, li;
+        for (li = 0; li < this.leave.length; li++) {
+          var m2 = this.leave[li];
+          if ([String(m2.guard).toLowerCase(), m2.from, m2.to].join('|') === lvKey) haveLv = true;
+        }
+        if (!haveLv) {
+          this.leave.push(this.adopt({ guard: lv.guard, from: lv.from, to: lv.to,
+            why: lv.why || 'Holiday' }));
+          report.records++;
+        }
       }
     }
 
