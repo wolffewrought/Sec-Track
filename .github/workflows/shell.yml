@@ -1,0 +1,46 @@
+# Builds the WebView shell APK on GitHub's runners - no Android Studio,
+# no machine of your own. Runs on demand, or when the shell changes.
+name: shell apk
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ['android-shell/**']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: android-shell }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+
+      - uses: gradle/actions/setup-gradle@v3
+        with: { gradle-version: '8.7' }
+
+      # The same keystore the old wrapper was signed with, kept as
+      # secrets, so the shell installs over it as an update. Without the
+      # secrets a debug APK is built instead - fine for testing, but a
+      # debug key can never update over the signed app.
+      - name: build
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
+            gradle assembleRelease
+          else
+            echo "No keystore secrets - building a debug APK for testing only"
+            gradle assembleDebug
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sec-track-shell-apk
+          path: android-shell/app/build/outputs/apk/**/*.apk
