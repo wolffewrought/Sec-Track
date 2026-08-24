@@ -29,6 +29,7 @@ jobs:
           }
           echo "arranging:"
           move settings.gradle            android-shell/settings.gradle
+          move gradle.properties          android-shell/gradle.properties
           move build.gradle               android-shell/app/build.gradle
           move AndroidManifest.xml        android-shell/app/src/main/AndroidManifest.xml
           move MainActivity.java          android-shell/app/src/main/java/com/wolffewrought/sectrack/MainActivity.java
