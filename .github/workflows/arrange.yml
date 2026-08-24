@@ -1,0 +1,46 @@
+# One-shot mover: upload the shell's files FLAT at the repo root, run
+# this once, and it files each into its proper place and commits. The
+# move touches android-shell/**, so the "shell apk" build then starts
+# by itself.
+name: arrange files
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: file everything into place
+        run: |
+          moved=0
+          move () {
+            if [ -f "$1" ]; then
+              mkdir -p "$(dirname "$2")"
+              git mv -f "$1" "$2"
+              echo "  $1 -> $2"
+              moved=1
+            fi
+          }
+          echo "arranging:"
+          move settings.gradle            android-shell/settings.gradle
+          move build.gradle               android-shell/app/build.gradle
+          move AndroidManifest.xml        android-shell/app/src/main/AndroidManifest.xml
+          move MainActivity.java          android-shell/app/src/main/java/com/wolffewrought/sectrack/MainActivity.java
+          move colors.xml                 android-shell/app/src/main/res/values/colors.xml
+          move ic_launcher_foreground.xml android-shell/app/src/main/res/drawable/ic_launcher_foreground.xml
+          move ic_launcher.xml            android-shell/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          move shell-README.md            android-shell/README.md
+          if [ "$moved" = "0" ]; then
+            echo "nothing at the root to arrange - already filed, or not uploaded yet"
+            exit 0
+          fi
+          git config user.name  "arrange-files"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "arrange the android shell files into place"
+          git push
