@@ -2008,7 +2008,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v159';
+var BUILD = 'sat-v161';
 
 var app = {
   visitors: [],
@@ -11081,7 +11081,10 @@ var app = {
   },
 
   fileSaved: function (name, ok) {
-    if (!ok) this.toast('Could not save ' + name, 'error');
+    /* said out loud either way: a silent success looks exactly like a
+       silent failure to the person watching the screen */
+    if (ok) this.toast('Saved ' + name);
+    else this.toast('Could not save ' + name, 'error');
   },
 
   applyBridgeUi: function () {
@@ -11153,7 +11156,8 @@ var app = {
         return;
       }
       for (var f = 0; f < files.length; f++) {
-        br.saveFile(files[f].name, this.toBase64(files[f].bytes));
+        try { br.saveFile(files[f].name, this.toBase64(files[f].bytes)); }
+        catch (e) { this.toast('The folder writer failed for ' + files[f].name, 'error'); }
       }
       return;
     }
@@ -11165,7 +11169,8 @@ var app = {
        download manager behind it - so Downloads is written natively. */
     if (br && br.saveToDownloads) {
       for (var d = 0; d < files.length; d++) {
-        br.saveToDownloads(files[d].name, this.toBase64(files[d].bytes));
+        try { br.saveToDownloads(files[d].name, this.toBase64(files[d].bytes)); }
+        catch (e) { this.toast('The Downloads writer failed for ' + files[d].name, 'error'); }
       }
       return;
     }
@@ -11179,15 +11184,21 @@ var app = {
   },
 
   savePdf: function (bytes, filename) {
-    var blob = new Blob([bytes], { type: 'application/pdf' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    /* An installed web app has no console, so a throw anywhere in here
+       is a PDF that silently never happens. Said out loud instead. */
+    try {
+      var blob = new Blob([bytes], { type: 'application/pdf' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    } catch (e) {
+      this.toast('Could not hand ' + filename + ' to the browser: ' + e.message, 'error');
+    }
   },
 
   /* A day with shifts on it exports one sheet per shift, because that is
