@@ -2008,7 +2008,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v162';
+var BUILD = 'sat-v163';
 
 var app = {
   visitors: [],
@@ -11183,12 +11183,20 @@ var app = {
     var cap = this.capacitorSaver();
     if (cap) {
       var self2 = this;
-      files.forEach(function (fl) {
+      /* Documents first; where modern Android refuses a public folder,
+         the app's own external storage is the fallback - and the toast
+         says which one actually took the file. */
+      var tryDirs = function (fl, dirs) {
+        if (!dirs.length) { self2.toast('Could not save ' + fl.name, 'error'); return; }
         cap.writeFile({ path: fl.name, data: self2.toBase64(fl.bytes),
-          directory: 'DOCUMENTS' })
-          .then(function () { self2.toast('Saved ' + fl.name + ' to Documents'); })
-          .catch(function () { self2.toast('Could not save ' + fl.name, 'error'); });
-      });
+          directory: dirs[0] })
+          .then(function () {
+            self2.toast('Saved ' + fl.name +
+              (dirs[0] === 'DOCUMENTS' ? ' to Documents' : " to the app's storage"));
+          })
+          .catch(function () { tryDirs(fl, dirs.slice(1)); });
+      };
+      files.forEach(function (fl) { tryDirs(fl, ['DOCUMENTS', 'EXTERNAL']); });
       return;
     }
 
