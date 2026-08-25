@@ -12,10 +12,12 @@ android {
         /* Keep the applicationId and signing key of the old wrapper and
            this installs OVER it as an update. Change either and it lands
            beside it as a second app instead. */
-        applicationId "com.wolffewrought.sectrack"
+        /* the SAME identity as the Capacitor app it succeeds, so that -
+           signed with the same key - it installs over it as an update */
+        applicationId "shop.wolffewrought.accesstracker"
         minSdk 29            /* Android 10: MediaStore.Downloads needs it */
         targetSdk 34
-        versionCode 2
+        versionCode 1000     /* comfortably above any existing build */
         versionName "shell-1"
     }
 
