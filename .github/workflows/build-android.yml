@@ -38,7 +38,9 @@ jobs:
           # The one line this wrapper was missing: without the Filesystem
           # plugin a Capacitor WebView has no way to save a file at all,
           # so every export died at a silently ignored download link.
-          npm install @capacitor/filesystem
+          # Pinned to the 7 line, because the project pins Capacitor 7 -
+          # the bare install fetched v8 and npm rightly refused the pair.
+          npm install @capacitor/filesystem@^7
 
       - name: Create the Android project
         run: |
