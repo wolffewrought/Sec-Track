@@ -2008,7 +2008,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v161';
+var BUILD = 'sat-v162';
 
 var app = {
   visitors: [],
@@ -11043,6 +11043,18 @@ var app = {
     return (typeof AndroidSaver !== 'undefined' && AndroidSaver) ? AndroidSaver : null;
   },
 
+  /* The Capacitor wrapper's own file writer, when the page is bundled
+     inside that APK and the Filesystem plugin has been added to it. A
+     Capacitor WebView ignores download links outright, so without this
+     no export can leave that container at all. */
+  capacitorSaver: function () {
+    try {
+      if (typeof Capacitor !== 'undefined' && Capacitor.Plugins &&
+          Capacitor.Plugins.Filesystem) return Capacitor.Plugins.Filesystem;
+    } catch (e) {}
+    return null;
+  },
+
   /* bytes to base64, in slices: one giant fromCharCode call overflows
      the argument stack on a big sheet */
   toBase64: function (bytes) {
@@ -11164,6 +11176,21 @@ var app = {
 
     if (mode === 'share' && this.sharePdfs(files)) return;
     if (mode === 'share') this.toast('Sharing is not available here - downloading instead');
+
+    /* Inside the Capacitor wrapper the same dead-end applies, and its
+       Filesystem plugin is the way out: each sheet lands in Documents,
+       and every save says so. */
+    var cap = this.capacitorSaver();
+    if (cap) {
+      var self2 = this;
+      files.forEach(function (fl) {
+        cap.writeFile({ path: fl.name, data: self2.toBase64(fl.bytes),
+          directory: 'DOCUMENTS' })
+          .then(function () { self2.toast('Saved ' + fl.name + ' to Documents'); })
+          .catch(function () { self2.toast('Could not save ' + fl.name, 'error'); });
+      });
+      return;
+    }
 
     /* In the shell, a blob link is a dead end - the WebView has no
        download manager behind it - so Downloads is written natively. */
