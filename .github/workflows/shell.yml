@@ -13,12 +13,12 @@ jobs:
     defaults:
       run: { working-directory: android-shell }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '17' }
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.7' }
 
       # The same keystore the old wrapper was signed with, kept as
@@ -42,7 +42,7 @@ jobs:
             gradle assembleDebug
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: sec-track-shell-apk
           path: android-shell/app/build/outputs/apk/**/*.apk
