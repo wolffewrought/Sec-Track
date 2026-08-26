@@ -233,7 +233,8 @@ body.night .swatch{border-bottom-color:var(--line)}
 body.night .muster-head{color:var(--ink)}
 body.night .status-valid,body.night .induction-tag.ok,body.night .induction-note.good{background:#052e16;color:var(--good)}
 body.night .status-needed,body.night .induction-tag.due,body.night .induction-note.bad{background:#3f1212;color:#fca5a5}
-body.night .status-soon,body.night .induction-tag.soon,body.night .induction-note.soon{background:#3a2a09;color:#fcd34d}
+body.night .status-soon,body.night .induction-note.soon{background:#3a2a09;color:#fcd34d}
+body.night .induction-tag.soon{background:#f59e0b;color:#000}
 body.night .form-title{color:#60a5fa}
 body.night .edit-btn{color:#60a5fa}
 body.night .rep-empty{color:var(--muted-soft)}
@@ -330,7 +331,7 @@ body.night .act-kind{color:var(--muted-soft)}
 .induction-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;padding:.15rem .45rem;border-radius:9999px;font-size:.8rem;font-weight:700;letter-spacing:.02em}
 .induction-tag.ok{background:#f0fdf4;color:#15803d}
 .induction-tag.due{background:#fef2f2;color:var(--bad-deep)}
-.induction-tag.soon{background:#fffbeb;color:#b45309}
+.induction-tag.soon{background:#f59e0b;color:#000}
 .status-soon{background:#fffbeb;color:#b45309}
 .induction-note.soon{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
 .flag-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
@@ -2076,7 +2077,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v177';
+var BUILD = 'sat-v178';
 
 var app = {
   visitors: [],
@@ -5077,7 +5078,7 @@ var app = {
      yet falls back to a single company-wide entry so nothing is hidden. */
   /* How far ahead an induction starts warning. Long enough to get a
      renewal booked before anyone is turned away at the gate. */
-  EXPIRY_WARN_DAYS: 30,
+  EXPIRY_WARN_DAYS: 28,   /* four weeks of amber before a renewal falls due */
 
   /* One reading of an expiry date, so an induction and a licence cannot
      end up disagreeing about what "expiring soon" means. */
@@ -6129,9 +6130,9 @@ var app = {
         if (e.missing) return { valid: false, missing: true, text: 'No induction date' };
         if (!e.valid) return { valid: false, text: 'Induction due' };
         if (e.soon) return { valid: true, soon: true,
-          text: e.days === 0 ? 'Induction expires today'
-            : 'Induction expires in ' + e.days + (e.days === 1 ? ' day' : ' days') };
-        return { valid: true, text: 'Induction valid' };
+          text: e.days === 0 ? 'Renewal needed today'
+            : e.days + (e.days === 1 ? ' day' : ' days') + ' until renewal' };
+        return { valid: true, text: 'Valid to ' + this.showDate(e.date) };
       }
     }
     return { valid: false, unknown: true, text: 'Not on the induction list' };
