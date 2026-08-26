@@ -355,7 +355,16 @@ body.no-scroll{overflow:hidden}
 .link-btn{background:none;border:none;padding:.4rem 0;font:inherit;color:var(--accent);font-weight:600;cursor:pointer;text-align:left;min-height:2.5rem;display:inline-flex;align-items:center;gap:.35rem}
 .detail-line{padding:.45rem 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.4rem}
 .detail-line:last-child{border-bottom:none}
-.log-acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem}
+.log-acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem;align-items:center}
+/* a time typed where the person is, not two screens away */
+.flag-pick{display:flex;flex-wrap:wrap;gap:.5rem;padding:.15rem 0}
+.flag-dot{width:2.5rem;height:2.5rem;border-radius:50%;border:2px solid var(--line-firm);cursor:pointer;padding:0;font-size:1rem}
+.flag-dot.none{background:var(--surface);color:var(--muted);font-weight:700}
+.flag-dot.sel{outline:3px solid var(--accent);outline-offset:2px}
+.rule-row{display:flex;align-items:center;gap:.55rem;padding:.4rem 0;border-bottom:1px solid var(--line)}
+.rule-dot{width:1.4rem;height:1.4rem;border-radius:50%;flex:none;border:1px solid var(--line-firm)}
+.rule-text{flex:1;min-width:0}
+.inline-time{width:5.6rem;min-height:2.5rem;padding:.35rem .5rem;font-size:.9rem;border:1px solid var(--line-firm);border-radius:.45rem;background:var(--surface);color:var(--ink)}
 /* a date is one thing; squeezed columns must not snap it at the slashes */
 .data-table .date-cell{white-space:nowrap;width:1%}
 .gs-period{margin:.9rem 0 .2rem;font-size:.95rem;color:var(--ink)}
@@ -482,6 +491,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <input type="date" id="moveVisitorDate">
 <p class="field-hint">Correct the day if this visit was logged against the wrong one.</p>
 </div>
+<div class="form-group">
+<label>Colour</label>
+<div class="flag-pick" id="flagPickVisitor"></div>
+<p class="field-hint">Tap a colour to sort this entry now instead of over the day sheet later.</p>
+</div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="visitorEntrySubmit">Record entry</button>
 <button type="button" class="button button-secondary" id="setCurrentTime">Use current time</button>
@@ -539,6 +553,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <label for="moveStaffDate">Day</label>
 <input type="date" id="moveStaffDate">
 <p class="field-hint">Correct the day if this movement was logged against the wrong one.</p>
+</div>
+<div class="form-group">
+<label>Colour</label>
+<div class="flag-pick" id="flagPickStaff"></div>
+<p class="field-hint">Tap a colour to sort this entry now instead of over the day sheet later.</p>
 </div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="staffMoveSubmit">Record departure</button>
@@ -666,6 +685,11 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <input type="date" id="moveIncidentDate">
 <p class="field-hint">Correct the day if this note was logged against the wrong one.</p>
 </div>
+<div class="form-group">
+<label>Colour</label>
+<div class="flag-pick" id="flagPickIncident"></div>
+<p class="field-hint">Tap a colour to sort this entry now instead of over the day sheet later.</p>
+</div>
 <div class="action-row">
 <button type="submit" class="button button-primary" id="incidentSubmit">Record incident</button>
 <button type="button" class="button button-secondary" id="incidentNowBtn">Use current time</button>
@@ -705,6 +729,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div id="subSheet" class="subpane active">
 <div class="page-switch" role="tablist">
 <button type="button" id="pageActivity" class="page-btn" role="tab">Activity</button>
+<button type="button" id="pageOnsite" class="page-btn" role="tab">On site</button>
 <button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
 <button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
 </div>
@@ -1427,6 +1452,16 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div class="section fold" id="fold_rowcolours">
 <div class="fold-row"><button type="button" class="fold-head" id="foldBtn_rowcolours" aria-expanded="false" aria-controls="foldBody_rowcolours"><span>Row colours</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_rowcolours" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_rowcolours" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_rowcolours">
+<div class="form-group" style="margin-bottom:.6rem">
+<label for="reasonRuleText">Reasons that colour themselves</label>
+<div id="reasonRuleList"></div>
+<input type="text" id="reasonRuleText" maxlength="40" placeholder="e.g. deliver" autocomplete="off">
+<div class="flag-pick" id="reasonRulePick" style="margin-top:.45rem"></div>
+<div class="action-row" style="margin-top:.45rem">
+<button type="button" class="button button-secondary" id="btnAddReasonRule">Add rule</button>
+</div>
+<p class="field-hint">A new visitor entry whose reason contains the word gets the colour on its own &mdash; &ldquo;deliver&rdquo; gathers Delivery, Deliveries and the rest of the family. A colour tapped on the form still wins.</p>
+</div>
 <p class="text-muted" style="margin-top:0">Tap the number beside any entry to colour it. Name the colours here and the meanings print on the reports.</p>
 <div id="flagEditor"></div>
 <div class="action-row">
@@ -2008,7 +2043,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v163';
+var BUILD = 'sat-v164';
 
 var app = {
   visitors: [],
@@ -3199,6 +3234,19 @@ var app = {
 
     var ps = document.getElementById('paperSize');
     var ws = document.getElementById('weekStart');
+    document.getElementById('btnAddReasonRule').addEventListener('click', function () {
+      var t = document.getElementById('reasonRuleText');
+      if (self.addReasonRule(t.value, self.pendingRuleFlag)) {
+        t.value = '';
+        self.renderReasonRules();
+        self.toast('Rule added');
+      } else {
+        self.toast('Type a word and tap a colour first', 'error');
+      }
+    });
+    self.renderFlagPicks();
+    self.renderReasonRules();
+
     var pdel = document.getElementById('pdfDelivery');
     pdel.value = self.pdfDeliveryMode();
     pdel.addEventListener('change', function () {
@@ -3418,6 +3466,7 @@ var app = {
     document.getElementById('pageDaily').addEventListener('click', function () { self.setLogPage('daily'); });
     document.getElementById('pageContractors').addEventListener('click', function () { self.setLogPage('contractors'); });
     document.getElementById('pageActivity').addEventListener('click', function () { self.setLogPage('activity'); });
+    document.getElementById('pageOnsite').addEventListener('click', function () { self.setLogPage('onsite'); });
 
     document.getElementById('prevDay').addEventListener('click', function () { self.shiftViewDate(-1); });
     document.getElementById('nextDay').addEventListener('click', function () { self.shiftViewDate(1); });
@@ -3583,6 +3632,9 @@ var app = {
     window.scrollTo(0, 0);
     if (name === 'settings') { this.renderStorageNote(); this.renderBackupNote(); }
     if (name === 'roster') this.renderRoster();
+    /* the commonest job greets you, whatever was open last time - the
+       tab is named tracker; entry is its sub-group's name */
+    if (name === 'tracker') { this.activateSub('entry', 'subVisitor'); this.renderFlagPicks(); }
     /* which sub tab bar is visible has just changed, and the bars below
        stack on its measured height */
     this.syncStickyOffset();
@@ -4501,6 +4553,7 @@ var app = {
       for (var ei = 0; ei < this.visitors.length; ei++) {
         if (this.visitors[ei].id !== this.editingEntryId) continue;
         this.visitors[ei].date = this.movedDay('moveVisitorDate', this.visitors[ei].date);
+        this.visitors[ei].flag = this.pendingFlag.visitor;
         this.visitors[ei].company = company;
         this.visitors[ei].rep = rep;
         this.visitors[ei].vehicle = vehicle;
@@ -4546,8 +4599,10 @@ var app = {
       vehicle: vehicle,
       reason: reason,
       entryTime: entryTime,
-      exitTime: exitTime
+      exitTime: exitTime,
+      flag: this.entryFlagFor('visitor', reason)
     });
+    this.resetEntryFlag('visitor');
 
     var learned = null;
     /* The visit is already recorded, so a failure here must not lose it.
@@ -4621,6 +4676,7 @@ var app = {
     document.getElementById('entryTime').value = rec.entryTime;
     document.getElementById('exitTime').value = rec.exitTime || '';
     this.showMoveDay('moveVisitorDateRow', 'moveVisitorDate', rec.date);
+    this.setEntryFlag('visitor', rec.flag || 0);
 
     var seq = this.seqFor('visitor', rec);
     var title = document.getElementById('visitorEntryTitle');
@@ -4637,6 +4693,7 @@ var app = {
 
   cancelEntryEdit: function () {
     this.showMoveDay('moveVisitorDateRow', 'moveVisitorDate', '');
+    this.resetEntryFlag('visitor');
     this.editingEntryId = null;
     document.getElementById('visitorForm').reset();
     document.getElementById('visitorEntryTitle').style.display = 'none';
@@ -4660,6 +4717,26 @@ var app = {
         return;
       }
     }
+  },
+
+  /* Only the people still inside the fence: open visits and staff who
+     have not come back, from the day on view. The inline time boxes ride
+     along, so an entry can be completed from this page too. */
+  renderOnsite: function (container, needle) {
+    var rows = this.dayLogFor(this.viewDate).filter(function (r) {
+      return (r.kind === 'visitor' && !r.rec.exitTime) ||
+             (r.kind === 'staff' && !r.rec.backTime);
+    });
+    if (needle) {
+      rows = rows.filter(function (r) {
+        return ((r.label || '') + ' ' + (r.detail || '')).toLowerCase().indexOf(needle) !== -1;
+      });
+    }
+    if (!rows.length) {
+      container.innerHTML = '<p class="empty-state">Nobody is still on site.</p>';
+      return;
+    }
+    container.innerHTML = this.dayLogTable(rows);
   },
 
   renderLog: function () {
@@ -4691,6 +4768,15 @@ var app = {
     cBtn.className = 'page-btn' + (this.logPage === 'contractors' ? ' active' : '');
     dBtn.className = 'page-btn' + (this.logPage === 'daily' ? ' active' : '');
     aBtn.className = 'page-btn' + (this.logPage === 'activity' ? ' active' : '');
+    var oBtn = document.getElementById('pageOnsite');
+    if (oBtn) {
+      var here = this.dayLogFor(this.viewDate).filter(function (r) {
+        return (r.kind === 'visitor' && !r.rec.exitTime) ||
+               (r.kind === 'staff' && !r.rec.backTime);
+      }).length;
+      oBtn.innerHTML = 'On site<span>' + here + ' here</span>';
+      oBtn.className = 'page-btn' + (this.logPage === 'onsite' ? ' active' : '');
+    }
     cBtn.setAttribute('aria-selected', this.logPage === 'contractors' ? 'true' : 'false');
     dBtn.setAttribute('aria-selected', this.logPage === 'daily' ? 'true' : 'false');
     aBtn.setAttribute('aria-selected', this.logPage === 'activity' ? 'true' : 'false');
@@ -4711,6 +4797,11 @@ var app = {
     summary.innerHTML = '<span>' + label + '</span>' + chip;
 
     var needle = this.sheetFilter();
+
+    if (this.logPage === 'onsite') {
+      this.renderOnsite(container, needle);
+      return;
+    }
 
     if (this.logPage === 'daily') {
       this.renderDayLog(container, needle);
@@ -5635,6 +5726,7 @@ var app = {
       for (var mi = 0; mi < this.staffMovements.length; mi++) {
         if (this.staffMovements[mi].id !== this.editingMoveId) continue;
         this.staffMovements[mi].date = this.movedDay('moveStaffDate', this.staffMovements[mi].date);
+        this.staffMovements[mi].flag = this.pendingFlag.staff;
         this.staffMovements[mi].name = name;
         this.staffMovements[mi].vehicleType = mode;
         this.staffMovements[mi].vehicle = vehicle;
@@ -5664,8 +5756,9 @@ var app = {
       reason: reason,
       outTime: outTime,
       backTime: backTime,
-      flag: 0
+      flag: this.entryFlagFor('staff', reason)
     });
+    this.resetEntryFlag('staff');
 
     this.saveData();
     this.renderStaffMovements();
@@ -5693,6 +5786,7 @@ var app = {
     document.getElementById('staffReasonInput').value = rec.reason;
     document.getElementById('staffOutTime').value = rec.outTime;
     this.showMoveDay('moveStaffDateRow', 'moveStaffDate', rec.date);
+    this.setEntryFlag('staff', rec.flag || 0);
     document.getElementById('staffBackTime').value = rec.backTime || '';
 
     var seq = this.seqFor('staff', rec);
@@ -5710,6 +5804,7 @@ var app = {
 
   cancelStaffMoveEdit: function () {
     this.showMoveDay('moveStaffDateRow', 'moveStaffDate', '');
+    this.resetEntryFlag('staff');
     this.editingMoveId = null;
     document.getElementById('staffMoveForm').reset();
     document.getElementById('staffMoveTitle').style.display = 'none';
@@ -6019,6 +6114,188 @@ var app = {
      and the word between them on one line is a wall of digits in a narrow
      column, and the column is narrow because the names beside it need the
      room. */
+  /* A small time box on the row itself: the guard watching someone
+     leave at 16:45 should not need the full edit form to say so. */
+  inlineTimeBox: function (id, kind) {
+    var pad = this.timeEntryMode() === 'pad';
+    var box = (pad
+      ? ' type="text" inputmode="numeric" maxlength="8" placeholder="0000" data-timepad="1"'
+      : ' type="time"');
+    if (kind === 'exit') {
+      return '<input class="inline-time" id="exitAt_' + Number(id) + '"' + box + '>' +
+        '<button type="button" class="small-act" onclick="app.setExitAt(' + Number(id) + ')">Set</button>';
+    }
+    return '<input class="inline-time" id="backAt_' + Number(id) + '"' + box + '>' +
+      '<button type="button" class="small-act" onclick="app.setBackAt(' + Number(id) + ')">Set</button>';
+  },
+
+  setExitAt: function (id) {
+    var el = document.getElementById('exitAt_' + id);
+    if (!el) return;
+    this.commitTypedTime(el);
+    var v = this.looseTime(el.value);
+    if (!v) { this.toast('Type the exit time first', 'error'); return; }
+    for (var i = 0; i < this.visitors.length; i++) {
+      if (this.visitors[i].id === id) {
+        this.visitors[i].exitTime = v;
+        this.saveData();
+        this.setLogPage(this.logPage || 'daily');
+        this.renderVisitors();
+        this.toast('Logged out at ' + this.showTime(v));
+        return;
+      }
+    }
+  },
+
+  setBackAt: function (id) {
+    var el = document.getElementById('backAt_' + id);
+    if (!el) return;
+    this.commitTypedTime(el);
+    var v = this.looseTime(el.value);
+    if (!v) { this.toast('Type the return time first', 'error'); return; }
+    for (var i = 0; i < this.staffMovements.length; i++) {
+      if (this.staffMovements[i].id === id) {
+        this.staffMovements[i].backTime = v;
+        this.saveData();
+        this.setLogPage(this.logPage || 'daily');
+        this.renderStaffMovements();
+        this.toast('Back at ' + this.showTime(v));
+        return;
+      }
+    }
+  },
+
+  /* ---------------- a colour chosen where the entry is made ---------------- */
+
+  FLAG_KINDS: ['visitor', 'staff', 'incident'],
+
+  pendingFlag: { visitor: 0, staff: 0, incident: 0 },
+  pendingFlagManual: { visitor: false, staff: false, incident: false },
+
+  /* the inline handlers speak numbers only - kind travels as an index */
+  pickFlagDot: function (ki, id) {
+    this.setEntryFlag(this.FLAG_KINDS[ki], id);
+  },
+
+  setEntryFlag: function (kind, id) {
+    this.pendingFlag[kind] = id;
+    this.pendingFlagManual[kind] = true;
+    this.renderFlagPicks();
+  },
+
+  resetEntryFlag: function (kind) {
+    this.pendingFlag[kind] = 0;
+    this.pendingFlagManual[kind] = false;
+    this.renderFlagPicks();
+  },
+
+  /* The colour a new record gets: a hand-picked one wins; failing that,
+     a visitor's reason may carry one from the rules below; failing both,
+     none. */
+  entryFlagFor: function (kind, reason) {
+    if (this.pendingFlagManual[kind]) return this.pendingFlag[kind];
+    if (kind === 'visitor') return this.flagForReason(reason || '');
+    return 0;
+  },
+
+  renderFlagPicks: function () {
+    var flags = this.allFlags(), i, j;
+    for (i = 0; i < this.FLAG_KINDS.length; i++) {
+      var kind = this.FLAG_KINDS[i];
+      var box = document.getElementById('flagPick' +
+        kind.charAt(0).toUpperCase() + kind.slice(1));
+      if (!box) continue;
+      var sel = this.pendingFlag[kind];
+      var out = '<button type="button" class="flag-dot none' + (sel === 0 ? ' sel' : '') +
+        '" onclick="app.pickFlagDot(' + i + ',0)" title="No colour">&ndash;</button>';
+      for (j = 0; j < flags.length; j++) {
+        var f = flags[j];
+        out += '<button type="button" class="flag-dot' + (sel === f.id ? ' sel' : '') +
+          '" style="background:' + f.hex + '"' +
+          ' onclick="app.pickFlagDot(' + i + ',' + f.id + ')"' +
+          ' title="' + this.esc(this.flagName(f.id)) + '"></button>';
+      }
+      box.innerHTML = out;
+    }
+  },
+
+  /* ---------------- reasons that colour themselves ---------------- */
+
+  reasonFlagRules: function () {
+    try {
+      var v = JSON.parse(localStorage.getItem('sat-reason-flags'));
+      return Array.isArray(v) ? v.filter(function (r) {
+        return r && typeof r.text === 'string' && r.text && typeof r.flag === 'number';
+      }) : [];
+    } catch (e) { return []; }
+  },
+
+  saveReasonRules: function (rules) {
+    try { localStorage.setItem('sat-reason-flags', JSON.stringify(rules)); } catch (e) {}
+  },
+
+  addReasonRule: function (text, flag) {
+    text = String(text || '').trim();
+    if (!text || !flag) return false;
+    var rules = this.reasonFlagRules();
+    rules.push({ text: text, flag: flag });
+    this.saveReasonRules(rules);
+    return true;
+  },
+
+  removeReasonRuleAt: function (i) {
+    var rules = this.reasonFlagRules();
+    if (!rules[i]) return;
+    rules.splice(i, 1);
+    this.saveReasonRules(rules);
+    this.renderReasonRules();
+  },
+
+  /* an umbrella match: "deliver" gathers Delivery, Deliveries, and the
+     rest of the family under one colour */
+  flagForReason: function (reason) {
+    var r = String(reason || '').toLowerCase();
+    if (!r) return 0;
+    var rules = this.reasonFlagRules();
+    for (var i = 0; i < rules.length; i++) {
+      if (r.indexOf(rules[i].text.toLowerCase()) !== -1) return rules[i].flag;
+    }
+    return 0;
+  },
+
+  pendingRuleFlag: 1,
+
+  pickRuleFlag: function (id) {
+    this.pendingRuleFlag = id;
+    this.renderReasonRules();
+  },
+
+  renderReasonRules: function () {
+    var list = document.getElementById('reasonRuleList');
+    var pick = document.getElementById('reasonRulePick');
+    if (!list || !pick) return;
+    var rules = this.reasonFlagRules(), i, out = '';
+    if (!rules.length) {
+      out = '<p class="text-muted" style="margin:.2rem 0">Nothing yet. A reason containing the word gets the colour by itself.</p>';
+    }
+    for (i = 0; i < rules.length; i++) {
+      out += '<div class="rule-row"><span class="rule-dot" style="background:' +
+        this.flagHex(rules[i].flag) + '" title="' + this.esc(this.flagName(rules[i].flag)) + '"></span>' +
+        '<span class="rule-text">&ldquo;' + this.esc(rules[i].text) + '&rdquo; &rarr; ' +
+        this.esc(this.flagName(rules[i].flag)) + '</span>' +
+        '<button type="button" class="delete-btn" onclick="app.removeReasonRuleAt(' + i + ')" aria-label="Remove">&times;</button></div>';
+    }
+    list.innerHTML = out;
+    var flags = this.allFlags(), p = '';
+    for (i = 0; i < flags.length; i++) {
+      var fr = flags[i];
+      p += '<button type="button" class="flag-dot' + (this.pendingRuleFlag === fr.id ? ' sel' : '') +
+        '" style="background:' + fr.hex + '"' +
+        ' onclick="app.pickRuleFlag(' + fr.id + ')" title="' + this.esc(this.flagName(fr.id)) + '"></button>';
+    }
+    pick.innerHTML = p;
+  },
+
   timeSpan: function (from, to) {
     var start = this.esc(this.showTime(from));
     if (!to) return start;
@@ -6044,13 +6321,15 @@ var app = {
       if (r.kind === 'visitor') {
         act = (r.rec.exitTime ? '' :
           '<button type="button" class="button button-secondary small-act" ' +
-          'onclick="app.setExit(' + r.rec.id + ')">Log out</button>') +
+          'onclick="app.setExit(' + r.rec.id + ')">Log out</button>' +
+          this.inlineTimeBox(r.rec.id, 'exit')) +
           '<button type="button" class="edit-btn" onclick="app.editEntry(' + r.rec.id + ')">Edit</button>' +
           '<button type="button" class="delete-btn" onclick="app.deleteVisitor(' + r.rec.id + ')" aria-label="Delete">&times;</button>';
       } else if (r.kind === 'staff') {
         act = (r.rec.backTime ? '' :
           '<button type="button" class="button button-secondary small-act" ' +
-          'onclick="app.setStaffBack(' + r.rec.id + ')">Back</button>') +
+          'onclick="app.setStaffBack(' + r.rec.id + ')">Back</button>' +
+          this.inlineTimeBox(r.rec.id, 'back')) +
           '<button type="button" class="edit-btn" onclick="app.editStaffMove(' + r.rec.id + ')">Edit</button>' +
           '<button type="button" class="delete-btn" onclick="app.deleteStaffMove(' + r.rec.id + ')" aria-label="Delete">&times;</button>';
       } else {
@@ -6108,7 +6387,7 @@ var app = {
   },
 
   setLogPage: function (page) {
-    if (page !== 'contractors' && page !== 'daily' && page !== 'activity') return;
+    if (page !== 'contractors' && page !== 'daily' && page !== 'activity' && page !== 'onsite') return;
     this.logPage = page;
     this.renderLog();
   },
@@ -6259,6 +6538,7 @@ var app = {
       for (var k = 0; k < this.incidents.length; k++) {
         if (this.incidents[k].id !== this.editingIncidentId) continue;
         this.incidents[k].date = this.movedDay('moveIncidentDate', this.incidents[k].date);
+        this.incidents[k].flag = this.pendingFlag.incident;
         this.incidents[k].type = type;
         this.incidents[k].detail = detail;
         this.incidents[k].time = time;
@@ -6278,8 +6558,9 @@ var app = {
       detail: detail,
       time: time,
       ended: ended,
-      flag: 0
+      flag: this.entryFlagFor('incident', '')
     });
+    this.resetEntryFlag('incident');
 
     this.saveData();
     this.renderIncidents();
@@ -6300,6 +6581,7 @@ var app = {
     document.getElementById('incidentTime').value = rec.time;
     document.getElementById('incidentEnd').value = rec.ended || '';
     this.showMoveDay('moveIncidentDateRow', 'moveIncidentDate', rec.date);
+    this.setEntryFlag('incident', rec.flag || 0);
 
     var seq = this.seqFor('incident', rec);
     var title = document.getElementById('incidentTitle');
@@ -6314,6 +6596,7 @@ var app = {
 
   cancelIncidentEdit: function () {
     this.showMoveDay('moveIncidentDateRow', 'moveIncidentDate', '');
+    this.resetEntryFlag('incident');
     this.editingIncidentId = null;
     document.getElementById('incidentForm').reset();
     document.getElementById('incidentTitle').style.display = 'none';
@@ -8721,12 +9004,23 @@ var app = {
     return null;
   },
 
+  /* A time as typed, made calculable without touching the field: the
+     length label updates on every keystroke, long before blur has tidied
+     "1700" into "17:00" - fed raw, the sums read 1700 as an hour and the
+     label announced a seventeen-hundred-hour shift. */
+  looseTime: function (v) {
+    if (!v) return '';
+    if (/^\d{1,2}:\d{2}$/.test(v)) return v;
+    var t = this.normaliseTypedTime(String(v));
+    return t === null ? '' : t;
+  },
+
   showShiftLength: function (key) {
     var pair = this.formFields(key);
     if (!pair) return;
     var mins = this.shiftMinutes(
-      document.getElementById(pair[1]).value,
-      document.getElementById(pair[2]).value);
+      this.looseTime(document.getElementById(pair[1]).value),
+      this.looseTime(document.getElementById(pair[2]).value));
 
     var out = document.getElementById('len_' + key);
     if (out) out.textContent = this.lengthText(mins);
@@ -8750,7 +9044,7 @@ var app = {
     /* Either end will do. A guard who knows a shift finished at 14:00 and
        ran eight hours has said everything needed; insisting on the start
        makes them do the arithmetic the app is here to do. */
-    if (!startEl.value && !endEl.value) {
+    if (!this.looseTime(startEl.value) && !this.looseTime(endEl.value)) {
       this.toast('Set a start or an end time, and the length fills in the other', 'error');
       return;
     }
@@ -8768,8 +9062,8 @@ var app = {
     if (hours >= this.LONG_SHIFT_HOURS &&
         !confirm('That is a ' + this.lengthText(mins) + ' shift. Is that right?')) return;
 
-    if (startEl.value) {
-      var total = this.toMinutes(startEl.value) + mins;
+    if (this.looseTime(startEl.value)) {
+      var total = this.toMinutes(this.looseTime(startEl.value)) + mins;
       endEl.value = this.pad2(Math.floor((total % 1440) / 60)) + ':' + this.pad2(total % 60);
       this.showShiftLength(key);
       var over = Math.floor(total / 1440);
@@ -8781,7 +9075,7 @@ var app = {
     /* Only an end, so work back to the start. A shift that ended at 02:00
        and ran eight hours began at 18:00 the evening before, which the
        clock reaches by wrapping rather than going negative. */
-    var back = this.toMinutes(endEl.value) - mins;
+    var back = this.toMinutes(this.looseTime(endEl.value)) - mins;
     var days = 0;
     while (back < 0) { back += 1440; days++; }
     startEl.value = this.pad2(Math.floor(back / 60)) + ':' + this.pad2(back % 60);
