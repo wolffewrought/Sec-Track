@@ -355,6 +355,11 @@ body.no-scroll{overflow:hidden}
 .link-btn{background:none;border:none;padding:.4rem 0;font:inherit;color:var(--accent);font-weight:600;cursor:pointer;text-align:left;min-height:2.5rem;display:inline-flex;align-items:center;gap:.35rem}
 .detail-line{padding:.45rem 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.4rem}
 .detail-line:last-child{border-bottom:none}
+/* The phone draws a select's popup itself; without an explicit scheme
+   and solid option colours, its first paint can arrive transparent. */
+select,option,optgroup{background-color:var(--surface);color:var(--ink)}
+:root{color-scheme:light}
+body.night{color-scheme:dark}
 .log-acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem;align-items:center}
 /* a time typed where the person is, not two screens away */
 .flag-pick{display:flex;flex-wrap:wrap;gap:.5rem;padding:.15rem 0}
@@ -1325,6 +1330,14 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <p class="field-hint">Typed times are kept the moment you leave the box &mdash; no Set button needed. The phone's picker is the phone's own; which face it opens with belongs to the phone, not the app.</p>
 </div>
 <div class="form-group">
+<label for="dateEntry">Typing a date</label>
+<select id="dateEntry">
+<option value="calendar">Use the phone's own calendar</option>
+<option value="pad">Type the numbers &mdash; 260827 becomes the date</option>
+</select>
+<p class="field-hint">Applies to induction expiry dates. Typed dates follow the date order chosen above and are tidied the moment you leave the box.</p>
+</div>
+<div class="form-group">
 <label for="tzPick">Time zone</label>
 <select id="tzPick"></select>
 <p class="field-hint">Only changes how times are written out. Entries are still stamped by the device clock, so leave this on the device setting unless sheets are read somewhere else.</p>
@@ -2043,7 +2056,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v164';
+var BUILD = 'sat-v165';
 
 var app = {
   visitors: [],
@@ -3275,6 +3288,15 @@ var app = {
       self.exportDaySheets('share');
     });
 
+    var de = document.getElementById('dateEntry');
+    de.value = self.dateEntryMode();
+    de.addEventListener('change', function () {
+      self.setDateEntryMode(de.value);
+      self.toast(de.value === 'pad'
+        ? 'Induction dates can be typed as digits'
+        : "Induction dates use the phone's calendar");
+    });
+
     var te = document.getElementById('timeEntry');
     te.value = self.timeEntryMode();
     te.addEventListener('change', function () {
@@ -4426,10 +4448,24 @@ var app = {
     var dateInput = null;
     if (withDates) {
       dateInput = document.createElement('input');
-      dateInput.type = 'date';
+      if (this.dateEntryMode() === 'pad') {
+        dateInput.type = 'text';
+        dateInput.inputMode = 'numeric';
+        dateInput.maxLength = 10;
+        dateInput.placeholder = this.dateOrder() === 'mdy' ? 'mm/dd/yyyy' : 'dd/mm/yyyy';
+        dateInput.value = inductionDate ? this.showDate(inductionDate) : '';
+        (function (el, self) {
+          el.addEventListener('blur', function () { self.commitTypedDate(el); });
+          el.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter') { ev.preventDefault(); self.commitTypedDate(el); }
+          });
+        })(dateInput, this);
+      } else {
+        dateInput.type = 'date';
+        dateInput.value = inductionDate || '';
+      }
       dateInput.className = 'rep-date';
       dateInput.title = 'Induction expiry for this person';
-      dateInput.value = inductionDate || '';
     }
 
     var remove = document.createElement('button');
@@ -4488,7 +4524,8 @@ var app = {
       }
       var entry = { name: name, vehicles: regs };
       var dateField = rows[i].querySelector('.rep-date');
-      if (dateField && dateField.value) entry.inductionDate = dateField.value;
+      var isoDate = this.readDateField(dateField);
+      if (isoDate) entry.inductionDate = isoDate;
       if (name || regs.length || entry.inductionDate) out.push(entry);
     }
     return out;
@@ -5385,10 +5422,17 @@ var app = {
       var repCell;
       if ((v.reps || []).length) {
         var parts = [];
-        for (var r = 0; r < v.reps.length; r++) {
-          parts.push(this.esc(v.reps[r].name || 'Unnamed') +
-            (v.reps[r].vehicles.length
-              ? '<span class="cell-sub">' + this.esc(v.reps[r].vehicles.join(', ')) + '</span>'
+        for (var j = 0; j < v.reps.length; j++) {
+          var rp = v.reps[j];
+          var mark = this.isContractorRep(v.name, rp.name)
+            ? ' <span class="cell-sub">&middot; in contractors</span>'
+            : (rp.name
+              ? ' <button type="button" class="small-act" onclick="app.repToContractor(' +
+                v.id + ',' + j + ')">Add as contractor</button>'
+              : '');
+          parts.push(this.esc(rp.name || 'Unnamed') + mark +
+            (rp.vehicles.length
+              ? '<span class="cell-sub">' + this.esc(rp.vehicles.join(', ')) + '</span>'
               : ''));
         }
         repCell = parts.join('<br>');
@@ -5410,6 +5454,54 @@ var app = {
     container.innerHTML = '<table class="data-table"><thead><tr>' +
       '<th>Company</th><th>Representatives</th><th>Shared pool</th><th>Usual reason</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
+  },
+
+  /* Already on the contractor register, under this company, by name? */
+  isContractorRep: function (companyName, repName) {
+    if (!repName) return false;
+    var cn = String(companyName || '').toLowerCase();
+    var rn = String(repName).toLowerCase();
+    for (var i = 0; i < this.contractors.length; i++) {
+      if (String(this.contractors[i].name || '').toLowerCase() !== cn) continue;
+      var reps = this.contractors[i].reps || [];
+      for (var j = 0; j < reps.length; j++) {
+        if (String(reps[j].name || '').toLowerCase() === rn) return true;
+      }
+    }
+    return false;
+  },
+
+  /* A regular's known driver, lifted into the contractor register with
+     their vehicles - induction left blank on purpose: that date is a
+     fact to be checked, not assumed. */
+  repToContractor: function (companyId, repIdx) {
+    var reg = null, i;
+    for (i = 0; i < this.regularVisitors.length; i++) {
+      if (this.regularVisitors[i].id === companyId) reg = this.regularVisitors[i];
+    }
+    if (!reg || !(reg.reps || [])[repIdx]) return;
+    var rep = reg.reps[repIdx];
+    if (!rep.name) { this.toast('Give the representative a name first', 'error'); return; }
+    if (this.isContractorRep(reg.name, rep.name)) {
+      this.toast(rep.name + ' is already on the contractor register');
+      return;
+    }
+    var target = null;
+    for (i = 0; i < this.contractors.length; i++) {
+      if (String(this.contractors[i].name || '').toLowerCase() === String(reg.name).toLowerCase()) {
+        target = this.contractors[i];
+      }
+    }
+    if (!target) {
+      target = { id: this.nextId(), name: reg.name, reps: [] };
+      this.contractors.push(target);
+    }
+    if (!target.reps) target.reps = [];
+    target.reps.push({ name: rep.name, vehicles: (rep.vehicles || []).slice() });
+    this.saveData();
+    this.renderArchive();
+    this.renderVisitors();
+    this.toast(rep.name + ' added under ' + reg.name + ' - set their induction in Contractors');
   },
 
   deleteRegularVisitor: function (id) {
@@ -9008,6 +9100,61 @@ var app = {
      length label updates on every keystroke, long before blur has tidied
      "1700" into "17:00" - fed raw, the sums read 1700 as an hour and the
      label announced a seventeen-hundred-hour shift. */
+  dateEntryMode: function () {
+    try { return localStorage.getItem('sat-dateentry') === 'pad' ? 'pad' : 'calendar'; } catch (e) { return 'calendar'; }
+  },
+
+  setDateEntryMode: function (v) {
+    try { localStorage.setItem('sat-dateentry', v === 'pad' ? 'pad' : 'calendar'); } catch (e) {}
+  },
+
+  /* A date as typed - 26/08/2027, 26.8.27, 260827 - read in the order
+     the person chose in settings, and handed back as ISO for storage.
+     A full year-first date is accepted too, whatever the setting. */
+  looseDate: function (v) {
+    v = String(v || '').replace(/^\s+|\s+$/g, '');
+    if (!v) return '';
+    var self = this;
+    var check = function (d, mo, y) {
+      if (y < 1900 || y > 2200 || mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+      var real = new Date(y, mo - 1, d);
+      if (real.getMonth() !== mo - 1 || real.getDate() !== d) return '';
+      return y + '-' + self.pad2(mo) + '-' + self.pad2(d);
+    };
+    /* the person's chosen order first - 260827 is a day-first date to a
+       day-first person, not the year 2608 */
+    var m = v.match(/^(\d{1,2})[\/\-. ]?(\d{1,2})[\/\-. ]?(\d{2}|\d{4})$/);
+    if (m) {
+      var a = Number(m[1]), b = Number(m[2]);
+      var y = Number(m[3]); if (y < 100) y += 2000;
+      var iso = this.dateOrder() === 'mdy' ? check(b, a, y) : check(a, b, y);
+      if (iso) return iso;
+    }
+    /* year-first as the fallback: separated, or eight bare digits that
+       actually start with a century */
+    m = v.match(/^(\d{4})[\/\-. ](\d{1,2})[\/\-. ](\d{1,2})$/) ||
+        v.match(/^((?:19|20)\d{2})(\d{2})(\d{2})$/);
+    if (m) return check(Number(m[3]), Number(m[2]), Number(m[1]));
+    return '';
+  },
+
+  /* On blur the digits are tidied into the chosen format, exactly as a
+     typed time is - the person sees what the app understood. */
+  commitTypedDate: function (el) {
+    if (!el) return;
+    var iso = this.looseDate(el.value);
+    if (iso) { el.value = this.showDate(iso); el.setAttribute('data-iso', iso); }
+    else if (el.value) { el.setAttribute('data-iso', ''); }
+    else { el.setAttribute('data-iso', ''); }
+  },
+
+  /* What a date field holds, whichever face it wears. */
+  readDateField: function (el) {
+    if (!el) return '';
+    if (el.type === 'date') return el.value || '';
+    return this.looseDate(el.value) || '';
+  },
+
   looseTime: function (v) {
     if (!v) return '';
     if (/^\d{1,2}:\d{2}$/.test(v)) return v;
