@@ -369,6 +369,10 @@ body.night{color-scheme:dark}
 .rule-row{display:flex;align-items:center;gap:.55rem;padding:.4rem 0;border-bottom:1px solid var(--line)}
 .rule-dot{width:1.4rem;height:1.4rem;border-radius:50%;flex:none;border:1px solid var(--line-firm)}
 .rule-text{flex:1;min-width:0}
+.form-clear-row{display:flex;justify-content:flex-end;margin:-.2rem 0 .45rem}
+.flag-select{min-height:2.75rem;font-size:1rem;padding:.4rem .55rem;border:1px solid var(--line-firm);border-radius:.45rem;background:var(--surface);color:var(--ink);max-width:15rem}
+.flag-swatch{display:inline-block;width:1.7rem;height:1.7rem;border-radius:50%;border:1px solid var(--line-firm);vertical-align:middle;margin-left:.55rem}
+.flag-swatch.none{background:transparent;border-style:dashed}
 .inline-time{width:5.6rem;min-height:2.5rem;padding:.35rem .5rem;font-size:.9rem;border:1px solid var(--line-firm);border-radius:.45rem;background:var(--surface);color:var(--ink)}
 /* a date is one thing; squeezed columns must not snap it at the slashes */
 .data-table .date-cell{white-space:nowrap;width:1%}
@@ -446,6 +450,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div class="fold-body" id="foldBody_recordvisitor">
 <form id="visitorForm" autocomplete="off">
 <h3 class="form-title" id="visitorEntryTitle" style="display:none"></h3>
+<div class="form-clear-row"><button type="button" class="button button-secondary small-act" id="clearVisitorForm">Clear</button></div>
 <div class="form-group">
 <label for="companyInput">Company / visitor name</label>
 <div class="autocomplete-wrapper">
@@ -516,6 +521,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div class="fold-body" id="foldBody_recordstaffdeparture">
 <form id="staffMoveForm" autocomplete="off">
 <h3 class="form-title" id="staffMoveTitle" style="display:none"></h3>
+<div class="form-clear-row"><button type="button" class="button button-secondary small-act" id="clearStaffForm">Clear</button></div>
 <div class="form-group">
 <label for="staffNameInput">Staff member</label>
 <div class="autocomplete-wrapper">
@@ -578,6 +584,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div class="fold-row"><button type="button" class="fold-head" id="foldBtn_issueorreturnakey" aria-expanded="true" aria-controls="foldBody_issueorreturnakey"><span>Issue or return a key</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_issueorreturnakey" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_issueorreturnakey" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_issueorreturnakey">
 <form id="keyMoveForm">
+<div class="form-clear-row"><button type="button" class="button button-secondary small-act" id="clearKeyForm">Clear</button></div>
 <input type="hidden" id="keyMoveEditId">
 <input type="hidden" id="keyToFrom">
 <div class="form-group">
@@ -623,6 +630,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div class="fold-body" id="foldBody_recordincident">
 <form id="incidentForm" autocomplete="off">
 <h3 class="form-title" id="incidentTitle" style="display:none"></h3>
+<div class="form-clear-row"><button type="button" class="button button-secondary small-act" id="clearIncidentForm">Clear</button></div>
 <div class="form-group">
 <label for="incidentType">What happened</label>
 <select id="incidentType">
@@ -733,10 +741,9 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 <div id="subSheet" class="subpane active">
 <div class="page-switch" role="tablist">
-<button type="button" id="pageActivity" class="page-btn" role="tab">Activity</button>
 <button type="button" id="pageOnsite" class="page-btn" role="tab">On site</button>
+<button type="button" id="pageActivity" class="page-btn" role="tab">Activity</button>
 <button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
-<button type="button" id="pageContractors" class="page-btn" role="tab">Contractors</button>
 </div>
 
 
@@ -2056,7 +2063,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v165';
+var BUILD = 'sat-v169';
 
 var app = {
   visitors: [],
@@ -2079,7 +2086,7 @@ var app = {
   editingMoveId: null,
   flagTarget: null,
   viewDate: '',
-  logPage: 'daily',
+  logPage: 'onsite',
   onSiteOnly: false,
   _lastSubmit: 0,
   _lastSig: '',
@@ -2242,7 +2249,7 @@ var app = {
      added, and a setting would appear to work everywhere but one screen. */
   redraw: function () {
     this.renderSheetControls();
-    this.setLogPage(this.logPage || 'daily');
+    this.setLogPage(this.logPage || 'onsite');
     this.renderShifts();
     this.renderIncidents();
     this.renderMuster();
@@ -2369,7 +2376,7 @@ var app = {
   chooseShift: function (id) {
     this.shiftFilter = (id === null || id === undefined || id === '') ? null : String(id);
     this.renderSheetControls();
-    this.setLogPage(this.logPage || 'daily');
+    this.setLogPage(this.logPage || 'onsite');
     this.renderIncidents();
     var sh = this.filterShift();
     this.toast(sh ? 'Showing ' + sh.guard + "'s shift only" : 'Showing the whole day');
@@ -3166,6 +3173,28 @@ var app = {
     document.getElementById('keyMoveForm').addEventListener('submit', function (e) { self.saveKeyMove(e); });
     document.getElementById('keyMoveCancel').addEventListener('click', function () { self.cancelKeyMoveEdit(); });
 
+    /* Clear at the top of each record form: a fumbled entry starts
+       over in one tap. The cancel paths already restore everything -
+       fields, colour, edit state - so Clear simply walks them, then
+       gives the visitor form its fresh-open time back. */
+    document.getElementById('clearVisitorForm').addEventListener('click', function () {
+      self.cancelEntryEdit();
+      self.setCurrentTime();
+      self.toast('Cleared');
+    });
+    document.getElementById('clearStaffForm').addEventListener('click', function () {
+      self.cancelStaffMoveEdit();
+      self.toast('Cleared');
+    });
+    document.getElementById('clearIncidentForm').addEventListener('click', function () {
+      self.cancelIncidentEdit();
+      self.toast('Cleared');
+    });
+    document.getElementById('clearKeyForm').addEventListener('click', function () {
+      self.cancelKeyMoveEdit();
+      self.toast('Cleared');
+    });
+
     document.getElementById('guardForm').addEventListener('submit', function (e) { self.saveGuard(e); });
     document.getElementById('guardCancel').addEventListener('click', function () { self.cancelGuardEdit(); });
     document.getElementById('guardColourAuto').addEventListener('click', function () {
@@ -3486,7 +3515,6 @@ var app = {
     });
 
     document.getElementById('pageDaily').addEventListener('click', function () { self.setLogPage('daily'); });
-    document.getElementById('pageContractors').addEventListener('click', function () { self.setLogPage('contractors'); });
     document.getElementById('pageActivity').addEventListener('click', function () { self.setLogPage('activity'); });
     document.getElementById('pageOnsite').addEventListener('click', function () { self.setLogPage('onsite'); });
 
@@ -4786,23 +4814,17 @@ var app = {
 
     /* the page split is applied to whichever list is on show, so the
        on-site filter and the contractor split compose rather than fight */
-    var source = this.onSiteOnly ? openAll : all;
-    var split = this.splitByPage(source);
     var counts = this.splitByPage(all);
 
-    var cBtn = document.getElementById('pageContractors');
     var dBtn = document.getElementById('pageDaily');
     var aBtn = document.getElementById('pageActivity');
     var dayCount = this.dayLogFor(this.viewDate).length;
 
-    cBtn.innerHTML = 'Contractors<span>' + split.contractors.length +
-      (this.onSiteOnly ? ' on site' : (split.contractors.length === 1 ? ' entry' : ' entries')) + '</span>';
     dBtn.innerHTML = 'Daily<span>' + dayCount +
       (dayCount === 1 ? ' entry' : ' entries') + '</span>';
-    aBtn.innerHTML = 'Activity<span>' + split.general.length +
-      (this.onSiteOnly ? ' on site' : (split.general.length === 1 ? ' entry' : ' entries')) + '</span>';
+    aBtn.innerHTML = 'Activity<span>' + dayCount +
+      (dayCount === 1 ? ' entry' : ' entries') + '</span>';
 
-    cBtn.className = 'page-btn' + (this.logPage === 'contractors' ? ' active' : '');
     dBtn.className = 'page-btn' + (this.logPage === 'daily' ? ' active' : '');
     aBtn.className = 'page-btn' + (this.logPage === 'activity' ? ' active' : '');
     var oBtn = document.getElementById('pageOnsite');
@@ -4814,7 +4836,6 @@ var app = {
       oBtn.innerHTML = 'On site<span>' + here + ' here</span>';
       oBtn.className = 'page-btn' + (this.logPage === 'onsite' ? ' active' : '');
     }
-    cBtn.setAttribute('aria-selected', this.logPage === 'contractors' ? 'true' : 'false');
     dBtn.setAttribute('aria-selected', this.logPage === 'daily' ? 'true' : 'false');
     aBtn.setAttribute('aria-selected', this.logPage === 'activity' ? 'true' : 'false');
 
@@ -4850,73 +4871,9 @@ var app = {
       return;
     }
 
-    var onContractors = this.logPage === 'contractors';
-    var src = onContractors ? split.contractors : split.general;
+    /* only the three pages remain; a stale page name was translated
+       by setLogPage before it could reach here */
 
-    if (needle) {
-      var kept = [], fi;
-      for (fi = 0; fi < src.length; fi++) {
-        if (this.matches(needle, [src[fi].company, src[fi].rep, src[fi].vehicle, src[fi].reason])) {
-          kept.push(src[fi]);
-        }
-      }
-      src = kept;
-    }
-
-    if (!src.length && needle) {
-      container.innerHTML = '<div class="empty-state">Nothing matches &ldquo;' +
-        this.esc(needle) + '&rdquo; on this page</div>';
-      this.renderFlagLegend();
-      return;
-    }
-
-    if (!src.length) {
-      var elsewhere = onContractors ? split.general.length : split.contractors.length;
-      var otherName = onContractors ? 'Activity' : 'Contractors';
-      var msg = this.onSiteOnly
-        ? (onContractors ? 'No contractors on site' : 'Nobody else on site')
-        : (onContractors ? 'No contractor access this day' : 'No other visitors this day');
-      if (elsewhere) {
-        msg += '<br><span class="text-muted">' + elsewhere +
-          (elsewhere === 1 ? ' entry is' : ' entries are') + ' on ' + otherName + '</span>';
-      }
-      container.innerHTML = '<div class="empty-state">' + msg + '</div>';
-      this.renderFlagLegend();
-      return;
-    }
-
-    /* numbering stays the day's own running order, so a number means the
-       same thing here, on the other page and on the printed sheet */
-    var vIdx = this.dayIndex(), cIdx = this.contractorIndex();
-    var rows = '';
-    for (var j = 0; j < src.length; j++) {
-      var v = src[j];
-      var otherDay = v.date !== this.viewDate;
-      var exitCell = v.exitTime
-        ? this.esc(this.showTime(v.exitTime))
-        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
-      rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
-        this.numCell(v, onContractors ? cIdx[v.id] : vIdx['v' + v.id], 'visitor', otherDay) +
-        '<td>' + this.esc(v.company) +
-          (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
-          (otherDay ? '<span class="cell-sub carried">in on ' + this.showDate(v.date) + '</span>' : '') +
-          (onContractors ? this.inductionTag(v) : '') +
-        '</td>' +
-        '<td>' + this.esc(v.vehicle || '-') + '</td>' +
-        '<td>' + this.esc(v.reason) + '</td>' +
-        '<td class="time-cell">' + this.esc(this.showTime(v.entryTime)) + '</td>' +
-        '<td class="time-cell">' + exitCell + '</td>' +
-        '<td class="row-actions">' +
-        '<button type="button" class="edit-btn" onclick="app.editEntry(' + v.id + ')">Edit</button>' +
-        '<button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
-        '</tr>';
-    }
-
-    container.innerHTML = '<table class="data-table"><thead><tr>' +
-      '<th class="num">#</th><th>Company / rep</th><th>Vehicle</th><th>Reason</th><th>In</th><th>Out</th><th></th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
-
-    this.renderFlagLegend();
   },
 
   deleteVisitor: function (id) {
@@ -5913,6 +5870,7 @@ var app = {
         this.staffMovements[i].backTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
         this.saveData();
         this.renderStaffMovements();
+        this.renderLog();
         this.renderMuster();
         this.toast(this.staffMovements[i].name + ' back on site');
         return;
@@ -6059,28 +6017,24 @@ var app = {
   entryInduction: function (v) {
     var c = this.findContractor(v.company);
     if (!c) return null;
+    /* Induction belongs to people. With nobody named there is nobody to
+       judge - the old company-wide sweep flagged every rep-less
+       delivery, which drowned the warnings that matter. */
+    if (!v.rep) return null;
     /* the day of the visit, which is what the sheet is a record of */
-    var entries = this.inductionEntries(c, v.date), i, due = 0;
-
-    if (v.rep) {
-      for (i = 0; i < entries.length; i++) {
-        if (entries[i].name.toLowerCase() === String(v.rep).toLowerCase()) {
-          var e = entries[i];
-          if (e.missing) return { valid: false, missing: true, text: 'No induction date' };
-          if (!e.valid) return { valid: false, text: 'Induction due' };
-          if (e.soon) return { valid: true, soon: true,
-            text: e.days === 0 ? 'Induction expires today'
-                : 'Induction expires in ' + e.days + (e.days === 1 ? ' day' : ' days') };
-          return { valid: true, text: 'Induction valid' };
-        }
+    var entries = this.inductionEntries(c, v.date), i;
+    for (i = 0; i < entries.length; i++) {
+      if (entries[i].name.toLowerCase() === String(v.rep).toLowerCase()) {
+        var e = entries[i];
+        if (e.missing) return { valid: false, missing: true, text: 'No induction date' };
+        if (!e.valid) return { valid: false, text: 'Induction due' };
+        if (e.soon) return { valid: true, soon: true,
+          text: e.days === 0 ? 'Induction expires today'
+            : 'Induction expires in ' + e.days + (e.days === 1 ? ' day' : ' days') };
+        return { valid: true, text: 'Induction valid' };
       }
-      return { valid: false, unknown: true, text: 'Not on the induction list' };
     }
-
-    if (!entries.length) return { valid: false, text: 'Nobody inducted for this company' };
-    for (i = 0; i < entries.length; i++) if (!entries[i].valid) due++;
-    return { valid: due === 0,
-             text: due ? due + ' of ' + entries.length + ' inductions due' : 'Inductions in date' };
+    return { valid: false, unknown: true, text: 'Not on the induction list' };
   },
 
   inductionTag: function (v) {
@@ -6100,13 +6054,16 @@ var app = {
     var day = this.entriesFor(date);
     for (i = 0; i < day.length; i++) {
       v = day[i];
-      if (this.isContractorEntry(v)) continue;
+      /* contractors ride the same pages as everyone else, wearing their
+         own label and keeping their own C-series numbers */
+      var isC = this.isContractorEntry(v);
       bits = [v.company];
       if (v.rep) bits.push(v.rep);
       if (v.vehicle) bits.push(v.vehicle);
       bits.push(v.reason);
-      out.push({ kind: 'visitor', rec: v, time: v.entryTime,
-        until: v.exitTime || '', label: 'Visitor', detail: bits.join(' \u00b7 ') });
+      out.push({ kind: 'visitor', ctr: isC, rec: v, time: v.entryTime,
+        until: v.exitTime || '', label: isC ? 'Contractor' : 'Visitor',
+        detail: bits.join(' \u00b7 ') });
     }
 
     var moves = this.staffMovesFor(date);
@@ -6231,7 +6188,7 @@ var app = {
       if (this.visitors[i].id === id) {
         this.visitors[i].exitTime = v;
         this.saveData();
-        this.setLogPage(this.logPage || 'daily');
+        this.setLogPage(this.logPage || 'onsite');
         this.renderVisitors();
         this.toast('Logged out at ' + this.showTime(v));
         return;
@@ -6249,7 +6206,7 @@ var app = {
       if (this.staffMovements[i].id === id) {
         this.staffMovements[i].backTime = v;
         this.saveData();
-        this.setLogPage(this.logPage || 'daily');
+        this.setLogPage(this.logPage || 'onsite');
         this.renderStaffMovements();
         this.toast('Back at ' + this.showTime(v));
         return;
@@ -6266,7 +6223,8 @@ var app = {
 
   /* the inline handlers speak numbers only - kind travels as an index */
   pickFlagDot: function (ki, id) {
-    this.setEntryFlag(this.FLAG_KINDS[ki], id);
+    /* the dropdown hands its value over as text */
+    this.setEntryFlag(this.FLAG_KINDS[ki], Number(id) || 0);
   },
 
   setEntryFlag: function (kind, id) {
@@ -6291,6 +6249,8 @@ var app = {
   },
 
   renderFlagPicks: function () {
+    /* a dropdown, because a colour's name says what the colour is for -
+       a bare dot asks the person to remember the code */
     var flags = this.allFlags(), i, j;
     for (i = 0; i < this.FLAG_KINDS.length; i++) {
       var kind = this.FLAG_KINDS[i];
@@ -6298,15 +6258,17 @@ var app = {
         kind.charAt(0).toUpperCase() + kind.slice(1));
       if (!box) continue;
       var sel = this.pendingFlag[kind];
-      var out = '<button type="button" class="flag-dot none' + (sel === 0 ? ' sel' : '') +
-        '" onclick="app.pickFlagDot(' + i + ',0)" title="No colour">&ndash;</button>';
+      var selHex = '';
+      var out = '<select class="flag-select" onchange="app.pickFlagDot(' + i + ',this.value)">' +
+        '<option value="0">No colour</option>';
       for (j = 0; j < flags.length; j++) {
         var f = flags[j];
-        out += '<button type="button" class="flag-dot' + (sel === f.id ? ' sel' : '') +
-          '" style="background:' + f.hex + '"' +
-          ' onclick="app.pickFlagDot(' + i + ',' + f.id + ')"' +
-          ' title="' + this.esc(this.flagName(f.id)) + '"></button>';
+        if (sel === f.id) selHex = f.hex;
+        out += '<option value="' + f.id + '"' + (sel === f.id ? ' selected' : '') + '>' +
+          this.esc(this.flagName(f.id)) + '</option>';
       }
+      out += '</select><span class="flag-swatch' + (selHex ? '' : ' none') + '"' +
+        (selHex ? ' style="background:' + selHex + '"' : '') + '></span>';
       box.innerHTML = out;
     }
   },
@@ -6397,11 +6359,13 @@ var app = {
 
   dayLogTable: function (rows) {
     var idx = this.dayIndex();
+    var cIdx = this.contractorIndex();
     var body = '', i;
 
     for (i = 0; i < rows.length; i++) {
       var r = rows[i];
-      var seq = idx[(r.kind === 'staff' ? 's' : (r.kind === 'incident' ? 'i' : 'v')) + r.rec.id];
+      var seq = r.ctr ? 'C' + (cIdx[r.rec.id] || '')
+        : idx[(r.kind === 'staff' ? 's' : (r.kind === 'incident' ? 'i' : 'v')) + r.rec.id];
       var open = (r.kind === 'visitor' && !r.rec.exitTime) ||
                  (r.kind === 'staff' && !r.rec.backTime);
       /* The same three controls the contractor table has, whatever page
@@ -6438,7 +6402,7 @@ var app = {
           '</span>' +
           (r.kind === 'incident' ? '' : '<span class="cell-sub">' + this.esc(r.label) + '</span>') +
         '</td>' +
-        '<td>' + this.esc(r.detail) +
+        '<td>' + this.esc(r.detail) + (r.ctr ? this.inductionTag(r.rec) : '') +
           /* under the words, not in a seventh column: a phone is only so
              wide, and a column past the edge is a column that does not
              exist - found on a real phone, again */
@@ -6479,7 +6443,10 @@ var app = {
   },
 
   setLogPage: function (page) {
-    if (page !== 'contractors' && page !== 'daily' && page !== 'activity' && page !== 'onsite') return;
+    /* the Contractors page folded into the others; an old jump to it
+       lands on Daily, where those entries now live */
+    if (page === 'contractors') page = 'daily';
+    if (page !== 'daily' && page !== 'activity' && page !== 'onsite') return;
     this.logPage = page;
     this.renderLog();
   },
