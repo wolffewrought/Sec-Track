@@ -381,6 +381,8 @@ body.night{color-scheme:dark}
 .rule-dot{width:1.4rem;height:1.4rem;border-radius:50%;flex:none;border:1px solid var(--line-firm)}
 .rule-text{flex:1;min-width:0}
 .form-clear-row{display:flex;justify-content:flex-end;margin:-.2rem 0 .45rem}
+.confirm-row{display:flex;gap:.6rem;justify-content:flex-end;margin-top:.7rem}
+.confirm-row .button{min-height:2.6rem;padding:.5rem 1.1rem}
 .flag-select{min-height:2.75rem;font-size:1rem;padding:.4rem .55rem;border:1px solid var(--line-firm);border-radius:.45rem;background:var(--surface);color:var(--ink);max-width:15rem}
 .flag-swatch{display:inline-block;width:1.7rem;height:1.7rem;border-radius:50%;border:1px solid var(--line-firm);vertical-align:middle;margin-left:.55rem}
 .flag-swatch.none{background:transparent;border-style:dashed}
@@ -1678,6 +1680,16 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 </div>
 
+<div id="confirmBox" class="flag-picker" role="dialog" aria-modal="true" aria-labelledby="confirmMsg" style="display:none">
+<div class="flag-picker-panel">
+<div class="flag-picker-title" id="confirmMsg"></div>
+<div class="confirm-row">
+<button type="button" class="button button-secondary" id="confirmNo">Cancel</button>
+<button type="button" class="button" id="confirmYes">Confirm</button>
+</div>
+</div>
+</div>
+
 <div id="flagPicker" class="flag-picker" role="dialog" aria-modal="true" aria-labelledby="flagPickerTitle" style="display:none">
 <div class="flag-picker-panel">
 <div class="flag-picker-title" id="flagPickerTitle">Colour this entry</div>
@@ -2077,7 +2089,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v178';
+var BUILD = 'sat-v181';
 
 var app = {
   visitors: [],
@@ -2772,8 +2784,16 @@ var app = {
        anyone who has already arranged their folds keeps their own */
     try {
       if (!localStorage.getItem('sat-order-subSheet')) {
-        localStorage.setItem('sat-order-subSheet', JSON.stringify(
-          ['incidentsandoccurrence', 'occurrencesheet', 'staffmovements', 'contractoraccess']));
+        var seedG = [], seedI;
+        for (seedI = 0; seedI < this.FOLD_GROUPS.subSheet.length; seedI++) {
+          if (this.FOLD_GROUPS.subSheet[seedI] !== 'contractoraccess') seedG.push(this.FOLD_GROUPS.subSheet[seedI]);
+        }
+        var selfM = this;
+        seedG.sort(function (a, b) {
+          return selfM.settingsTitle(a).toLowerCase() < selfM.settingsTitle(b).toLowerCase() ? -1 : 1;
+        });
+        seedG.push('contractoraccess');
+        localStorage.setItem('sat-order-subSheet', JSON.stringify(seedG));
       }
     } catch (e) {}
 
@@ -3214,6 +3234,12 @@ var app = {
        over in one tap. The cancel paths already restore everything -
        fields, colour, edit state - so Clear simply walks them, then
        gives the visitor form its fresh-open time back. */
+    document.getElementById('confirmYes').addEventListener('click', function () { self.confirmYes(); });
+    document.getElementById('confirmNo').addEventListener('click', function () { self.confirmNo(); });
+    document.getElementById('confirmBox').addEventListener('click', function (ev) {
+      if (ev.target === document.getElementById('confirmBox')) self.confirmNo();
+    });
+
     document.getElementById('clearVisitorForm').addEventListener('click', function () {
       self.cancelEntryEdit();
       self.setCurrentTime();
@@ -4803,19 +4829,74 @@ var app = {
     document.getElementById('inductionNote').style.display = 'none';
   },
 
+  /* The browser's own confirm() never shows on some tablets, so the
+     app asks with its own dialog. One pending action at a time. */
+  appConfirm: function (msg, yesLabel, fn) {
+    this._confirmFn = fn || null;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmYes').textContent = yesLabel || 'Confirm';
+    document.getElementById('confirmBox').style.display = 'flex';
+  },
+
+  confirmYes: function () {
+    var f = this._confirmFn;
+    this.confirmNo();
+    if (f) f();
+  },
+
+  confirmNo: function () {
+    this._confirmFn = null;
+    document.getElementById('confirmBox').style.display = 'none';
+  },
+
   setExit: function (id) {
+    var self = this;
     for (var i = 0; i < this.visitors.length; i++) {
       if (this.visitors[i].id === id) {
+        var v = this.visitors[i];
         var d = new Date();
-        this.visitors[i].exitTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
-        this.saveData();
-        this.renderLog();
-        this.renderMuster();
-        this.toast('Exit logged for ' + this.visitors[i].company +
-          (this.visitors[i].date !== this.viewDate ? ' (' + this.showDate(this.visitors[i].date) + ')' : ''));
+        var at = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+        this.appConfirm('Log out ' + v.company + ' at ' + this.showTime(at) + '?', 'Log out', function () {
+          v.exitTime = at;
+          self.saveData();
+          self.renderLog();
+          self.renderMuster();
+          self.toast('Exit logged for ' + v.company +
+            (v.date !== self.viewDate ? ' (' + self.showDate(v.date) + ')' : ''));
+        });
         return;
       }
     }
+  },
+
+  /* A finished entry reopened - the tap that shouldn't have happened,
+     or the driver who came straight back. No dialog: undo is the
+     safety valve, and redoing it is one press away. */
+  reopen: function (list, id, field) {
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) {
+        list[i][field] = '';
+        this.saveData();
+        this.setLogPage(this.logPage || 'onsite');
+        this.renderMuster();
+        return list[i];
+      }
+    }
+    return null;
+  },
+
+  undoExit: function (id) {
+    var r = this.reopen(this.visitors, id, 'exitTime');
+    if (!r) return;
+    this.renderVisitors();
+    this.toast(r.company + ' back on site');
+  },
+
+  undoStaffBack: function (id) {
+    var r = this.reopen(this.staffMovements, id, 'backTime');
+    if (!r) return;
+    this.renderStaffMovements();
+    this.toast(r.name + ' marked still off site');
   },
 
   /* Only the people still inside the fence: open visits and staff who
@@ -4877,8 +4958,10 @@ var app = {
       var v = src[j];
       var otherDay = v.date !== this.viewDate;
       var exitCell = v.exitTime
-        ? this.esc(this.showTime(v.exitTime))
-        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
+        ? this.esc(this.showTime(v.exitTime)) +
+          ' <button type="button" class="edit-btn" onclick="app.undoExit(' + v.id + ')">Undo</button>'
+        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>' +
+          this.inlineTimeBox(v.id, 'exit', 2);
       rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
         this.numCell(v, cIdx[v.id], 'visitor', otherDay) +
         '<td>' + this.esc(v.company) +
@@ -5912,7 +5995,7 @@ var app = {
 
     this.saveData();
     this.renderStaffMovements();
-    if (this.logPage === 'daily') this.renderLog();
+    this.renderLog();
     e.target.reset();
     document.getElementById('staffVehiclePickRow').style.display = 'none';
     document.getElementById('staffVehicleRow').style.display = 'block';
@@ -5965,15 +6048,20 @@ var app = {
   },
 
   setStaffBack: function (id) {
+    var self = this;
     for (var i = 0; i < this.staffMovements.length; i++) {
       if (this.staffMovements[i].id === id) {
+        var m = this.staffMovements[i];
         var d = new Date();
-        this.staffMovements[i].backTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
-        this.saveData();
-        this.renderStaffMovements();
-        this.renderLog();
-        this.renderMuster();
-        this.toast(this.staffMovements[i].name + ' back on site');
+        var at = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+        this.appConfirm('Mark ' + m.name + ' back at ' + this.showTime(at) + '?', 'Back on site', function () {
+          m.backTime = at;
+          self.saveData();
+          self.renderStaffMovements();
+          self.renderLog();
+          self.renderMuster();
+          self.toast(m.name + ' back on site');
+        });
         return;
       }
     }
@@ -6046,8 +6134,10 @@ var app = {
       var m = display[i];
       var otherDay = m.date !== this.viewDate;
       var backCell = m.backTime
-        ? this.esc(this.showTime(m.backTime))
-        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button>';
+        ? this.esc(this.showTime(m.backTime)) +
+          ' <button type="button" class="edit-btn" onclick="app.undoStaffBack(' + m.id + ')">Undo</button>'
+        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setStaffBack(' + m.id + ')">Back</button>' +
+          this.inlineTimeBox(m.id, 'back', 1);
       rows += '<tr' + (m.backTime ? '' : ' class="on-site"') + '>' +
         this.numCell(m, seq['s' + m.id], 'staff', otherDay) +
         '<td>' + this.esc(m.name) +
@@ -6263,50 +6353,69 @@ var app = {
      room. */
   /* A small time box on the row itself: the guard watching someone
      leave at 16:45 should not need the full edit form to say so. */
-  inlineTimeBox: function (id, kind) {
+  inlineTimeBox: function (id, kind, s) {
+    /* s names the surface the box sits on, so the same record can
+       carry a box on the log page and on its fold without the two
+       fighting over one input id. 0 and blank are the log pages,
+       1 the staff fold, 2 the contractor fold, 3 the keys list. */
+    var n = Number(s) || 0;
+    var suf = (n ? n + '_' : '') + Number(id);
     var pad = this.timeEntryMode() === 'pad';
     var box = (pad
       ? ' type="text" inputmode="numeric" maxlength="8" placeholder="0000" data-timepad="1"'
       : ' type="time"');
     if (kind === 'exit') {
-      return '<input class="inline-time" id="exitAt_' + Number(id) + '"' + box + '>' +
-        '<button type="button" class="small-act" onclick="app.setExitAt(' + Number(id) + ')">Set</button>';
+      return '<input class="inline-time" id="exitAt_' + suf + '"' + box + '>' +
+        '<button type="button" class="small-act" onclick="app.setExitAt(' + Number(id) + ', ' + n + ')">Set</button>';
     }
-    return '<input class="inline-time" id="backAt_' + Number(id) + '"' + box + '>' +
-      '<button type="button" class="small-act" onclick="app.setBackAt(' + Number(id) + ')">Set</button>';
+    if (kind === 'keyback') {
+      return '<input class="inline-time" id="keybackAt_' + suf + '"' + box + '>' +
+        '<button type="button" class="small-act" onclick="app.setKeyBackAt(' + Number(id) + ', ' + n + ')">Set</button>';
+    }
+    return '<input class="inline-time" id="backAt_' + suf + '"' + box + '>' +
+      '<button type="button" class="small-act" onclick="app.setBackAt(' + Number(id) + ', ' + n + ')">Set</button>';
   },
 
-  setExitAt: function (id) {
-    var el = document.getElementById('exitAt_' + id);
+  setExitAt: function (id, s) {
+    var el = document.getElementById('exitAt_' + (s ? Number(s) + '_' : '') + id);
     if (!el) return;
     this.commitTypedTime(el);
     var v = this.looseTime(el.value);
     if (!v) { this.toast('Type the exit time first', 'error'); return; }
+    var self = this;
     for (var i = 0; i < this.visitors.length; i++) {
       if (this.visitors[i].id === id) {
-        this.visitors[i].exitTime = v;
-        this.saveData();
-        this.setLogPage(this.logPage || 'onsite');
-        this.renderVisitors();
-        this.toast('Logged out at ' + this.showTime(v));
+        var rec = this.visitors[i];
+        this.appConfirm('Log out ' + rec.company + ' at ' + this.showTime(v) + '?', 'Log out', function () {
+          rec.exitTime = v;
+          self.saveData();
+          self.setLogPage(self.logPage || 'onsite');
+          self.renderVisitors();
+          self.toast('Logged out at ' + self.showTime(v));
+        });
         return;
       }
     }
   },
 
-  setBackAt: function (id) {
-    var el = document.getElementById('backAt_' + id);
+  setBackAt: function (id, s) {
+    var el = document.getElementById('backAt_' + (s ? Number(s) + '_' : '') + id);
     if (!el) return;
     this.commitTypedTime(el);
     var v = this.looseTime(el.value);
     if (!v) { this.toast('Type the return time first', 'error'); return; }
+    var self = this;
     for (var i = 0; i < this.staffMovements.length; i++) {
       if (this.staffMovements[i].id === id) {
-        this.staffMovements[i].backTime = v;
-        this.saveData();
-        this.setLogPage(this.logPage || 'onsite');
-        this.renderStaffMovements();
-        this.toast('Back at ' + this.showTime(v));
+        var rec = this.staffMovements[i];
+        this.appConfirm('Mark ' + rec.name + ' back at ' + this.showTime(v) + '?', 'Back on site', function () {
+          rec.backTime = v;
+          self.saveData();
+          self.setLogPage(self.logPage || 'onsite');
+          self.renderStaffMovements();
+          self.renderMuster();
+          self.toast('Back at ' + self.showTime(v));
+        });
         return;
       }
     }
@@ -6472,14 +6581,16 @@ var app = {
          phone, not by the tests. */
       var act = '';
       if (r.kind === 'visitor') {
-        act = (r.rec.exitTime ? '' :
+        act = (r.rec.exitTime ?
+          '<button type="button" class="edit-btn" onclick="app.undoExit(' + r.rec.id + ')">Undo</button>' :
           '<button type="button" class="button button-secondary small-act" ' +
           'onclick="app.setExit(' + r.rec.id + ')">Log out</button>' +
           this.inlineTimeBox(r.rec.id, 'exit')) +
           '<button type="button" class="edit-btn" onclick="app.editEntry(' + r.rec.id + ')">Edit</button>' +
           '<button type="button" class="delete-btn" onclick="app.deleteVisitor(' + r.rec.id + ')" aria-label="Delete">&times;</button>';
       } else if (r.kind === 'staff') {
-        act = (r.rec.backTime ? '' :
+        act = (r.rec.backTime ?
+          '<button type="button" class="edit-btn" onclick="app.undoStaffBack(' + r.rec.id + ')">Undo</button>' :
           '<button type="button" class="button button-secondary small-act" ' +
           'onclick="app.setStaffBack(' + r.rec.id + ')">Back</button>' +
           this.inlineTimeBox(r.rec.id, 'back')) +
@@ -6720,7 +6831,7 @@ var app = {
 
     this.saveData();
     this.renderIncidents();
-    if (this.logPage === 'daily') this.renderLog();
+    this.renderLog();
     e.target.reset();
     document.getElementById('incidentDetail').focus();
     this.toast('Incident recorded - ' + this.incidentsFor(this.viewDate).length + ' on the Day Sheet');
@@ -7815,6 +7926,7 @@ var app = {
         '<span class="cell-sub">' + self.esc(self.showTime(m.outTime)) + '</span></td>' +
         '<td class="row-actions">' +
         '<button type="button" class="edit-btn" onclick="app.returnKeyAt(' + i + ')">Returned</button>' +
+        self.inlineTimeBox(i, 'keyback', 3) +
         '<button type="button" class="edit-btn" onclick="app.editKeyMoveAt(' + i + ')">Edit</button>' +
         '</td></tr>';
     }).join('') + '</tbody></table>';
@@ -7832,6 +7944,7 @@ var app = {
     document.getElementById('keySubmit').textContent = 'Save changes';
     document.getElementById('keyCancel').style.display = '';
     document.getElementById('keyName').focus();
+    this.bringIntoView('addakey', 'keyForm');
   },
 
   cancelKeyEdit: function () {
@@ -7890,18 +8003,41 @@ var app = {
   },
 
   returnKeyAt: function (i) {
+    var self = this;
     var m = this.shownKeysOut[i];
     if (!m) return;
-    m.backTime = this.clockNow().replace(/\s*(am|pm)$/i, '');
-    if (!/^\d{2}:\d{2}$/.test(m.backTime)) {
+    var at = this.clockNow().replace(/\s*(am|pm)$/i, '');
+    if (!/^\d{2}:\d{2}$/.test(at)) {
       var d = new Date();
-      m.backTime = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
+      at = this.pad2(d.getHours()) + ':' + this.pad2(d.getMinutes());
     }
-    this.saveData();
-    this.renderKeys();
-    this.renderKeysOut();
-    this.renderHandover();
-    this.toast(this.keyLabel(m.keyId) + ' returned by ' + m.to);
+    this.appConfirm('Mark ' + this.keyLabel(m.keyId) + ' returned by ' + m.to + '?', 'Returned', function () {
+      m.backTime = at;
+      self.saveData();
+      self.renderKeys();
+      self.renderKeysOut();
+      self.renderHandover();
+      self.toast(self.keyLabel(m.keyId) + ' returned by ' + m.to);
+    });
+  },
+
+  setKeyBackAt: function (i, s) {
+    var el = document.getElementById('keybackAt_' + (s ? Number(s) + '_' : '') + i);
+    if (!el) return;
+    this.commitTypedTime(el);
+    var v = this.looseTime(el.value);
+    if (!v) { this.toast('Type the return time first', 'error'); return; }
+    var self = this;
+    var m = this.shownKeysOut[i];
+    if (!m) return;
+    this.appConfirm('Mark ' + this.keyLabel(m.keyId) + ' returned at ' + this.showTime(v) + '?', 'Returned', function () {
+      m.backTime = v;
+      self.saveData();
+      self.renderKeys();
+      self.renderKeysOut();
+      self.renderHandover();
+      self.toast(self.keyLabel(m.keyId) + ' returned at ' + self.showTime(v) + ' by ' + m.to);
+    });
   },
 
   editKeyMoveAt: function (i) {
@@ -7915,6 +8051,7 @@ var app = {
     document.getElementById('keyBackTime').value = m.backTime || '';
     document.getElementById('keyMoveSubmit').textContent = 'Save changes';
     document.getElementById('keyMoveCancel').style.display = '';
+    this.bringIntoView('issueorreturnakey', 'keyMoveForm');
   },
 
   cancelKeyMoveEdit: function () {
@@ -8641,6 +8778,14 @@ var app = {
 
   shownGuardList: [],
 
+  /* An edit that fills a form the guard cannot see looks dead. Open
+     the form's fold if it is shut, and bring the form to the eye. */
+  bringIntoView: function (slug, formId) {
+    if (this.openFolds().indexOf(slug) === -1) this.toggleFold(slug);
+    var f = document.getElementById(formId);
+    if (f && f.scrollIntoView) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
   editGuardAt: function (i) {
     var g = this.shownGuardList[i];
     if (!g) return;
@@ -8652,6 +8797,7 @@ var app = {
     document.getElementById('guardColourPick').value = this.guardHex(g.name);
     document.getElementById('guardSubmit').textContent = 'Save changes';
     document.getElementById('guardCancel').style.display = '';
+    this.bringIntoView('addaguard', 'guardForm');
     document.getElementById('guardName').focus();
   },
 
