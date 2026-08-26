@@ -24,11 +24,20 @@ body{background:var(--page);padding-bottom:calc(3rem + env(safe-area-inset-botto
 /* On Android 15 and newer the web view fills the whole screen, so the
    header would sit under the status bar and camera cutout. These insets
    are zero in a normal browser tab, so the hosted version is unchanged. */
-.header-text{flex:1;min-width:0}
 .cog{background:rgba(255,255,255,.12);border:none;color:#fff;width:2.6rem;height:2.6rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0}
 .cog.active{background:var(--accent)}
 .cog svg{pointer-events:none;display:block}
 .header .cog + .cog{margin-left:.4rem}
+.onduty-btn{flex:0 0 auto;margin-left:auto;margin-right:.4rem;background:#1d4ed8;color:#fff;border:none;border-radius:.375rem;padding:.5rem .9rem;font-family:inherit;font-size:.85rem;font-weight:700;letter-spacing:.02em;cursor:pointer;min-height:2.4rem}
+.onduty-btn:active{background:#1e40af}
+.onduty-btn.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px #1d4ed8}
+body.night .onduty-btn.on{box-shadow:0 0 0 2px var(--page),0 0 0 4px #1d4ed8}
+.onduty-btn+.handover-btn{margin-left:0}
+.handover-btn{flex:0 0 auto;margin-left:auto;margin-right:.4rem;background:#15803d;color:#fff;border:none;border-radius:.375rem;padding:.5rem .9rem;font-family:inherit;font-size:.85rem;font-weight:700;letter-spacing:.02em;cursor:pointer;min-height:2.4rem}
+.handover-btn:active{background:#166534}
+.handover-btn.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px #15803d}
+body.night .handover-btn.on{box-shadow:0 0 0 2px var(--page),0 0 0 4px #15803d}
+.handover-btn+.muster-btn{margin-left:0}
 .muster-btn{flex:0 0 auto;margin-left:auto;margin-right:.5rem;background:var(--bad);color:#fff;border:none;border-radius:.375rem;padding:.5rem .9rem;font-family:inherit;font-size:.85rem;font-weight:700;letter-spacing:.02em;cursor:pointer;min-height:2.4rem}
 .muster-btn:active{background:var(--bad-deep)}
 .muster-btn.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--bad)}
@@ -74,9 +83,10 @@ body.night .cal-day i{color:var(--accent-deep)}
 .day-pick{padding:.45rem .6rem;border:1px solid var(--line-firm);background:var(--surface);border-radius:.35rem;font-family:inherit;font-size:.8rem;font-weight:600;color:var(--slate);cursor:pointer}
 .day-pick.on{background:var(--accent);border-color:var(--accent);color:#fff}
 body.night .day-pick{background:var(--page);border-color:var(--ink-soft);color:var(--ink-soft)}
-.header{background:var(--header);color:#fff;position:sticky;display:flex;align-items:center;gap:.75rem;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:calc(1rem + env(safe-area-inset-top,0px)) calc(1rem + env(safe-area-inset-right,0px)) 1rem calc(1rem + env(safe-area-inset-left,0px))}
-.header h1{font-size:1.25rem;font-weight:600;margin-bottom:.25rem}
-.header-date{font-size:.875rem;opacity:.9}
+.header{background:var(--header);color:#fff;position:sticky;display:flex;flex-direction:column;align-items:stretch;gap:.3rem;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:calc(1rem + env(safe-area-inset-top,0px)) calc(1rem + env(safe-area-inset-right,0px)) 1rem calc(1rem + env(safe-area-inset-left,0px))}
+.hdr-title{text-align:left;font-size:1.25rem;font-weight:600;margin:0;letter-spacing:.05em}
+.hdr-controls{display:flex;align-items:center;gap:.4rem}
+.hdr-date{text-align:left;font-size:.875rem;opacity:.9}
 .tab-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--line-firm);overflow-x:auto;position:sticky;top:calc(4.4rem + env(safe-area-inset-top,0px));z-index:50}
 .tab-nav button{flex:1;min-width:104px;padding:1rem .75rem;border:none;background:var(--surface);color:var(--slate);font-weight:500;font-size:.875rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
 .tab-nav button.active{color:var(--accent);border-bottom-color:var(--accent);background:#eff6ff}
@@ -415,10 +425,10 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <body>
 
 <div class="header" id="appHeader">
-<div class="header-text">
-<h1>Security Access Tracker</h1>
-<div class="header-date" id="headerDate"></div>
-</div>
+<h1 class="hdr-title">Security Access Tracker</h1>
+<div class="hdr-controls">
+<button type="button" id="btnSubDuty" class="onduty-btn" aria-label="On duty" title="On duty">On duty</button>
+<button type="button" id="btnSubHandover" class="handover-btn" aria-label="Handover" title="Handover">Handover</button>
 <button type="button" id="musterBtn" class="muster-btn" aria-label="Roll call" title="Roll call">Muster</button>
 <button type="button" id="themeBtn" class="cog" aria-label="Switch between day and night" title="Day or night">
 <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path id="themeIcon" fill="currentColor" d=""/></svg>
@@ -426,6 +436,8 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <button type="button" id="settingsBtn" class="cog" aria-label="Settings" title="Settings">
 <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M22.85 10.19A11 11 0 0 1 22.85 13.81L19.79 13.3A7.9 7.9 0 0 1 18.43 16.59L20.95 18.4A11 11 0 0 1 18.4 20.95L16.59 18.43A7.9 7.9 0 0 1 13.3 19.79L13.81 22.85A11 11 0 0 1 10.19 22.85L10.7 19.79A7.9 7.9 0 0 1 7.41 18.43L5.6 20.95A11 11 0 0 1 3.05 18.4L5.57 16.59A7.9 7.9 0 0 1 4.21 13.3L1.15 13.81A11 11 0 0 1 1.15 10.19L4.21 10.7A7.9 7.9 0 0 1 5.57 7.41L3.05 5.6A11 11 0 0 1 5.6 3.05L7.41 5.57A7.9 7.9 0 0 1 10.7 4.21L10.19 1.15A11 11 0 0 1 13.81 1.15L13.3 4.21A7.9 7.9 0 0 1 16.59 5.57L18.4 3.05A11 11 0 0 1 20.95 5.6L18.43 7.41A7.9 7.9 0 0 1 19.79 10.7L22.85 10.19ZM16.7 12A4.7 4.7 0 0 0 7.3 12A4.7 4.7 0 0 0 16.7 12Z"/></svg>
 </button>
+</div>
+<div class="hdr-date" id="headerDate"></div>
 </div>
 
 <div class="tab-nav" id="tabNav">
@@ -732,11 +744,10 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 </div>
 <div id="backdateNote" class="induction-note bad" role="status" aria-live="polite" style="display:none"></div>
 </div>
+
 </div>
 <div class="subtab-nav" role="tablist">
 <button type="button" id="btnSubSheet" class="subtab active" role="tab" aria-selected="true">Sheet</button>
-<button type="button" id="btnSubDuty" class="subtab" role="tab" aria-selected="false">Duty</button>
-<button type="button" id="btnSubHandover" class="subtab" role="tab" aria-selected="false">Handover</button>
 
 </div>
 <div id="subSheet" class="subpane active">
@@ -746,10 +757,8 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <button type="button" id="pageDaily" class="page-btn" role="tab">Daily</button>
 </div>
 
-
-
 <div class="section fold open" id="fold_occurrencesheet">
-<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_occurrencesheet" aria-expanded="true" aria-controls="foldBody_occurrencesheet"><span>Occurrence sheet</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_occurrencesheet" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_occurrencesheet" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_occurrencesheet" aria-expanded="true" aria-controls="foldBody_occurrencesheet"><span>Movement</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_occurrencesheet" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_occurrencesheet" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_occurrencesheet">
 <div id="sheetSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <input type="search" id="sheetSearch" aria-label="Search this day's log" class="filter-box" maxlength="40" placeholder="Filter by name, vehicle or reason">
@@ -766,18 +775,23 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div id="staffMoveContainer"></div>
 </div>
 </div>
+
+<div class="section fold open" id="fold_contractoraccess">
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_contractoraccess" aria-expanded="true" aria-controls="foldBody_contractoraccess"><span>Contractor access</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_contractoraccess" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_contractoraccess" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-body" id="foldBody_contractoraccess">
+<div id="contractorLog"></div>
+</div>
+</div>
 <div class="section fold open" id="fold_incidentsandoccurrence">
-<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_incidentsandoccurrence" aria-expanded="true" aria-controls="foldBody_incidentsandoccurrence"><span>Incidents and occurrences</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_incidentsandoccurrence" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_incidentsandoccurrence" aria-label="Move down" title="Move down">&#9660;</button></div>
+<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_incidentsandoccurrence" aria-expanded="true" aria-controls="foldBody_incidentsandoccurrence"><span>Occurrence</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_incidentsandoccurrence" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_incidentsandoccurrence" aria-label="Move down" title="Move down">&#9660;</button></div>
 <div class="fold-body" id="foldBody_incidentsandoccurrence">
 <div id="incidentSummary" class="sheet-summary" role="status" aria-live="polite"></div>
 <div id="incidentContainer"></div>
 </div>
 </div>
 </div>
+
 <div id="subDuty" class="subpane">
-<div class="section fold open" id="fold_onduty">
-<div class="fold-row"><button type="button" class="fold-head" id="foldBtn_onduty" aria-expanded="true" aria-controls="foldBody_onduty"><span>On duty</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_onduty" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_onduty" aria-label="Move down" title="Move down">&#9660;</button></div>
-<div class="fold-body" id="foldBody_onduty">
 <div id="dutyDayLabel" class="sheet-summary" role="status" aria-live="polite"></div>
 <form id="shiftForm" autocomplete="off">
 <h3 class="form-title" id="shiftFormTitle" style="display:none"></h3>
@@ -837,8 +851,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 
 <p class="field-hint">More than one shift can be recorded for a day, so a handover is shown on the sheet and on the printed report.</p>
 </div>
-</div>
-</div>
+
 <div id="subHandover" class="subpane">
 <div class="section fold open" id="fold_tohandover">
 <div class="fold-row"><button type="button" class="fold-head" id="foldBtn_tohandover" aria-expanded="true" aria-controls="foldBody_tohandover"><span>To hand over</span><i class="fold-arrow"></i></button><button type="button" class="move-btn" id="up_tohandover" aria-label="Move up" title="Move up">&#9650;</button><button type="button" class="move-btn" id="down_tohandover" aria-label="Move down" title="Move down">&#9660;</button></div>
@@ -1643,7 +1656,7 @@ body.night .flag-row input.flag-swatch{border-color:var(--ink-soft)}
 <div class="tp-bar" data-part="header" role="button" tabindex="0" title="The bar at the top"><span>Security Access Tracker</span><i class="tp-muster" data-part="bad" role="button" tabindex="0" title="Warnings">Muster</i></div>
 <div class="tp-pills" data-part="chip" role="button" tabindex="0" title="Pills and tabs"><i class="tp-pill on">Activity</i><i class="tp-pill">Daily</i><i class="tp-pill">Contractors</i></div>
 <div class="tp-card" data-part="surface" role="button" tabindex="0" title="Cards and tables">
-<div class="tp-h" data-part="ink" role="button" tabindex="0" title="Main text">Occurrence sheet</div>
+<div class="tp-h" data-part="ink" role="button" tabindex="0" title="Main text">Movement</div>
 <div class="tp-sub" data-part="muted" role="button" tabindex="0" title="Quieter text">Tuesday, 6 October &middot; 3 entries recorded</div>
 <table class="tp-table"><tbody>
 <tr><td><b class="tp-num" data-part="accent" role="button" tabindex="0" title="Buttons and links">1</b></td><td>Northgate Haulage<span class="tp-sub">D. Perry</span></td><td>06:00</td></tr>
@@ -2063,7 +2076,7 @@ var Store = (function () {
 /* Bumped with every release. Shown in Settings so it is always possible to
    tell which build a device is actually running, rather than guessing at
    whether an upload landed. */
-var BUILD = 'sat-v169';
+var BUILD = 'sat-v177';
 
 var app = {
   visitors: [],
@@ -2752,6 +2765,17 @@ var app = {
   },
 
   migrate: function () {
+    /* a fresh device orders the sheet's folds alphabetically, which
+       would seat the contractor register first; it belongs beneath
+       Staff movements, so the very first run writes that order down -
+       anyone who has already arranged their folds keeps their own */
+    try {
+      if (!localStorage.getItem('sat-order-subSheet')) {
+        localStorage.setItem('sat-order-subSheet', JSON.stringify(
+          ['incidentsandoccurrence', 'occurrencesheet', 'staffmovements', 'contractoraccess']));
+      }
+    } catch (e) {}
+
     var i;
     for (i = 0; i < this.regularVisitors.length; i++) this.normaliseRecord(this.regularVisitors[i], false);
     for (i = 0; i < this.contractors.length; i++) this.normaliseRecord(this.contractors[i], true);
@@ -3073,6 +3097,18 @@ var app = {
       setTimeout(function () { document.getElementById('shiftGuardList').classList.remove('active'); }, 200);
     });
 
+    document.getElementById('btnSubDuty').addEventListener('click', function () {
+      /* the roster of the day, one press from anywhere */
+      self.activateTab('sheet');
+      self.activateSub('day', 'subDuty');
+      if (window.scrollTo) window.scrollTo(0, 0);
+    });
+    document.getElementById('btnSubHandover').addEventListener('click', function () {
+      /* the shift's last job, one press from anywhere */
+      self.activateTab('sheet');
+      self.activateSub('day', 'subHandover');
+      if (window.scrollTo) window.scrollTo(0, 0);
+    });
     document.getElementById('musterBtn').addEventListener('click', function () {
       /* wherever you are, the roll call is one press away */
       self.activateTab('sheet');
@@ -3614,7 +3650,7 @@ var app = {
      buttons can never drift apart. */
   SUBTABS: {
     entry: [['btnSubVisitor', 'subVisitor'], ['btnSubIncident', 'subIncident'], ['btnSubStaffOut', 'subStaffOut'], ['btnSubKeyMove', 'subKeyMove']],
-    day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty'], ['btnSubHandover', 'subHandover'], ['musterBtn', 'subMuster', true]],
+    day:   [['btnSubSheet', 'subSheet'], ['btnSubDuty', 'subDuty', true], ['btnSubHandover', 'subHandover', true], ['musterBtn', 'subMuster', true]],
     db:    [['btnSubContractors', 'subContractors'], ['btnSubRegulars', 'subRegulars'], ['btnSubKeys', 'subKeys'], ['btnSubStaffList', 'subStaffList']],
     roster: [['btnSubRoster', 'subRoster'], ['btnSubGuards', 'subGuards']]
   },
@@ -3661,7 +3697,6 @@ var app = {
     if (paneId === 'subDuty') this.renderShifts();
     window.scrollTo(0, 0);
   },
-
 
   activateTab: function (name) {
     if (this.TABS.indexOf(name) === -1) return;
@@ -3742,8 +3777,7 @@ var app = {
     subStaffOut: ['recordstaffdeparture'],
     subKeyMove: ['issueorreturnakey', 'outatthemoment'],
     subIncident: ['recordincident'],
-    subSheet: ['occurrencesheet', 'staffmovements', 'incidentsandoccurrence'],
-    subDuty: ['onduty'],
+    subSheet: ['occurrencesheet', 'staffmovements', 'incidentsandoccurrence', 'contractoraccess'],
     subHandover: ['tohandover'],
     subMuster: ['rollcall', 'onsite', 'staffoffsite'],
     subGuards: ['guards', 'addaguard', 'mergetwoguards'],
@@ -4595,7 +4629,6 @@ var app = {
   recordVisitor: function (e) {
     e.preventDefault();
 
-
     var company = document.getElementById('companyInput').value.replace(/^\s+|\s+$/g, '');
     var rep = document.getElementById('repInput').value.replace(/^\s+|\s+$/g, '');
     var vehicle = document.getElementById('vehicleInput').value.replace(/^\s+|\s+$/g, '').toUpperCase();
@@ -4804,6 +4837,72 @@ var app = {
     container.innerHTML = this.dayLogTable(rows);
   },
 
+  /* The contractor register's day view, living in its own fold on the
+     Sheet - collapsible and movable like the sections around it. */
+  renderContractorAccess: function (split, needle) {
+    var container = document.getElementById('contractorLog');
+    if (!container) return;
+    var src = split.contractors;
+
+    if (needle) {
+      var kept = [], fi;
+      for (fi = 0; fi < src.length; fi++) {
+        if (this.matches(needle, [src[fi].company, src[fi].rep, src[fi].vehicle, src[fi].reason])) {
+          kept.push(src[fi]);
+        }
+      }
+      src = kept;
+    }
+
+    if (!src.length && needle) {
+      container.innerHTML = '<div class="empty-state">Nothing matches &ldquo;' +
+        this.esc(needle) + '&rdquo; on this page</div>';
+      this.renderFlagLegend();
+      return;
+    }
+
+    if (!src.length) {
+      var msg = this.onSiteOnly ? 'No contractors on site' : 'No contractor access this day';
+      container.innerHTML = '<div class="empty-state">' + msg + '</div>';
+      this.renderFlagLegend();
+      return;
+    }
+
+    /* numbering stays the day's own running order, so a number means the
+       same thing here, on the other page and on the printed sheet */
+    var vIdx = this.dayIndex(), cIdx = this.contractorIndex();
+    var rows = '';
+    for (var j = 0; j < src.length; j++) {
+      var v = src[j];
+      var otherDay = v.date !== this.viewDate;
+      var exitCell = v.exitTime
+        ? this.esc(this.showTime(v.exitTime))
+        : '<button type="button" class="button button-secondary" style="padding:.3rem .5rem;font-size:.72rem" onclick="app.setExit(' + v.id + ')">Log out</button>';
+      rows += '<tr' + (v.exitTime ? '' : ' class="on-site"') + '>' +
+        this.numCell(v, cIdx[v.id], 'visitor', otherDay) +
+        '<td>' + this.esc(v.company) +
+          (v.rep ? '<span class="cell-sub">' + this.esc(v.rep) + '</span>' : '') +
+          (otherDay ? '<span class="cell-sub carried">in on ' + this.showDate(v.date) + '</span>' : '') +
+          this.inductionTag(v) +
+        '</td>' +
+        '<td>' + this.esc(v.vehicle || '-') + '</td>' +
+        '<td>' + this.esc(v.reason) + '</td>' +
+        '<td class="time-cell">' + this.esc(this.showTime(v.entryTime)) + '</td>' +
+        '<td class="time-cell">' + exitCell + '</td>' +
+        '<td class="row-actions">' +
+        '<button type="button" class="edit-btn" onclick="app.editEntry(' + v.id + ')">Edit</button>' +
+        '<button type="button" class="delete-btn" onclick="app.deleteVisitor(' + v.id + ')">X</button></td>' +
+        '</tr>';
+    }
+
+    container.innerHTML = '<table class="data-table"><thead><tr>' +
+      '<th class="num">#</th><th>Company / rep</th><th>Vehicle</th><th>Reason</th><th>In</th><th>Out</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+
+    this.renderFlagLegend();
+
+  },
+
   renderLog: function () {
     var container = document.getElementById('logContainer');
     var summary = document.getElementById('sheetSummary');
@@ -4814,6 +4913,8 @@ var app = {
 
     /* the page split is applied to whichever list is on show, so the
        on-site filter and the contractor split compose rather than fight */
+    var source = this.onSiteOnly ? openAll : all;
+    var split = this.splitByPage(source);
     var counts = this.splitByPage(all);
 
     var dBtn = document.getElementById('pageDaily');
@@ -4822,8 +4923,8 @@ var app = {
 
     dBtn.innerHTML = 'Daily<span>' + dayCount +
       (dayCount === 1 ? ' entry' : ' entries') + '</span>';
-    aBtn.innerHTML = 'Activity<span>' + dayCount +
-      (dayCount === 1 ? ' entry' : ' entries') + '</span>';
+    aBtn.innerHTML = 'Activity<span>' + split.general.length +
+      (this.onSiteOnly ? ' on site' : (split.general.length === 1 ? ' entry' : ' entries')) + '</span>';
 
     dBtn.className = 'page-btn' + (this.logPage === 'daily' ? ' active' : '');
     aBtn.className = 'page-btn' + (this.logPage === 'activity' ? ' active' : '');
@@ -4856,6 +4957,9 @@ var app = {
 
     var needle = this.sheetFilter();
 
+    /* the fold refreshes with every log render, whatever page is up */
+    this.renderContractorAccess(split, needle);
+
     if (this.logPage === 'onsite') {
       this.renderOnsite(container, needle);
       return;
@@ -4870,10 +4974,6 @@ var app = {
       this.renderActivity(container, needle);
       return;
     }
-
-    /* only the three pages remain; a stale page name was translated
-       by setLogPage before it could reach here */
-
   },
 
   deleteVisitor: function (id) {
@@ -6054,16 +6154,13 @@ var app = {
     var day = this.entriesFor(date);
     for (i = 0; i < day.length; i++) {
       v = day[i];
-      /* contractors ride the same pages as everyone else, wearing their
-         own label and keeping their own C-series numbers */
-      var isC = this.isContractorEntry(v);
+      if (this.isContractorEntry(v)) continue;
       bits = [v.company];
       if (v.rep) bits.push(v.rep);
       if (v.vehicle) bits.push(v.vehicle);
       bits.push(v.reason);
-      out.push({ kind: 'visitor', ctr: isC, rec: v, time: v.entryTime,
-        until: v.exitTime || '', label: isC ? 'Contractor' : 'Visitor',
-        detail: bits.join(' \u00b7 ') });
+      out.push({ kind: 'visitor', rec: v, time: v.entryTime,
+        until: v.exitTime || '', label: 'Visitor', detail: bits.join(' \u00b7 ') });
     }
 
     var moves = this.staffMovesFor(date);
@@ -6218,8 +6315,9 @@ var app = {
 
   FLAG_KINDS: ['visitor', 'staff', 'incident'],
 
-  pendingFlag: { visitor: 0, staff: 0, incident: 0 },
-  pendingFlagManual: { visitor: false, staff: false, incident: false },
+  /* keyed lazily from FLAG_KINDS, so the trio is written once */
+  pendingFlag: {},
+  pendingFlagManual: {},
 
   /* the inline handlers speak numbers only - kind travels as an index */
   pickFlagDot: function (ki, id) {
@@ -6257,7 +6355,7 @@ var app = {
       var box = document.getElementById('flagPick' +
         kind.charAt(0).toUpperCase() + kind.slice(1));
       if (!box) continue;
-      var sel = this.pendingFlag[kind];
+      var sel = this.pendingFlag[kind] || 0;
       var selHex = '';
       var out = '<select class="flag-select" onchange="app.pickFlagDot(' + i + ',this.value)">' +
         '<option value="0">No colour</option>';
@@ -6359,13 +6457,11 @@ var app = {
 
   dayLogTable: function (rows) {
     var idx = this.dayIndex();
-    var cIdx = this.contractorIndex();
     var body = '', i;
 
     for (i = 0; i < rows.length; i++) {
       var r = rows[i];
-      var seq = r.ctr ? 'C' + (cIdx[r.rec.id] || '')
-        : idx[(r.kind === 'staff' ? 's' : (r.kind === 'incident' ? 'i' : 'v')) + r.rec.id];
+      var seq = idx[(r.kind === 'staff' ? 's' : (r.kind === 'incident' ? 'i' : 'v')) + r.rec.id];
       var open = (r.kind === 'visitor' && !r.rec.exitTime) ||
                  (r.kind === 'staff' && !r.rec.backTime);
       /* The same three controls the contractor table has, whatever page
@@ -6402,7 +6498,7 @@ var app = {
           '</span>' +
           (r.kind === 'incident' ? '' : '<span class="cell-sub">' + this.esc(r.label) + '</span>') +
         '</td>' +
-        '<td>' + this.esc(r.detail) + (r.ctr ? this.inductionTag(r.rec) : '') +
+        '<td>' + this.esc(r.detail) +
           /* under the words, not in a seventh column: a phone is only so
              wide, and a column past the edge is a column that does not
              exist - found on a real phone, again */
@@ -6443,8 +6539,8 @@ var app = {
   },
 
   setLogPage: function (page) {
-    /* the Contractors page folded into the others; an old jump to it
-       lands on Daily, where those entries now live */
+    /* the Contractors page became a fold on the Sheet; an old jump to
+       it lands on Daily, with the fold in plain sight below */
     if (page === 'contractors') page = 'daily';
     if (page !== 'daily' && page !== 'activity' && page !== 'onsite') return;
     this.logPage = page;
@@ -10609,7 +10705,6 @@ var app = {
        a handover sheet does not reprint them - a period report, read for
        compliance rather than at a gate, still does, and keeps its table. */
 
-
     /* A running log: everything that happened in one order, minus the
        inducted contractors, mirroring the Daily page on screen. */
     var logSheet = !!(range && range.logSheet);
@@ -10634,7 +10729,6 @@ var app = {
       : ((isRange && !byShift) ? 'SITE OCCURRENCE REPORT' : 'SITE OCCURRENCE SHEET')),
       PDFKit.PW / 2, y + 20, 14, true, WHITE);
     y += 34;
-
 
     /* Who held the gate, printed before anything else and with room to
        sign - that is what turns this from a printout into a record. */
@@ -10897,7 +10991,6 @@ var app = {
         var ka = a.date + ' ' + a.time, kb = b.date + ' ' + b.time;
         return ka < kb ? -1 : (ka > kb ? 1 : 0);
       });
-
 
       /* The band lets the eye group the log at a glance. It is deliberately
          not the only signal - the What column still says what each row is,
